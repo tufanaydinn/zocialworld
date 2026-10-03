@@ -1,0 +1,27 @@
+{
+  "name": "@project/web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test:unit": "node --import tsx --test \"src/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/stats.js": "^0.17.4",
+    "@types/three": "^0.186.0",
+    "tsx": "^4.19.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@project/shared": "0.0.0",
+    "livekit-client": "^2.22.3",
+    "stats.js": "^0.17.0",
+    "three": "^0.186.1"
+  }
+}
