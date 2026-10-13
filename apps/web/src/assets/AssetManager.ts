@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { AssetPackMissingError, installedAssetPacks, isAssetAvailable } from "./assetPacks.ts";
 
 /**
  * Centralized GLTF/GLB loading.
  *
- * Every future agent adding characters, props or environment pieces
- * should load them through this class instead of instantiating
+ * Code that adds characters, props or environment pieces should load them through this class instead of instantiating
  * `GLTFLoader` in scene code. That gives us, in one place:
  *
  *  - caching (a model requested twice is only downloaded/parsed once),
@@ -16,8 +16,8 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
  *  - consistent error handling and load-progress reporting,
  *  - a single spot to add future Draco/Meshopt decompression.
  *
- * No external assets ship with CORE-001 (see assets/asset-registry.json);
- * this class is wired and ready for the Asset Research / Character agents.
+ * Third-party model packs are listed in assets/asset-registry.json and
+ * downloaded separately; a missing pack is never requested (assetPacks.ts).
  */
 
 export interface LoadProgress {
@@ -32,6 +32,7 @@ export class AssetManager {
   private readonly loader = new GLTFLoader();
   private readonly gltfCache = new Map<string, Promise<GLTF>>();
   private readonly progressListeners = new Set<ProgressListener>();
+  private readonly installedPacks = installedAssetPacks();
 
   onProgress(listener: ProgressListener): () => void {
     this.progressListeners.add(listener);
@@ -41,6 +42,11 @@ export class AssetManager {
   /** Loads (or returns the cached parse of) a .glb/.gltf file. */
   async loadGltf(url: string): Promise<GLTF> {
     let pending = this.gltfCache.get(url);
+    if (!pending && !isAssetAvailable(url, this.installedPacks)) {
+      // A file of a pack this checkout does not have: fail at once, without a request (callers keep their placeholder).
+      pending = Promise.reject(new AssetPackMissingError(url));
+      this.gltfCache.set(url, pending);
+    }
     if (!pending) {
       pending = new Promise<GLTF>((resolve, reject) => {
         this.loader.load(

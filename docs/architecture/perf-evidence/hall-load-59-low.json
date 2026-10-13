@@ -1,0 +1,311 @@
+{
+ "at": "2026-10-08T15:34:55.551Z",
+ "clients": 59,
+ "mix": {
+  "seated": 51,
+  "standing": 4,
+  "walking": 4
+ },
+ "measuredSeconds": 130,
+ "server": {
+  "eventLoop": {
+   "p50Ms": 1.08,
+   "p99Ms": 2.95,
+   "maxMs": 41.06
+  },
+  "cpuPercentOfOneCore": 5.3,
+  "rssMb": 141,
+  "windows": [
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.55,
+    "maxMs": 14.2,
+    "meanMs": 1.13,
+    "cpuMs": 246,
+    "rssMb": 141,
+    "at": 25
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.69,
+    "maxMs": 11.18,
+    "meanMs": 1.14,
+    "cpuMs": 259,
+    "rssMb": 141,
+    "at": 30
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.53,
+    "maxMs": 6.73,
+    "meanMs": 1.13,
+    "cpuMs": 247,
+    "rssMb": 141,
+    "at": 35
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.52,
+    "maxMs": 41.06,
+    "meanMs": 1.15,
+    "cpuMs": 304,
+    "rssMb": 141,
+    "at": 40
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.6,
+    "maxMs": 11.78,
+    "meanMs": 1.14,
+    "cpuMs": 278,
+    "rssMb": 141,
+    "at": 45
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.6,
+    "maxMs": 14.21,
+    "meanMs": 1.13,
+    "cpuMs": 267,
+    "rssMb": 141,
+    "at": 50
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.5,
+    "maxMs": 13.89,
+    "meanMs": 1.14,
+    "cpuMs": 252,
+    "rssMb": 141,
+    "at": 55
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 1.98,
+    "maxMs": 9.91,
+    "meanMs": 1.12,
+    "cpuMs": 223,
+    "rssMb": 141,
+    "at": 60
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.11,
+    "maxMs": 10.9,
+    "meanMs": 1.12,
+    "cpuMs": 245,
+    "rssMb": 141,
+    "at": 65
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.45,
+    "maxMs": 13.14,
+    "meanMs": 1.14,
+    "cpuMs": 232,
+    "rssMb": 141,
+    "at": 70
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.37,
+    "maxMs": 8.9,
+    "meanMs": 1.13,
+    "cpuMs": 249,
+    "rssMb": 141,
+    "at": 75
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.75,
+    "maxMs": 7.41,
+    "meanMs": 1.14,
+    "cpuMs": 255,
+    "rssMb": 141,
+    "at": 80
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.85,
+    "maxMs": 20.32,
+    "meanMs": 1.15,
+    "cpuMs": 253,
+    "rssMb": 141,
+    "at": 85
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.34,
+    "maxMs": 12.6,
+    "meanMs": 1.13,
+    "cpuMs": 246,
+    "rssMb": 141,
+    "at": 90
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.69,
+    "maxMs": 8.36,
+    "meanMs": 1.14,
+    "cpuMs": 254,
+    "rssMb": 141,
+    "at": 95
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.43,
+    "maxMs": 11,
+    "meanMs": 1.14,
+    "cpuMs": 238,
+    "rssMb": 141,
+    "at": 100
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.38,
+    "maxMs": 18.81,
+    "meanMs": 1.14,
+    "cpuMs": 246,
+    "rssMb": 141,
+    "at": 105
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.56,
+    "maxMs": 11.34,
+    "meanMs": 1.15,
+    "cpuMs": 310,
+    "rssMb": 116,
+    "at": 110
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.95,
+    "maxMs": 13.24,
+    "meanMs": 1.15,
+    "cpuMs": 284,
+    "rssMb": 116,
+    "at": 115
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.62,
+    "maxMs": 9.27,
+    "meanMs": 1.14,
+    "cpuMs": 261,
+    "rssMb": 116,
+    "at": 120
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.55,
+    "maxMs": 11.87,
+    "meanMs": 1.14,
+    "cpuMs": 284,
+    "rssMb": 117,
+    "at": 125
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 1.81,
+    "maxMs": 10.43,
+    "meanMs": 1.11,
+    "cpuMs": 293,
+    "rssMb": 117,
+    "at": 130
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 1.97,
+    "maxMs": 32.7,
+    "meanMs": 1.13,
+    "cpuMs": 296,
+    "rssMb": 117,
+    "at": 135
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 1.94,
+    "maxMs": 7.45,
+    "meanMs": 1.11,
+    "cpuMs": 275,
+    "rssMb": 117,
+    "at": 140
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 2.24,
+    "maxMs": 17.56,
+    "meanMs": 1.14,
+    "cpuMs": 300,
+    "rssMb": 117,
+    "at": 145
+   },
+   {
+    "p50Ms": 1.08,
+    "p99Ms": 1.96,
+    "maxMs": 10.09,
+    "meanMs": 1.12,
+    "cpuMs": 271,
+    "rssMb": 117,
+    "at": 150
+   }
+  ]
+ },
+ "relayLatencyMs": {
+  "samples": 65,
+  "p50": 0.4,
+  "p95": 1.2,
+  "max": 2
+ },
+ "perSeatedClient": {
+  "messagesPerSecond": 44.6,
+  "kilobytesPerSecond": 9.1
+ },
+ "page": {
+  "url": "http://127.0.0.1:5173/?perf=hallnet&quality=low",
+  "summary": {
+   "scene": "hallnet",
+   "quality": "low",
+   "viewport": {
+    "width": 1280,
+    "height": 720,
+    "pixelRatio": 0.4
+   },
+   "resolutionScale": 1,
+   "msaa": false,
+   "frames": 600,
+   "fps": 6.44,
+   "frameMs": {
+    "mean": 155.39,
+    "p50": 148.05,
+    "p95": 219.66
+   },
+   "mainMs": 5.37,
+   "sections": {
+    "world": 0.89,
+    "players": 0.27,
+    "rest": 0.18,
+    "render": 3.4,
+    "overlays": 0.63
+   },
+   "renderer": {
+    "calls": 92,
+    "triangles": 129132,
+    "programs": 39,
+    "geometries": 293,
+    "textures": 50
+   },
+   "pointLights": 0,
+   "pointLightPool": null,
+   "remotePlayers": 59,
+   "dom": {
+    "nodes": 872,
+    "nameplates": 59,
+    "nameplatesShown": 7
+   }
+  },
+  "error": null
+ },
+ "serverLog": []
+}

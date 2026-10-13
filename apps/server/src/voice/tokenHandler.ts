@@ -1,12 +1,10 @@
-import { AccessToken } from "livekit-server-sdk";
+import { AccessToken, TrackSource } from "livekit-server-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { isOriginAllowed } from "../origin.js";
 import type { VoiceConfig } from "./config.js";
 
 /**
- * Voice token minting (CORE-004 §10/§39; capability-auth model added in
- * the CORE-004 security revision — 
- * on PR #4).
+ * Voice token minting, authorised by a per-session capability.
  *
  * Deliberately NOT a WebSocket message on the gameplay protocol — this
  * is a one-shot request/response (ask for a token, get a token), kept
@@ -20,29 +18,35 @@ import type { VoiceConfig } from "./config.js";
  * it is used here only to sign a short-lived JWT, which is the only
  * thing sent to the browser. See docs/privacy/VOICE_THREAT_MODEL.md.
  *
- * Trust model (REVISED): the browser supplies only an opaque capability
+ * Trust model: the browser supplies only an opaque capability
  * (see `apps/server/src/voice/capability.ts`), never a `playerId` or
  * nickname — those are resolved server-side, from the capability, via
  * `resolveCapability` (in practice, `WorldServer.resolveVoiceSession`).
- * This closes a real vulnerability in the original design: every
+ * This matters because every
  * connected client already learns every other player's `playerId`
  * through the ordinary multiplayer protocol
  * (`player_snapshot`/`player_joined`), so trusting a client-supplied
  * `playerId` directly would let any client request a voice token *as*
  * another visible player (LiveKit participant identity is a
  * routing/security identity, not cosmetic). A `playerId`/nickname field
- * in the request body, if present, is now simply never read — there is
+ * in the request body, if present, is simply never read — there is
  * no code path from an attacker-supplied value to the minted token.
  */
 
 const MAX_BODY_BYTES = 1024;
 const MAX_CAPABILITY_LENGTH = 128; // base64url of 32 random bytes is 43 chars; generous headroom without inviting a large-body attempt
-const TOKEN_TTL_SECONDS = 600; // short-lived — CORE-004 §10
+const TOKEN_TTL_SECONDS = 600; // short-lived: ten minutes
 
 const CONTROL_CHAR_PATTERN = /[\u0000-\u001F\u007F]/;
 
 export interface VoiceTokenRequest {
   capability: string;
+  /**
+   * Watch mode (ADR-014 § 5): a subscribe-only grant for watching the Watch Hall
+   * stage without a wallet. Present only when the body said `listenOnly: true`. It can only
+   * narrow the grant — no request field can widen it.
+   */
+  listenOnly?: true;
 }
 
 export interface VoiceTokenResponse {
@@ -55,7 +59,25 @@ export interface VoiceTokenResponse {
 export interface VoiceIdentity {
   playerId: string;
   nickname: string;
+  /**
+   * ADR-015 § 5: whether the session is a wallet holder. Only holders get the full
+   * (publishing) grant; a guest may only listen. Read from live session state, never the request.
+   */
+  canReceive: boolean;
+  /**
+   * The server-verified permission to publish — an owned name (fee-confirmed or claimed by key) while a
+   * name registry runs; the holder flag (canReceive) otherwise. Read from live session state, never the request.
+   */
+  canTalk: boolean;
 }
+
+/** The 403 body when a guest asks for the full grant (ADR-015: speaking needs a wallet; listening does not). */
+export const WALLET_REQUIRED_ERROR = "wallet_required";
+/**
+ * The 403 body when a wallet holder without an owned name asks for the full grant while a name registry
+ * runs (the holder flag is client-asserted; an owned name is checked by the server).
+ */
+export const NAME_REQUIRED_ERROR = "name_required";
 
 function isValidCapability(value: unknown): value is string {
   return (
@@ -68,30 +90,60 @@ function isValidCapability(value: unknown): value is string {
 
 /**
  * Exported for unit testing without an HTTP round-trip. Deliberately
- * reads ONLY `body.capability` — an extra `playerId`/`nickname` field
- * in the request body (e.g. an attacker trying to resurrect the old
- * trust model) is silently ignored, never merged into the result. See
- * `tokenHandler.test.ts`'s impersonation-attempt tests.
+ * reads ONLY `body.capability` and the optional `body.listenOnly` flag —
+ * an extra `playerId`/`nickname` field in the request body (e.g. an
+ * attacker trying to claim another identity) is silently
+ * ignored, never merged into the result. See `tokenHandler.test.ts`'s
+ * impersonation-attempt tests.
  */
 export function parseVoiceTokenRequest(raw: unknown): VoiceTokenRequest | null {
   if (typeof raw !== "object" || raw === null) return null;
   const body = raw as Record<string, unknown>;
   if (!isValidCapability(body.capability)) return null;
-  return { capability: body.capability };
+  if (body.listenOnly !== undefined && typeof body.listenOnly !== "boolean") return null;
+  return body.listenOnly === true ? { capability: body.capability, listenOnly: true } : { capability: body.capability };
 }
 
-/** Mints a scoped, short-lived LiveKit token for the given (already server-resolved) identity. No recording grant is ever issued — see CORE-004 §7. */
-export async function mintVoiceToken(config: VoiceConfig, identity: VoiceIdentity): Promise<VoiceTokenResponse> {
+export interface MintOptions {
+  /** Watch mode: subscribe only (no publishing of any source, no metadata updates). */
+  listenOnly?: boolean;
+}
+
+/** Mints a scoped, short-lived LiveKit token for the given (already server-resolved) identity. No recording grant is ever issued. */
+export async function mintVoiceToken(config: VoiceConfig, identity: VoiceIdentity, options: MintOptions = {}): Promise<VoiceTokenResponse> {
   const token = new AccessToken(config.apiKey, config.apiSecret, {
     identity: identity.playerId, // the opaque multiplayer session id — the voice security identity
     name: identity.nickname, // display metadata only, mirrors the social nickname — never the security identity
     ttl: TOKEN_TTL_SECONDS,
   });
+  if (options.listenOnly) {
+    // ADR-014 § 5 watch mode: a strictly narrower grant than the one below — it can hear the
+    // stage and the stage/floor microphones but can publish nothing (no microphone, no screen,
+    // no data, no attributes). Talking and presenting still need the wallet-gated normal grant.
+    token.addGrant({
+      room: config.roomName,
+      roomJoin: true,
+      canPublish: false,
+      canPublishSources: [],
+      canPublishData: false,
+      canSubscribe: true,
+      canUpdateOwnMetadata: false,
+    });
+    return { token: await token.toJwt(), url: config.url, roomName: config.roomName };
+  }
   token.addGrant({
     room: config.roomName,
     roomJoin: true,
     canPublish: true,
+    // Microphone and (consented, in-world) screen share only — no webcam publishing.
+    // SCREEN_SHARE_AUDIO carries the stage holder's tab audio.
+    canPublishSources: [TrackSource.MICROPHONE, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
     canSubscribe: true,
+    // The client never uses LiveKit data messages — no data channel to publish on.
+    canPublishData: false,
+    // Lets a client publish its own voice range ("whisper" / "talk" / "shout") as a participant
+    // attribute. Display names in the game come from the multiplayer server, never from LiveKit.
+    canUpdateOwnMetadata: true,
     // roomRecord intentionally omitted — this grant has no recording
     // capability of any kind, enforced at the token layer, not just by
     // this application never calling a recording API.
@@ -184,7 +236,22 @@ export function createVoiceTokenHandler(
           res.writeHead(403).end(); // unknown, revoked, or superseded capability — never treated as "fall back to anything browser-supplied"
           return;
         }
-        return mintVoiceToken(config, identity).then((response) => {
+        // ADR-015 § 5: a guest may listen (the listen-only grant is unchanged) but
+        // never publish — the full grant needs a wallet holder. A second layer behind the client's
+        // own gate.
+        if (parsed.listenOnly !== true && !identity.canReceive) {
+          res.setHeader("Content-Type", "application/json");
+          res.writeHead(403).end(JSON.stringify({ error: WALLET_REQUIRED_ERROR }));
+          return;
+        }
+        // The holder flag is client-asserted, so while a name registry runs the full grant also needs an
+        // owned name — something the server verified (a fee payment or a signature by the name key).
+        if (parsed.listenOnly !== true && !identity.canTalk) {
+          res.setHeader("Content-Type", "application/json");
+          res.writeHead(403).end(JSON.stringify({ error: NAME_REQUIRED_ERROR }));
+          return;
+        }
+        return mintVoiceToken(config, identity, { listenOnly: parsed.listenOnly === true }).then((response) => {
           res.setHeader("Content-Type", "application/json");
           res.writeHead(200).end(JSON.stringify(response));
         });
@@ -192,7 +259,7 @@ export function createVoiceTokenHandler(
       .catch(() => {
         // Malformed JSON, oversized body, or a token-signing failure —
         // never leak internals (no stack trace, no SDP/ICE/secret data,
-        // see CORE-004 §31) to the client.
+        // see docs/privacy/VOICE_THREAT_MODEL.md) to the client.
         if (!res.headersSent) res.writeHead(400).end();
       });
   };

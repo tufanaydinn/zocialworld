@@ -9,7 +9,7 @@
  * Strategy (documented in full in docs/protocols/multiplayer-protocol.md
  * § Interpolation strategy): keep a short buffer of recently received
  * `(t, x, y, z, rotationY)` samples, keyed by *local receive time*
- * (not the server's own clock — CORE-002 does no clock synchronization,
+ * (not the server's own clock — there is no clock synchronization,
  * so mixing local and server time for interpolation math would be
  * meaningless). Render at `now - RENDER_DELAY_MS`, lerping between the
  * two samples that bracket that time. If the render time has run past
@@ -75,6 +75,53 @@ export class InterpolationBuffer {
 
   get sampleCount(): number {
     return this.samples.length;
+  }
+
+  /**
+   * `sample` without allocating (every remote player samples every frame): writes the transform at
+   * `renderTime` into `out` and returns it, or returns `null` (leaving `out` alone) if nothing has been pushed yet.
+   */
+  sampleInto(renderTime: number, out: InterpolatedTransform): InterpolatedTransform | null {
+    const samples = this.samples;
+    const count = samples.length;
+    if (count === 0) return null;
+    const first = samples[0]!;
+    const last = samples[count - 1]!;
+    let a = first;
+    let b = first;
+    let alpha = 0;
+    if (count > 1 && renderTime > first.t) {
+      if (renderTime >= last.t) {
+        a = last;
+        b = last;
+      } else {
+        a = last;
+        b = last;
+        for (let i = 0; i < count - 1; i++) {
+          const from = samples[i]!;
+          const to = samples[i + 1]!;
+          if (renderTime >= from.t && renderTime <= to.t) {
+            const span = to.t - from.t;
+            a = from;
+            b = to;
+            alpha = span <= 0 ? 1 : (renderTime - from.t) / span;
+            break;
+          }
+        }
+      }
+    }
+    if (a === b) {
+      out.x = a.x;
+      out.y = a.y;
+      out.z = a.z;
+      out.rotationY = a.rotationY;
+      return out;
+    }
+    out.x = lerp(a.x, b.x, alpha);
+    out.y = lerp(a.y, b.y, alpha);
+    out.z = lerp(a.z, b.z, alpha);
+    out.rotationY = lerpAngle(a.rotationY, b.rotationY, alpha);
+    return out;
   }
 
   /** Returns the interpolated transform at `renderTime` (same clock as the `t` values pushed), or `null` if nothing has been pushed yet. */

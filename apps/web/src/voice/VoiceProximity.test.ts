@@ -6,17 +6,19 @@ import {
   resolveVoiceGain,
   VOICE_FULL_VOLUME_RADIUS_METERS,
   VOICE_MAX_AUDIBLE_RADIUS_METERS,
+  VOICE_RANGES,
+  parseVoiceRange,
+  resolveSpeakerGain,
+  shouldSubscribe,
 } from "./VoiceProximity.ts";
 
-// CORE-004 §33 Tests 1-4.
-
-test("Test 1: returns full volume at and inside the full-volume radius", () => {
+test("returns full volume at and inside the full-volume radius", () => {
   assert.equal(getVoiceGain(0), 1);
   assert.equal(getVoiceGain(1), 1);
   assert.equal(getVoiceGain(VOICE_FULL_VOLUME_RADIUS_METERS), 1);
 });
 
-test("Test 2: declines smoothly (monotonically, no jumps) between full and max radius", () => {
+test("declines smoothly (monotonically, no jumps) between full and max radius", () => {
   const samples = [];
   for (let d = VOICE_FULL_VOLUME_RADIUS_METERS; d <= VOICE_MAX_AUDIBLE_RADIUS_METERS; d += 0.5) {
     samples.push(getVoiceGain(d));
@@ -39,19 +41,19 @@ test("Test 2: declines smoothly (monotonically, no jumps) between full and max r
   assert.ok(midGain > 0.1 && midGain < 0.9, `midpoint gain ${midGain} is not meaningfully between 0 and 1`);
 });
 
-test("Test 2b: the attenuation curve is continuous at both boundaries (no audible click)", () => {
+test("the attenuation curve is continuous at both boundaries (no audible click)", () => {
   const epsilon = 0.001;
   assert.ok(Math.abs(getVoiceGain(VOICE_FULL_VOLUME_RADIUS_METERS - epsilon) - getVoiceGain(VOICE_FULL_VOLUME_RADIUS_METERS)) < 0.01);
   assert.ok(Math.abs(getVoiceGain(VOICE_MAX_AUDIBLE_RADIUS_METERS + epsilon) - getVoiceGain(VOICE_MAX_AUDIBLE_RADIUS_METERS)) < 0.01);
 });
 
-test("Test 3: returns zero at and beyond the max audible radius", () => {
+test("returns zero at and beyond the max audible radius", () => {
   assert.equal(getVoiceGain(VOICE_MAX_AUDIBLE_RADIUS_METERS), 0);
   assert.equal(getVoiceGain(VOICE_MAX_AUDIBLE_RADIUS_METERS + 1), 0);
   assert.equal(getVoiceGain(1000), 0);
 });
 
-test("Test 4: voice constants are distinct from SOCIAL_INTERACTION_RADIUS_METERS — the nearby-selection radius is not reused as the voice radius", () => {
+test("voice constants are distinct from SOCIAL_INTERACTION_RADIUS_METERS — the nearby-selection radius is not reused as the voice radius", () => {
   // Deliberately NOT importing SOCIAL_INTERACTION_RADIUS_METERS here —
   // the point of this test is that the voice module defines its own
   // independent constants rather than accidentally importing/reusing
@@ -77,8 +79,8 @@ test("custom radii parameters override the defaults correctly", () => {
   assert.equal(getVoiceGain(25, 10, 20), 0); // beyond custom max radius
 });
 
-// CORE-004 §33 Test 5: local mute state suppresses voice for the muted player.
-test("Test 5: a muted player is silent regardless of distance", () => {
+// Local mute state suppresses voice for the muted player.
+test("a muted player is silent regardless of distance", () => {
   assert.equal(resolveVoiceGain(0, { muted: true, blocked: false }), 0);
   assert.equal(resolveVoiceGain(1, { muted: true, blocked: false }), 0);
   // Even standing right next to them (would otherwise be full volume).
@@ -90,8 +92,8 @@ test("an unmuted, unblocked player at distance follows the normal attenuation cu
   assert.equal(resolveVoiceGain(distance, { muted: false, blocked: false }), getVoiceGain(distance));
 });
 
-// CORE-004 §33 Test 6: local block state suppresses voice for the blocked player.
-test("Test 6: a blocked player is silent regardless of distance", () => {
+// Local block state suppresses voice for the blocked player.
+test("a blocked player is silent regardless of distance", () => {
   assert.equal(resolveVoiceGain(0, { muted: false, blocked: true }), 0);
   assert.equal(resolveVoiceGain(1, { muted: false, blocked: true }), 0);
   assert.equal(resolveVoiceGain(VOICE_FULL_VOLUME_RADIUS_METERS, { muted: false, blocked: true }), 0);
@@ -99,4 +101,33 @@ test("Test 6: a blocked player is silent regardless of distance", () => {
 
 test("mute and block suppression compose (either one alone is enough to silence)", () => {
   assert.equal(resolveVoiceGain(0, { muted: true, blocked: true }), 0);
+});
+
+// ---------------------------------------------------------------- speaking ranges
+
+test("speaking ranges: a whisper is silent where talk is still audible, shout reaches furthest", () => {
+  const none = { muted: false, blocked: false };
+  assert.equal(resolveSpeakerGain(5, none, "whisper"), 0);
+  assert.ok(resolveSpeakerGain(5, none, "talk") > 0);
+  assert.equal(resolveSpeakerGain(20, none, "talk"), 0);
+  assert.ok(resolveSpeakerGain(20, none, "shout") > 0);
+  assert.equal(resolveSpeakerGain(VOICE_RANGES.shout.max, none, "shout"), 0);
+});
+
+test("speaker gain applies per-player and master volume, clamped, and mute/block still win", () => {
+  const none = { muted: false, blocked: false };
+  assert.equal(resolveSpeakerGain(0, none, "talk", 0.5, 1), 0.5);
+  assert.equal(resolveSpeakerGain(0, none, "talk", 2, 2), 2);
+  assert.equal(resolveSpeakerGain(0, { muted: true, blocked: false }, "shout", 2, 2), 0);
+  assert.equal(resolveSpeakerGain(0, { muted: false, blocked: true }, "talk"), 0);
+});
+
+test("subscription uses hysteresis and unknown range values fall back to talk", () => {
+  assert.equal(shouldSubscribe(14, "talk", false), true);
+  assert.equal(shouldSubscribe(17, "talk", false), false);
+  assert.equal(shouldSubscribe(17, "talk", true), true, "already subscribed: keep until further out");
+  assert.equal(shouldSubscribe(25, "talk", true), false);
+  assert.equal(parseVoiceRange("shout"), "shout");
+  assert.equal(parseVoiceRange("megaphone"), "talk");
+  assert.equal(parseVoiceRange(undefined), "talk");
 });

@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { ProjectBoothInteractable } from "./ProjectBoothInteractable.ts";
 import { PROJECTS } from "./projectData.ts";
 
-// CORE-005 § 31 Test 12: a booth referencing an unknown project fails loudly.
+// A booth referencing an unknown project fails loudly.
 test("Test 12: a booth referencing an unknown projectId throws at construction", () => {
   assert.throws(
     () =>

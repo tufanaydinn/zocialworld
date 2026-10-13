@@ -1,86 +1,109 @@
 # Contributing
 
-Thank you for your interest in this project.
+Thank you for your interest in Zocial World. This guide covers the workflow, the checks a change must
+pass, how the code is organised around content, and how architecture decisions are made.
 
-## Development Workflow
+## Workflow
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes
-4. Run validation locally (see below)
-5. Push to your fork and open a pull request
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Make your change, with tests.
+4. Run the checks below.
+5. Push to your fork and open a pull request that explains what changed and why.
 
-## Local Setup
+## Local setup
+
+Requirements: Node.js 22 and npm.
 
 ```bash
-# Install dependencies
 npm install
-
-# Run development servers (web client + multiplayer server)
-npm run dev
-
-# Type checking
-npm run typecheck
-
-# Run unit tests
-npm test
-
-# Run end-to-end tests
-npm run test:e2e
+npm run dev          # web client (http://localhost:5174), game server (port 8787) and a local LiveKit
 ```
 
-## Code Quality
+`npm run dev` uses the `test` network and the sample content. The wallet engine build is not in this
+repository yet (its build scripts will be published separately later), so the wallet runs on a stand-in
+engine that reports "not installed"; everything else works. `npm run assets:fetch` downloads the optional
+third-party model packs. See [apps/web/README.md](apps/web/README.md) and
+[apps/server/README.md](apps/server/README.md), which also explain local multi-user testing.
 
-Before pushing, ensure:
-- **No TypeScript errors:** `npm run typecheck`
-- **No build errors:** `npm run build`
-- **Tests pass:** `npm test` and `npm run test:e2e`
+## Checks
 
-## Manual Verification
+Before you push:
 
-Some features require manual testing with real input devices:
-
-### Camera and Mouse-Look (CORE-001)
-1. `npm run dev` from the repository root
-2. Open the app in a real browser and click the canvas
-3. Confirm the cursor disappears and mouse movement orbits the camera
-4. Confirm mouse wheel zooms the camera smoothly
-5. Walk toward a building and confirm the camera pulls in without clipping through walls
-6. Press Esc to unlock the pointer
-
-### Social Features (CORE-003)
-When adding social identity features, test with two real browser windows:
-1. `npm run dev`
-2. Open two browser tabs/windows at the dev URL
-3. Set nicknames in each (e.g., "Alice" and "Bob")
-4. Walk one player near the other and press E to open the player context card
-5. Test Block functionality: confirm the blocked player's nameplate disappears locally
-6. Confirm the project board interaction (`[E] View Projects`) continues to work normally
-
-### Voice Testing (CORE-004)
-
-**Automated tests** verify the connection/subscription pipeline without real audio:
 ```bash
-npm run test:e2e
+npm run typecheck                        # TypeScript across every workspace
+npm test                                 # all of the following:
+npm run test:unit                        #   client unit tests (apps/web)
+npm run test:server                      #   game server tests (apps/server)
+npm run test:scripts                     #   tests of the scripts under scripts/
+VITE_ZCASH_NETWORK=test npm run build    # production build
+npm run test:e2e                         # Playwright end-to-end tests on the sample content
 ```
 
-**Real voice testing** requires a self-hosted LiveKit server (not part of default CI):
-1. Run `livekit-server --dev` in a separate terminal and note the printed `devkey` and `secret`
-2. Copy `devkey` and `secret` into `apps/server/.env` as `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`
-3. `npm run dev`
-4. Open two browser tabs with real microphone/speaker devices (or real headphones to avoid feedback)
-5. Click "Enable Voice" in each tab
-6. Hold `V` and speak; confirm the other tab hears the voice with distance-based attenuation
-7. Test Mute and Block on the player context card
+Some tests need external infrastructure and are skipped by default: the specs that run against a real
+LiveKit server (`voice-integration.spec.ts`, `watch-hall-voice-real.spec.ts`,
+`watch-stage-integration.spec.ts`, `moderation-livekit-real.spec.ts`). See
+[tests/e2e/README.md](tests/e2e/README.md) for how to run them.
 
-## Guidelines
+## Systems and content
 
-- Do not commit `.env` files or secrets of any kind — `.env.example` files are public and tracked
-- External assets (models, textures, audio) must have compatible open-source licenses documented in `assets/LICENSES.md`
-- Changes to privacy/security-sensitive systems (multiplayer presence, voice transport, wallet integration) require careful review — see `docs/privacy/PRIVACY_MODEL.md`
-- Real LiveKit/SFU voice integration tests (`voice-integration.spec.ts`) require external infrastructure and are skipped by default — see `tests/e2e/README.md` for manual verification procedures
-- Experimental wallet functionality must never be used with meaningful funds unless explicitly documented as production-ready
+The client separates **systems** (rendering, movement, collision, networking, voice, the Watch Hall and
+learning logic) from **content** (the locations, travel destinations, the Watch Hall layout, the lessons
+and the scene's atmosphere).
 
-## Questions?
+- Systems never import content. The composition root, `apps/web/src/core/App.ts`, resolves one content
+  provider and hands its parts to the systems that need them.
+- This repository ships **sample content** in `apps/web/src/content/sample/`: the prototype plaza, a small
+  Watch Hall with one row of seats, and three lessons. The hosted deployment adds its own content module,
+  which is maintained separately. A plain checkout resolves to the sample content.
+- The game server follows the same pattern: the Watch Hall schedule comes from a catalogue file the
+  operator provides, and falls back to the sample catalogue in
+  `apps/server/src/content/watchCatalog.sample.ts`.
+- End-to-end tests stand players at named anchors (`apps/web/src/debug/anchors.ts`), never at hard-coded
+  coordinates, so the same spec runs on any content that publishes the anchors it needs.
 
-See `docs/architecture/OVERVIEW.md` for system design overview and `docs/decisions/` for architecture decisions.
+When you add a system, give it an interface the content can fill, and extend the sample content so the
+system can be tried in `npm run dev` and the tests. Do not add production-scale world layouts, original
+artwork or curriculum to this repository. See
+[apps/web/src/content/README.md](apps/web/src/content/README.md).
+
+## Comments
+
+A comment explains what the code does, why, and which constraint it protects. It does not say who asked
+for the change, which ticket or review produced it, or where the code came from: that belongs in the
+commit message and the pull request. If a rule is not obvious from the code, write the rule down.
+
+```ts
+// Bad:  // Fixed after the review in issue 123
+// Good: // Scratch vectors, so a frame allocates nothing.
+```
+
+## Architecture decisions
+
+Changes that touch the client stack, the camera model, the collision approach, the repository structure,
+the wire protocol, the privacy boundaries or anything else with a recorded decision need an
+Architecture Decision Record. Read [docs/decisions/README.md](docs/decisions/README.md) first: it lists
+the published ADRs and explains how to propose a new one. A pull request that changes a recorded
+decision includes the new or superseding ADR.
+
+## Privacy and security
+
+- Changes to privacy-sensitive systems (multiplayer presence, chat, voice, identity, the wallet and
+  payments) need careful review. Read [docs/privacy/PRIVACY_MODEL.md](docs/privacy/PRIVACY_MODEL.md) and
+  the threat model of the system you change, and update the threat model in the same pull request.
+- Never commit `.env` files, keys, seeds or other secrets. `.env.example` files hold placeholders only.
+- Use the `test` network for development. Never test with meaningful funds.
+- Report vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
+
+## Assets
+
+Third-party assets must have a licence that allows redistribution, recorded in
+[assets/LICENSES.md](assets/LICENSES.md) and [assets/asset-registry.json](assets/asset-registry.json)
+(source, version, licence, and whether the file was modified). Do not assume that an entire asset site
+has one licence. Original Zocial World artwork is not part of this repository; see
+[assets/ART_AND_ASSETS_LICENSE.md](assets/ART_AND_ASSETS_LICENSE.md).
+
+## Questions
+
+Start with [docs/architecture/OVERVIEW.md](docs/architecture/OVERVIEW.md) for the system design and
+[docs/decisions/](docs/decisions/) for the decisions behind it.

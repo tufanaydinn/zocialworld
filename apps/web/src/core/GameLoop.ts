@@ -45,7 +45,9 @@ export class GameLoop {
 
     const rawDelta = (nowMs - this.lastTimeMs) / 1000;
     this.lastTimeMs = nowMs;
-    const delta = Math.min(rawDelta, MAX_DELTA_SECONDS);
+    // Never negative either: the first frame's timestamp can predate start() by seconds on a loaded machine,
+    // which used to push every accumulator (e.g. the 10 Hz transform publish timer) far below zero.
+    const delta = Math.min(Math.max(rawDelta, 0), MAX_DELTA_SECONDS);
     this.elapsedSeconds += delta;
 
     this.updateCallback(delta, this.elapsedSeconds);

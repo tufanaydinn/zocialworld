@@ -5,9 +5,8 @@ import type { RemotePlayer } from "../networking/RemotePlayer.ts";
 /**
  * Adapts a `RemotePlayer` into the existing `Interactable` contract so
  * `InteractionSystem` can treat "the nearest remote player" exactly like
- * any other world interactable (CORE-003 §8/§17: "nearest valid
- * interactable wins" — see docs/architecture/OVERVIEW.md §
- * Player selection for the full precedence rule). No changes to
+ * any other world interactable ("nearest valid interactable wins" —
+ * see docs/architecture/OVERVIEW.md for the full precedence rule). No changes to
  * `InteractionSystem` itself were needed for this.
  *
  * `position` returns the SAME `THREE.Vector3` instance `RemotePlayer`

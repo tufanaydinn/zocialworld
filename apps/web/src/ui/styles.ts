@@ -1,13 +1,12 @@
 /**
  * Shared UI styling, injected once as a single <style> tag.
  *
- * Deviation from the file list in the task spec (which only named
- * InteractionPrompt.ts and PrototypePanel.ts under ui/): a shared
- * stylesheet module avoids duplicating the "dark translucent panel,
- * amber accent" look across every widget. See docs/OVERVIEW.md.
+ * A shared stylesheet module avoids duplicating the "dark translucent
+ * panel, amber accent" look across every widget. See
+ * docs/architecture/OVERVIEW.md.
  *
- * Per master spec section 67: fantasy 3D world, modern readable UI —
- * dark translucent panels, amber accent, rounded corners, sans-serif.
+ * The look: fantasy 3D world, modern readable UI — dark translucent
+ * panels, amber accent, rounded corners, sans-serif.
  */
 
 let injected = false;
@@ -161,6 +160,46 @@ const CSS = `
   text-align: center;
 }
 
+.zw-chat-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 240px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255, 250, 240, 0.94);
+  color: #241a10;
+  font: 600 13px/1.35 "Segoe UI", system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  will-change: transform;
+  overflow-wrap: anywhere;
+  z-index: 2;
+}
+.zw-chat-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-bottom: 0;
+  border-top-color: rgba(255, 250, 240, 0.94);
+}
+.zw-nameplate-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #2f6fb0;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
 .zw-nameplate {
   position: absolute;
   top: 0;
@@ -171,6 +210,13 @@ const CSS = `
   white-space: nowrap;
   pointer-events: none;
   will-change: transform;
+  /* No backdrop blur — a full hall is 60 plates over the big screen, each one a blurred
+     compositor layer. A denser panel and a text shadow keep the name legible instead. */
+  backdrop-filter: none;
+  background: rgba(14, 15, 21, 0.86);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  /* The player's avatar colour as a thin underline (cosmetic; no wallet badge on plates). */
+  box-shadow: inset 0 -2px 0 var(--zw-accent, transparent);
 }
 
 .zw-connection-status {
@@ -233,7 +279,7 @@ const CSS = `
   font-family: inherit;
   font-size: 12px;
   cursor: pointer;
-  text-decoration: none; /* also used on <a> elements — CORE-005's external project links */
+  text-decoration: none; /* also used on <a> elements — the external project links */
 }
 
 .zw-button:hover:not(:disabled) {
@@ -277,6 +323,30 @@ const CSS = `
 
 .zw-nickname-controls .zw-button {
   padding: 4px 10px;
+}
+
+/* Guests cannot choose a name — a dimmed, read-only input and the way to a wallet. Kept as
+   narrow as the holder's row (no "Nickname:" label, a two-line button): the bottom row is shared with the
+   centred action bar, whose right-hand buttons must stay clickable. */
+.zw-nickname-controls .zw-button[hidden] {
+  display: none;
+}
+.zw-nickname-controls[data-guest="true"] .zw-nickname-label {
+  display: none;
+}
+.zw-nickname-controls[data-guest="true"] .zw-input {
+  width: 96px;
+  opacity: 0.6;
+  cursor: default;
+}
+.zw-nickname-controls .zw-nickname-connect {
+  max-width: 128px;
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: normal;
+  text-align: left;
+  color: #ffd36a;
 }
 
 /* A separate backdrop class from .zw-modal-backdrop (rather than sharing
@@ -340,7 +410,7 @@ const CSS = `
   padding: 4px 10px;
 }
 
-/* CORE-005: project discovery (ProjectDiscoveryPanel / ProjectDetailPanel) */
+/* Project discovery (ProjectDiscoveryPanel / ProjectDetailPanel) */
 
 .zw-project-discovery-hidden {
   display: none;
@@ -360,7 +430,7 @@ const CSS = `
 }
 
 /* Reset button chrome so a <button> card reads identically to the plain
-   .zw-project-card div it replaces (CORE-005 §40: real <button>
+   .zw-project-card div it replaces (real <button>
    elements for accessibility, not a div with a click handler). */
 .zw-project-card-button {
   display: block;

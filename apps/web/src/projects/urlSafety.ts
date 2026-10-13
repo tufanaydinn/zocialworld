@@ -1,5 +1,5 @@
 /**
- * CORE-005 § 15: external link safety. The ONLY function anything in
+ * External link safety. The ONLY function anything in
  * this module ever uses to decide whether a project's `websiteUrl`/
  * `repositoryUrl`/`socialUrl` may be rendered as a clickable link — see
  * `ProjectDetailPanel.ts`. Never render an unvalidated registry string
@@ -30,8 +30,7 @@ export function isSafeExternalUrl(value: string | undefined | null): value is st
  * Builds a safe `<a>` element for an already-`isSafeExternalUrl()`-checked
  * URL — never called with an unchecked value (callers must check first;
  * this throws rather than silently rendering an unsafe link if misused).
- * `rel="noopener noreferrer"` on every `target="_blank"` link, per CORE-005
- * § 15.
+ * `rel="noopener noreferrer"` on every `target="_blank"` link.
  */
 export function createSafeExternalLink(url: string, label: string): HTMLAnchorElement {
   if (!isSafeExternalUrl(url)) throw new Error(`createSafeExternalLink: refusing to render unsafe URL "${url}"`);
@@ -39,6 +38,6 @@ export function createSafeExternalLink(url: string, label: string): HTMLAnchorEl
   anchor.href = url;
   anchor.target = "_blank";
   anchor.rel = "noopener noreferrer";
-  anchor.textContent = label; // text node only — never innerHTML, see CORE-005 § 39
+  anchor.textContent = label; // text node only — never innerHTML
   return anchor;
 }

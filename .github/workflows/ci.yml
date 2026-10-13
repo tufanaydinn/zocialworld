@@ -28,8 +28,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build
+      # A build fails closed without VITE_ZCASH_NETWORK (apps/web/.env is not committed), so CI names the network.
+      - name: Build (test-network client + server)
         run: npm run build
+        env:
+          VITE_ZCASH_NETWORK: test
 
       - name: Unit tests (client) + server tests
         run: npm test

@@ -2,8 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SocialStore } from "./SocialStore.ts";
 
-// CORE-003 §23 Test 8.
-
 test("a player is not blocked by default", () => {
   const store = new SocialStore();
   assert.equal(store.isBlocked("p1"), false);
@@ -35,7 +33,7 @@ test("a player is not muted by default", () => {
   assert.equal(store.isMuted("p1"), false);
 });
 
-// CORE-004 §19 Test 5: local mute state suppresses voice for the muted player.
+// Local mute state suppresses voice for the muted player.
 test("muting a player changes local relationship state", () => {
   const store = new SocialStore();
   store.mute("p1");
@@ -98,7 +96,7 @@ test("onChange does not fire for a no-op (blocking an already-blocked player)", 
   assert.equal(callCount, 0);
 });
 
-// CORE-003 §23 Test 9 (architectural half — see also WorldServer.test.ts /
+// Block privacy (architectural half — see also WorldServer.test.ts /
 // protocol.ts for "the server has no block-related message type at all").
 test("SocialStore has no network dependency — nothing it does can transmit block state", () => {
   // SocialStore's public surface only ever mutates in-memory Sets and

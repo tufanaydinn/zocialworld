@@ -1,0 +1,3884 @@
+[
+  {
+    "id": "kenney-fantasy-town-kit-2.0",
+    "creator": "Kenney (www.kenney.nl)",
+    "sourceUrl": "https://kenney.nl/assets/fantasy-town-kit",
+    "version": "2.0 (creation date 03-08-2025)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kenney-fantasy-town-kit-2.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/environment/kenney-fantasy-town",
+    "modified": false,
+    "notes": "All GLB models + Textures/colormap.png copied unmodified from \"Models/GLB format/\". variation-a.png from \"Models/Textures/\".",
+    "usedIn": "Modular building pieces (walls, roofs, doors, stairs), stalls, lanterns, fences, porch pieces, cart.",
+    "source": {
+      "kind": "zip",
+      "url": "https://kenney.nl/media/pages/assets/fantasy-town-kit/efe948d309-1754222374/kenney_fantasy-town-kit_2.0.zip",
+      "sha256": "1a7530c09f4d2fa2cdee259876f089334f8b1f27fa86a0c4f54ef86cdd8676ef",
+      "size": 3854691
+    },
+    "fileCount": 170,
+    "totalBytes": 2520491,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "size": 705
+      },
+      {
+        "path": "Textures/colormap.png",
+        "from": "Models/GLB format/Textures/colormap.png",
+        "sha256": "4aac939dc33195e35caf8c382ee3cb170054da763577f22d3c22692ec6afccdf",
+        "size": 11143
+      },
+      {
+        "path": "Textures/variation-a.png",
+        "from": "Models/Textures/variation-a.png",
+        "sha256": "d644fc35249e78f4436101d9e59795e42ecf4628a887e3cea5d2237317d51aff",
+        "size": 11243
+      },
+      {
+        "path": "balcony-wall-fence.glb",
+        "from": "Models/GLB format/balcony-wall-fence.glb",
+        "sha256": "16c43dfd257121fb93767e973b0fde09672502ca85383028c916e48126c049bc",
+        "size": 11236
+      },
+      {
+        "path": "balcony-wall.glb",
+        "from": "Models/GLB format/balcony-wall.glb",
+        "sha256": "3d504c3facb858d3110dcb2bba88af2c5be57d82bb07d52334a49195d022b84c",
+        "size": 7424
+      },
+      {
+        "path": "banner-green.glb",
+        "from": "Models/GLB format/banner-green.glb",
+        "sha256": "5c9a1bb7d564270306fe438fd4a141fc6de0d102b355bbd1d2710249c489868a",
+        "size": 10200
+      },
+      {
+        "path": "banner-red.glb",
+        "from": "Models/GLB format/banner-red.glb",
+        "sha256": "4e4a83de16e5979d2b34bb206d3bf3703a9039711bc658b37e3738d43090703d",
+        "size": 9988
+      },
+      {
+        "path": "blade.glb",
+        "from": "Models/GLB format/blade.glb",
+        "sha256": "ef54ee87322191f18f7bf93d065add896fc584578c4c913eb99ea0bb18495a14",
+        "size": 18792
+      },
+      {
+        "path": "cart-high.glb",
+        "from": "Models/GLB format/cart-high.glb",
+        "sha256": "4b0bce37e8645f3719a9032bf4d49048b7779ac891758ae6e2693238911c5eec",
+        "size": 88560
+      },
+      {
+        "path": "cart.glb",
+        "from": "Models/GLB format/cart.glb",
+        "sha256": "63503cd0a7398310e01aabc8e3663f711a7517394d23d179d0695157fee99d40",
+        "size": 52920
+      },
+      {
+        "path": "chimney-base.glb",
+        "from": "Models/GLB format/chimney-base.glb",
+        "sha256": "f7da0ca85be73a00f65aa297023e136e6bed93b7667ef49861a97ce89fd3a6e9",
+        "size": 8408
+      },
+      {
+        "path": "chimney-top.glb",
+        "from": "Models/GLB format/chimney-top.glb",
+        "sha256": "639eb7e9add8e491aa64aac94bd4ecbf1e67f8c628f3e0173f029f1c667b7590",
+        "size": 7896
+      },
+      {
+        "path": "chimney.glb",
+        "from": "Models/GLB format/chimney.glb",
+        "sha256": "a15cdbd13860092f6d793e5b785043eb90a49cdaa725bb71df9fd154ca68dac6",
+        "size": 4656
+      },
+      {
+        "path": "fence-broken.glb",
+        "from": "Models/GLB format/fence-broken.glb",
+        "sha256": "caa25191602fd94389e022c8e1f6a4963dd3b1457768e3ccff1dc8dbf4671aa4",
+        "size": 11960
+      },
+      {
+        "path": "fence-curved.glb",
+        "from": "Models/GLB format/fence-curved.glb",
+        "sha256": "be132586a950f4e4830815b909d9d53fb7e8653ff14c9f03c38c9fc550f4e797",
+        "size": 25408
+      },
+      {
+        "path": "fence-gate.glb",
+        "from": "Models/GLB format/fence-gate.glb",
+        "sha256": "cee58694ea5fdcca18e01318b355bfcd38eac6fad21b83f860039c287b150cc6",
+        "size": 46340
+      },
+      {
+        "path": "fence.glb",
+        "from": "Models/GLB format/fence.glb",
+        "sha256": "92261b9419108d84f3db0def5eadeffa783032029897562b1f512e4a7570ef48",
+        "size": 7672
+      },
+      {
+        "path": "fountain-center.glb",
+        "from": "Models/GLB format/fountain-center.glb",
+        "sha256": "bd2337361b7ce93c73b69d2a8d6fbf4fe6bcffea6469f16d1643c960781fa2ba",
+        "size": 3280
+      },
+      {
+        "path": "fountain-corner-inner-square.glb",
+        "from": "Models/GLB format/fountain-corner-inner-square.glb",
+        "sha256": "76c96385cddbe153a75088d717f63624ac5e1dd948e84f6ae540140d23825ec2",
+        "size": 6908
+      },
+      {
+        "path": "fountain-corner-inner.glb",
+        "from": "Models/GLB format/fountain-corner-inner.glb",
+        "sha256": "d92a3d5aa8e5fd8dd3c4b1349171b549c57b6fe7e49e3c4776ad5d0106ec37ee",
+        "size": 15000
+      },
+      {
+        "path": "fountain-corner.glb",
+        "from": "Models/GLB format/fountain-corner.glb",
+        "sha256": "fb63467da36c0e14799ac2071791f9cb537eb2558206c81abf0e280753e19176",
+        "size": 8272
+      },
+      {
+        "path": "fountain-curved.glb",
+        "from": "Models/GLB format/fountain-curved.glb",
+        "sha256": "aec3a6ebb4eda01f392054d3ee203d8cee74c9c45d584d3d9e5e2052949bca3e",
+        "size": 25048
+      },
+      {
+        "path": "fountain-edge.glb",
+        "from": "Models/GLB format/fountain-edge.glb",
+        "sha256": "e75beda6d401c6c5f6a55ddc40f560a51f901156cc7ec17ad6a8150dfaec5650",
+        "size": 6024
+      },
+      {
+        "path": "fountain-round-detail.glb",
+        "from": "Models/GLB format/fountain-round-detail.glb",
+        "sha256": "05cdd740e3175c2d3208d4cb6630a279a9b4cbc48393b28c92e3e40cca2a5d6b",
+        "size": 136888
+      },
+      {
+        "path": "fountain-round.glb",
+        "from": "Models/GLB format/fountain-round.glb",
+        "sha256": "8d19741e2cca6cbdce114b950b4aa12af625979bbc17b2910ef2366834af5565",
+        "size": 84848
+      },
+      {
+        "path": "fountain-square-detail.glb",
+        "from": "Models/GLB format/fountain-square-detail.glb",
+        "sha256": "c201d8e39a8699c5551c543f5dae7779b1303cce71d7769661e66282cd628f63",
+        "size": 32092
+      },
+      {
+        "path": "fountain-square.glb",
+        "from": "Models/GLB format/fountain-square.glb",
+        "sha256": "bc5613a8f1f514fac805f29f2f8f1ba3dd4cb64b449f51dd02cf565a3e5c9523",
+        "size": 27104
+      },
+      {
+        "path": "hedge-curved.glb",
+        "from": "Models/GLB format/hedge-curved.glb",
+        "sha256": "60e7a954c1dc308193f8330d624e59d8bd2f688d1d7c5b0c1da608eb5cd431c2",
+        "size": 26312
+      },
+      {
+        "path": "hedge-gate.glb",
+        "from": "Models/GLB format/hedge-gate.glb",
+        "sha256": "688772aecf1c61410bfe0a257f51082bccaabed65d1794bad04226d444e7629e",
+        "size": 8432
+      },
+      {
+        "path": "hedge-large-curved.glb",
+        "from": "Models/GLB format/hedge-large-curved.glb",
+        "sha256": "aee5d522711385fbc66f39c4f91e955a806b31128522ba2285c5d3374fbc9047",
+        "size": 25024
+      },
+      {
+        "path": "hedge-large-gate.glb",
+        "from": "Models/GLB format/hedge-large-gate.glb",
+        "sha256": "22525eeeb1075a220d552085100620b8f0de6877bb903e3407c455d365d89a33",
+        "size": 18072
+      },
+      {
+        "path": "hedge-large.glb",
+        "from": "Models/GLB format/hedge-large.glb",
+        "sha256": "f3aafd7064fcb53a1783cb04997d2f676038a55e0941bada74f39bcc7c86afd3",
+        "size": 9568
+      },
+      {
+        "path": "hedge.glb",
+        "from": "Models/GLB format/hedge.glb",
+        "sha256": "12001b57dbd3ccaddd217c49e541620137d3e835d873ce0bcedc0e01180a08a9",
+        "size": 6524
+      },
+      {
+        "path": "lantern.glb",
+        "from": "Models/GLB format/lantern.glb",
+        "sha256": "f270637e3083d6e84a30626ee05df2b09597a642985a7f5c3e4ab5bb1c7a8d55",
+        "size": 14984
+      },
+      {
+        "path": "overhang.glb",
+        "from": "Models/GLB format/overhang.glb",
+        "sha256": "515edba27d8c6326cee6f5912b7270224672f9f3dd61e43e85e1d504913ef19c",
+        "size": 7648
+      },
+      {
+        "path": "pillar-stone.glb",
+        "from": "Models/GLB format/pillar-stone.glb",
+        "sha256": "1eda742ccbc67ead6edead25c687f55d8671b88786b9e23c08ae7982bccb4b7c",
+        "size": 11324
+      },
+      {
+        "path": "pillar-wood.glb",
+        "from": "Models/GLB format/pillar-wood.glb",
+        "sha256": "569c83dade6063399576640e80db35c34e422817ec132419fc2e2695189be5cf",
+        "size": 5312
+      },
+      {
+        "path": "planks-half.glb",
+        "from": "Models/GLB format/planks-half.glb",
+        "sha256": "fe096b7ed7b29104724feab61d65ebc06966075955bf6e044eea635ef1076043",
+        "size": 10164
+      },
+      {
+        "path": "planks-opening.glb",
+        "from": "Models/GLB format/planks-opening.glb",
+        "sha256": "20540c1d80f8b4af816e139a31f6a385f436dbf2d03314176ab99ca35452e11c",
+        "size": 16360
+      },
+      {
+        "path": "planks.glb",
+        "from": "Models/GLB format/planks.glb",
+        "sha256": "619705afa7ad290bfa499a701fd7ea07210ad535126cb3abc245b6f16e1420ab",
+        "size": 11148
+      },
+      {
+        "path": "poles-horizontal.glb",
+        "from": "Models/GLB format/poles-horizontal.glb",
+        "sha256": "058d3816d57dca64dbc1e9a30e85c6e5e3aca2561bf57083acdce0ed3f375b29",
+        "size": 5660
+      },
+      {
+        "path": "poles.glb",
+        "from": "Models/GLB format/poles.glb",
+        "sha256": "5e6e9cbbcf29b042191781f830f928471c57f1dc7843ee33e2f7c1bff3edf522",
+        "size": 4212
+      },
+      {
+        "path": "road-bend.glb",
+        "from": "Models/GLB format/road-bend.glb",
+        "sha256": "a4d8fbe9080849dccb45de7ac5f5ded2e17a3d893b8c07338e24193b28e1f03f",
+        "size": 25044
+      },
+      {
+        "path": "road-corner-inner.glb",
+        "from": "Models/GLB format/road-corner-inner.glb",
+        "sha256": "0a998ac30f4be6f3a7d9f2e1f4e61edf35c5d9d99201b1389024921d45038661",
+        "size": 13552
+      },
+      {
+        "path": "road-corner.glb",
+        "from": "Models/GLB format/road-corner.glb",
+        "sha256": "96525a726a15410faf52bb4b813a985704fdbca37aec6d93808b8c18b9ec1e7d",
+        "size": 13736
+      },
+      {
+        "path": "road-curb-end.glb",
+        "from": "Models/GLB format/road-curb-end.glb",
+        "sha256": "d3381ca4cae823dfa3f5f361810b6259197486e73c083793ac62ca312f182f6e",
+        "size": 4828
+      },
+      {
+        "path": "road-curb.glb",
+        "from": "Models/GLB format/road-curb.glb",
+        "sha256": "236faeba46e3a0f5e3ec2b80f8ed57048e5b95a1a407526ebda35a3da143317c",
+        "size": 2804
+      },
+      {
+        "path": "road-edge-slope.glb",
+        "from": "Models/GLB format/road-edge-slope.glb",
+        "sha256": "afbdfd9ef63c5c1dc9a99bb4f3ecbc94308300995b7958483014cd7f234484fc",
+        "size": 5724
+      },
+      {
+        "path": "road-edge.glb",
+        "from": "Models/GLB format/road-edge.glb",
+        "sha256": "fdefb02b17eddb4543379841a727c41a9ca0b800953a681974e63798f80ce410",
+        "size": 4912
+      },
+      {
+        "path": "road-slope.glb",
+        "from": "Models/GLB format/road-slope.glb",
+        "sha256": "97d7e6c5aa5762de408c2053ceed88b4be77ac6d3ca79588d11ab3e1e0fa9094",
+        "size": 2820
+      },
+      {
+        "path": "road.glb",
+        "from": "Models/GLB format/road.glb",
+        "sha256": "85630c89588bdc19285a7b5e894c1ddac69d7ce2b069966453800519e446f900",
+        "size": 2788
+      },
+      {
+        "path": "rock-large.glb",
+        "from": "Models/GLB format/rock-large.glb",
+        "sha256": "425bea0dd3c8d9198a067a2faad1df8860c5b9eb53560ce5c67347a79852b9d1",
+        "size": 18876
+      },
+      {
+        "path": "rock-small.glb",
+        "from": "Models/GLB format/rock-small.glb",
+        "sha256": "2f2ca3e9970124b81bde77cec3b1a337410a5c76336ce5dec5760aff1b415316",
+        "size": 12620
+      },
+      {
+        "path": "rock-wide.glb",
+        "from": "Models/GLB format/rock-wide.glb",
+        "sha256": "236082a8c9dec4cef61f00f7f77e4a2050d1083852af65d27dd3c16a53c54b64",
+        "size": 15172
+      },
+      {
+        "path": "roof-corner-inner.glb",
+        "from": "Models/GLB format/roof-corner-inner.glb",
+        "sha256": "2b2f61d1695b88acdef05f0263ed20fb3a4f8d5c6aee12d3f9e5cebe29e08d9c",
+        "size": 4464
+      },
+      {
+        "path": "roof-corner-round.glb",
+        "from": "Models/GLB format/roof-corner-round.glb",
+        "sha256": "86285841d25d70921548bce543ecde08b66e1171c49ee1cc6f6ddf23d7aa7577",
+        "size": 5836
+      },
+      {
+        "path": "roof-corner.glb",
+        "from": "Models/GLB format/roof-corner.glb",
+        "sha256": "122d00bf873e5928eecf334785f1daf005c6f04033552258e97bf1cb1000b353",
+        "size": 4996
+      },
+      {
+        "path": "roof-flat.glb",
+        "from": "Models/GLB format/roof-flat.glb",
+        "sha256": "48bc045365398c92291f65ab80038670b14f85974aadedc3d17847254a0881b5",
+        "size": 3448
+      },
+      {
+        "path": "roof-gable-detail.glb",
+        "from": "Models/GLB format/roof-gable-detail.glb",
+        "sha256": "41ffddc760e9599428310188d96a44af80f23a243f9255748f418fd70123fdc2",
+        "size": 12028
+      },
+      {
+        "path": "roof-gable-end.glb",
+        "from": "Models/GLB format/roof-gable-end.glb",
+        "sha256": "2ee635e8550180bb7840f7fdfff0b0835a34a425ffb903f19657cde65c261704",
+        "size": 6056
+      },
+      {
+        "path": "roof-gable-top.glb",
+        "from": "Models/GLB format/roof-gable-top.glb",
+        "sha256": "584761438f511db6c0c36a602b0cb7a84484acaebf94b96c722d6c8f188d57e9",
+        "size": 6572
+      },
+      {
+        "path": "roof-gable.glb",
+        "from": "Models/GLB format/roof-gable.glb",
+        "sha256": "4bb6bdbcadbb8ebeb69d720e29f6c2e57c99d98966baa41fd86914d3c13d6039",
+        "size": 7632
+      },
+      {
+        "path": "roof-high-corner-round.glb",
+        "from": "Models/GLB format/roof-high-corner-round.glb",
+        "sha256": "fa4736aa73d17b55b20b5cfcbfc83160c4a18a4e9563ede334d0c7d2327ed727",
+        "size": 6056
+      },
+      {
+        "path": "roof-high-corner.glb",
+        "from": "Models/GLB format/roof-high-corner.glb",
+        "sha256": "3ecd2f3fadaed67a2c713b272c7b8f73f60709752f8529bb34f9f92925123a4f",
+        "size": 5008
+      },
+      {
+        "path": "roof-high-cornerinner.glb",
+        "from": "Models/GLB format/roof-high-cornerinner.glb",
+        "sha256": "e1ab3e28f921d131c6f6ede216f6df1a0497ce1556fcfa94cacdce44b7ec31b3",
+        "size": 4284
+      },
+      {
+        "path": "roof-high-flat.glb",
+        "from": "Models/GLB format/roof-high-flat.glb",
+        "sha256": "ff3cff6e3fa40a6f82271b82c425d732f32374e14c1c63f7e9c0db1d55d54cb2",
+        "size": 3464
+      },
+      {
+        "path": "roof-high-gable-detail.glb",
+        "from": "Models/GLB format/roof-high-gable-detail.glb",
+        "sha256": "d0b95f79cca6bc347d9479fa7a80dfc2b65b56f0f1ed00799893a21b0d9b5f68",
+        "size": 12840
+      },
+      {
+        "path": "roof-high-gable-end.glb",
+        "from": "Models/GLB format/roof-high-gable-end.glb",
+        "sha256": "5f31970df848c6ffa95de3300f786bec2a331c63b1cb505ad893027ca67bf187",
+        "size": 6268
+      },
+      {
+        "path": "roof-high-gable-top.glb",
+        "from": "Models/GLB format/roof-high-gable-top.glb",
+        "sha256": "5e94a86388c83c330f2b7178e6fb96bdb6674528538e1c5b29d4acfca3de995a",
+        "size": 6568
+      },
+      {
+        "path": "roof-high-gable.glb",
+        "from": "Models/GLB format/roof-high-gable.glb",
+        "sha256": "21c54b2645ba33846f43410e6cef4d4f9239bc172bfb12f3227a6ec232977e2d",
+        "size": 7456
+      },
+      {
+        "path": "roof-high-left.glb",
+        "from": "Models/GLB format/roof-high-left.glb",
+        "sha256": "f4cf3fc08e5155015af7bd28dca8b2effe96fe3743276a5561119a3e7368cba4",
+        "size": 11376
+      },
+      {
+        "path": "roof-high-point.glb",
+        "from": "Models/GLB format/roof-high-point.glb",
+        "sha256": "dd26c8d572f05a4725317de01415a17819b2d12cf01c8907bb2116b4ad8e85e9",
+        "size": 6192
+      },
+      {
+        "path": "roof-high-right.glb",
+        "from": "Models/GLB format/roof-high-right.glb",
+        "sha256": "1c04bb5ecf61a660126cf28d64f2d06ddbf645a9e76598bb7af5828325968f79",
+        "size": 10996
+      },
+      {
+        "path": "roof-high-window.glb",
+        "from": "Models/GLB format/roof-high-window.glb",
+        "sha256": "b5bea885f9dc0a2b1195748a1c4b9994e16256ab740b6cdc6783ebbcf8b96946",
+        "size": 20732
+      },
+      {
+        "path": "roof-high.glb",
+        "from": "Models/GLB format/roof-high.glb",
+        "sha256": "7d39cd8fdcb8bd652d8a40f5f54e5e3d2c41bc1bb84691334f75bc411024cb12",
+        "size": 8088
+      },
+      {
+        "path": "roof-left.glb",
+        "from": "Models/GLB format/roof-left.glb",
+        "sha256": "ff3fdc7d3572ee0f20746ae4d5b02a6ad26c185468b48fd0950852231cf81f15",
+        "size": 12904
+      },
+      {
+        "path": "roof-point.glb",
+        "from": "Models/GLB format/roof-point.glb",
+        "sha256": "a7dfd157128e04105e976d7a47f772e95e4bd9f3d73b87a00b43861f406b94f8",
+        "size": 6180
+      },
+      {
+        "path": "roof-right.glb",
+        "from": "Models/GLB format/roof-right.glb",
+        "sha256": "5f88d69d73a0beb5d74a69928adcb8aa6464c4ec3ad34b7c154c4ddcb17ad5f3",
+        "size": 13004
+      },
+      {
+        "path": "roof-window.glb",
+        "from": "Models/GLB format/roof-window.glb",
+        "sha256": "9c95c71b7ea2a284f9ea37d0f684fe5aa654cdff14815969bc97d234014bbd53",
+        "size": 15524
+      },
+      {
+        "path": "roof.glb",
+        "from": "Models/GLB format/roof.glb",
+        "sha256": "8f245dfc04b8e76b2833081462f7530c2aea9114a703161c1d9a4a975927347d",
+        "size": 9324
+      },
+      {
+        "path": "stairs-full-corner-inner.glb",
+        "from": "Models/GLB format/stairs-full-corner-inner.glb",
+        "sha256": "4065d32494ad3ffca8d4d351f27f7927ff0c4c8f8deb99a2464210bcef58a208",
+        "size": 8304
+      },
+      {
+        "path": "stairs-full-corner-outer.glb",
+        "from": "Models/GLB format/stairs-full-corner-outer.glb",
+        "sha256": "61431fa509a2ea13c43c5cb532dae2c70a08f56267ba83fe2ad76fa2e53ddb68",
+        "size": 9440
+      },
+      {
+        "path": "stairs-full.glb",
+        "from": "Models/GLB format/stairs-full.glb",
+        "sha256": "d2ebf8c1ec86f75024d9f7931951d7e8fc4665349365b9e6886fadebbd108e9d",
+        "size": 7064
+      },
+      {
+        "path": "stairs-stone-corner.glb",
+        "from": "Models/GLB format/stairs-stone-corner.glb",
+        "sha256": "4fd7ab97b286ab1c57ae66ab62eb0325a0f9b25880eeb24767a42036146bb5d7",
+        "size": 12792
+      },
+      {
+        "path": "stairs-stone-handrail.glb",
+        "from": "Models/GLB format/stairs-stone-handrail.glb",
+        "sha256": "715e36185b27fcc37a84c345740584a10897a9148ba66050cda4a49eae4f7262",
+        "size": 23428
+      },
+      {
+        "path": "stairs-stone-round.glb",
+        "from": "Models/GLB format/stairs-stone-round.glb",
+        "sha256": "78794e160a030dedc6b5b7a376d50b129f7052683b3cdae9904a4ad5dbe96f38",
+        "size": 17840
+      },
+      {
+        "path": "stairs-stone.glb",
+        "from": "Models/GLB format/stairs-stone.glb",
+        "sha256": "ce92a069280c069d675f030a7258a50f5271cd8070e84339c120faa6c115e61d",
+        "size": 12172
+      },
+      {
+        "path": "stairs-wide-stone-handrail.glb",
+        "from": "Models/GLB format/stairs-wide-stone-handrail.glb",
+        "sha256": "def3d44694a5393d3ddc1c002d09db90387dcef820286961ac506b0b9fc7009b",
+        "size": 23440
+      },
+      {
+        "path": "stairs-wide-stone.glb",
+        "from": "Models/GLB format/stairs-wide-stone.glb",
+        "sha256": "b28dae600de5c1759993dd363e18eebb40db6db544d94f7f56fb8829bc7f38be",
+        "size": 12188
+      },
+      {
+        "path": "stairs-wide-wood-handrail.glb",
+        "from": "Models/GLB format/stairs-wide-wood-handrail.glb",
+        "sha256": "474816e2464c0a4a2e0b1d15ac999b9aa4b4f9a47a3521342cd8fdb77599a872",
+        "size": 43904
+      },
+      {
+        "path": "stairs-wide-wood.glb",
+        "from": "Models/GLB format/stairs-wide-wood.glb",
+        "sha256": "33f06f1d5f926997e2709741884fd1f4bd86ce4cfc753a74257d2a9e3efffdb6",
+        "size": 33060
+      },
+      {
+        "path": "stairs-wood-handrail.glb",
+        "from": "Models/GLB format/stairs-wood-handrail.glb",
+        "sha256": "206895c4887b620590c9e31ce00aa57179c042f6b1756c0d03c21a17a0431bbf",
+        "size": 44228
+      },
+      {
+        "path": "stairs-wood.glb",
+        "from": "Models/GLB format/stairs-wood.glb",
+        "sha256": "f6be9e5f77572d493dce374b68d231f116800ce388a3dcb0d646032162ccadd9",
+        "size": 33384
+      },
+      {
+        "path": "stall-bench.glb",
+        "from": "Models/GLB format/stall-bench.glb",
+        "sha256": "5a4b379488241394916991c4b482ec4863c05bb548ca8751f5c3935f1f6e5b9c",
+        "size": 14168
+      },
+      {
+        "path": "stall-green.glb",
+        "from": "Models/GLB format/stall-green.glb",
+        "sha256": "2da2f7b31cde5d943d7c08c457bbb39797ef0a607921fde0b8455f338ce40205",
+        "size": 27120
+      },
+      {
+        "path": "stall-red.glb",
+        "from": "Models/GLB format/stall-red.glb",
+        "sha256": "aa20a630f417032c46aaefbc779fd2b3355b451bf05d31acc36fd664146866b1",
+        "size": 24304
+      },
+      {
+        "path": "stall-stool.glb",
+        "from": "Models/GLB format/stall-stool.glb",
+        "sha256": "50c6b512d810687f40e27c7a43b2864e5f7bc84f16ff7a4112cea4807676c336",
+        "size": 14172
+      },
+      {
+        "path": "stall.glb",
+        "from": "Models/GLB format/stall.glb",
+        "sha256": "f0a636fccb7d57c38f5acd58881c468f4872f1bcda1e9fd9b1118e76110565a1",
+        "size": 11500
+      },
+      {
+        "path": "tree-crooked.glb",
+        "from": "Models/GLB format/tree-crooked.glb",
+        "sha256": "da4349701dd3fc474f7bb03cfe8b230bec0919025d8d1ecac0d1061a23c5e910",
+        "size": 19252
+      },
+      {
+        "path": "tree-high-crooked.glb",
+        "from": "Models/GLB format/tree-high-crooked.glb",
+        "sha256": "a9af8768a5328c62694a42f67858a88eea974ad4540c5c3c54a7a70fdead7505",
+        "size": 21744
+      },
+      {
+        "path": "tree-high-round.glb",
+        "from": "Models/GLB format/tree-high-round.glb",
+        "sha256": "7f372e338cbf5514a41e8d2afda81acd67277a4c5ad4e6e35a9acfa4a6e3bc4b",
+        "size": 13176
+      },
+      {
+        "path": "tree-high.glb",
+        "from": "Models/GLB format/tree-high.glb",
+        "sha256": "2dbb718a81d9c3697c069495f58840f6c2002c8cdd13388be560c2199f6d03e7",
+        "size": 20700
+      },
+      {
+        "path": "tree.glb",
+        "from": "Models/GLB format/tree.glb",
+        "sha256": "e8d81b97297de62699b92559cee7b247da84b1815df2515e42fd5a318a30b8d7",
+        "size": 18188
+      },
+      {
+        "path": "wall-arch-top-detail.glb",
+        "from": "Models/GLB format/wall-arch-top-detail.glb",
+        "sha256": "24457e03e5dff3e074a79f9789953dd7fbb93bbd89254cdb751ddf4363a9a6de",
+        "size": 16076
+      },
+      {
+        "path": "wall-arch-top.glb",
+        "from": "Models/GLB format/wall-arch-top.glb",
+        "sha256": "ae5f068bed777a7a698a770011b340e62b590751ebcc61d662b5b4a48369b698",
+        "size": 12876
+      },
+      {
+        "path": "wall-arch.glb",
+        "from": "Models/GLB format/wall-arch.glb",
+        "sha256": "18076d2770925a570c10708c2726e92f99226a940beb8435b21dfb71e20adcf9",
+        "size": 4840
+      },
+      {
+        "path": "wall-block-half.glb",
+        "from": "Models/GLB format/wall-block-half.glb",
+        "sha256": "c875a1d86faf9eab5af9152c0fd06b91cea4693e92780f949d505a5186925e32",
+        "size": 8564
+      },
+      {
+        "path": "wall-block.glb",
+        "from": "Models/GLB format/wall-block.glb",
+        "sha256": "daa35e5b32d7941f3dc61f64f6f9630b70441478d652989cd6c02a908b84af86",
+        "size": 8532
+      },
+      {
+        "path": "wall-broken.glb",
+        "from": "Models/GLB format/wall-broken.glb",
+        "sha256": "043f74b83254c32379d0fe60b066c5ded7f3396ccc91df443aea1763d492fa23",
+        "size": 16904
+      },
+      {
+        "path": "wall-corner-detail.glb",
+        "from": "Models/GLB format/wall-corner-detail.glb",
+        "sha256": "2382ce760563264c57e3e5fcccd9b31a80a97dc316b289813558d053ec22495b",
+        "size": 15748
+      },
+      {
+        "path": "wall-corner-diagonal-half.glb",
+        "from": "Models/GLB format/wall-corner-diagonal-half.glb",
+        "sha256": "3e689a3e266865a44030d22fd645dd7605a1b6e7fb679bbb2355c18da6258344",
+        "size": 4788
+      },
+      {
+        "path": "wall-corner-diagonal.glb",
+        "from": "Models/GLB format/wall-corner-diagonal.glb",
+        "sha256": "6218647612c1138f1897d4cde4774f399570a91411cca28d4095ee4d1e19f1e4",
+        "size": 6032
+      },
+      {
+        "path": "wall-corner-edge.glb",
+        "from": "Models/GLB format/wall-corner-edge.glb",
+        "sha256": "dd8d24f82cd3d4d0ac9776a4d54aaefb69312d834bcfb0907bf8e63d1699ffda",
+        "size": 5416
+      },
+      {
+        "path": "wall-corner.glb",
+        "from": "Models/GLB format/wall-corner.glb",
+        "sha256": "d67d4c6210d5e877ce24ccfb42cb3eab1576f7addb689924e7776d6b73e4165a",
+        "size": 6788
+      },
+      {
+        "path": "wall-curved.glb",
+        "from": "Models/GLB format/wall-curved.glb",
+        "sha256": "d55b3e931383c0f9f6311a586a01cca57d64e06146d260c8d08a9d39987f6d59",
+        "size": 11432
+      },
+      {
+        "path": "wall-detail-cross.glb",
+        "from": "Models/GLB format/wall-detail-cross.glb",
+        "sha256": "7af8fba9e7022c500289bee84fcbe02a1fdad0c2afc0276155a82c1021d6456d",
+        "size": 8464
+      },
+      {
+        "path": "wall-detail-diagonal.glb",
+        "from": "Models/GLB format/wall-detail-diagonal.glb",
+        "sha256": "c568992d9f558b0f8778124c965770a7486d5ca7b371dc2fb3154cd6c0dfd528",
+        "size": 6672
+      },
+      {
+        "path": "wall-detail-horizontal.glb",
+        "from": "Models/GLB format/wall-detail-horizontal.glb",
+        "sha256": "ff7607024a93d3e7256dc4975afb038e9299a08bdfb40a544fcabe40c9be29e4",
+        "size": 6240
+      },
+      {
+        "path": "wall-diagonal.glb",
+        "from": "Models/GLB format/wall-diagonal.glb",
+        "sha256": "b1be46b9aae995aa34101e6aa62987624fbf9b3d814a67b4cb48d57958e38290",
+        "size": 5212
+      },
+      {
+        "path": "wall-door.glb",
+        "from": "Models/GLB format/wall-door.glb",
+        "sha256": "79b2d40db110ca96a6e77d4261da665fdf8c68f4c20c2afef5bce1c28ad72857",
+        "size": 29276
+      },
+      {
+        "path": "wall-doorway-base.glb",
+        "from": "Models/GLB format/wall-doorway-base.glb",
+        "sha256": "4e2629d59e471e96c6661e29044cd32567191745671d00d75666328b2c7e1a05",
+        "size": 8028
+      },
+      {
+        "path": "wall-doorway-round.glb",
+        "from": "Models/GLB format/wall-doorway-round.glb",
+        "sha256": "773ccde0f2b39d7fa61e5093fc4f11b137732a5becbe278c9dae03917895fe98",
+        "size": 13332
+      },
+      {
+        "path": "wall-doorway-square-wide-curved.glb",
+        "from": "Models/GLB format/wall-doorway-square-wide-curved.glb",
+        "sha256": "d29b18fafb53b9280c7781b79514c5b3059a12c26586a78e0391eb055135b4a2",
+        "size": 14316
+      },
+      {
+        "path": "wall-doorway-square-wide.glb",
+        "from": "Models/GLB format/wall-doorway-square-wide.glb",
+        "sha256": "74bd794d5b0b45902541da75555d60cc690359390d05f5cf364606347a0dd9ba",
+        "size": 5864
+      },
+      {
+        "path": "wall-doorway-square.glb",
+        "from": "Models/GLB format/wall-doorway-square.glb",
+        "sha256": "1ad6ca0f201c602d7ead56f395744ffd87ba8e5d6e16148d60d0c13e31cf85f3",
+        "size": 7844
+      },
+      {
+        "path": "wall-half.glb",
+        "from": "Models/GLB format/wall-half.glb",
+        "sha256": "b64b5d8a8d3aa472162e3c00197fc24253a791a6100b8b63590d42eb2fb62eb4",
+        "size": 4808
+      },
+      {
+        "path": "wall-rounded.glb",
+        "from": "Models/GLB format/wall-rounded.glb",
+        "sha256": "a09474e4d3992b5656e4999ceafa8c92500373b82c17f83216563c80dd6f6b54",
+        "size": 12616
+      },
+      {
+        "path": "wall-side.glb",
+        "from": "Models/GLB format/wall-side.glb",
+        "sha256": "0ac077f8aa296060f548614e82a7fbfe6a09b5f8bad3453c7c6bb27e7df95119",
+        "size": 3852
+      },
+      {
+        "path": "wall-slope.glb",
+        "from": "Models/GLB format/wall-slope.glb",
+        "sha256": "a7a1ea684f57370a796009353fb469b3f8eb676be544b7980e1b1059ddb5d2af",
+        "size": 4812
+      },
+      {
+        "path": "wall-window-glass.glb",
+        "from": "Models/GLB format/wall-window-glass.glb",
+        "sha256": "b0d666b1850d0b92734bdea736a062b4424fd909d13495f4a73719eb51bb41f4",
+        "size": 15708
+      },
+      {
+        "path": "wall-window-round.glb",
+        "from": "Models/GLB format/wall-window-round.glb",
+        "sha256": "ec911d8b3bd041ff46d5f5b21a04c2e1bcd006c51262866da94dc24a2c21e41c",
+        "size": 22356
+      },
+      {
+        "path": "wall-window-shutters.glb",
+        "from": "Models/GLB format/wall-window-shutters.glb",
+        "sha256": "58a641a03fc4a5a225663969cc257fcf4f2fc63c199b4aca16b612142ff9eed0",
+        "size": 23892
+      },
+      {
+        "path": "wall-window-small.glb",
+        "from": "Models/GLB format/wall-window-small.glb",
+        "sha256": "44516aac3d06ee8d2694cfd57d0c6e1e27ca2d0bc45b738ea1f0d1821da10110",
+        "size": 9376
+      },
+      {
+        "path": "wall-window-stone.glb",
+        "from": "Models/GLB format/wall-window-stone.glb",
+        "sha256": "7ed37c9b795febc8b414d75ccdf9e8c04a94a791a9adbf6e548ed6ddbf0aba3c",
+        "size": 12484
+      },
+      {
+        "path": "wall-wood-arch-top-detail.glb",
+        "from": "Models/GLB format/wall-wood-arch-top-detail.glb",
+        "sha256": "6ad402b907878ba59bb148610eb50fa8439ac27b78eb3ede2e621f2d12235621",
+        "size": 16092
+      },
+      {
+        "path": "wall-wood-arch-top.glb",
+        "from": "Models/GLB format/wall-wood-arch-top.glb",
+        "sha256": "595a0235499eb7adc79c4bb8ddd49cda81e170d70632e22bfa83756909eae345",
+        "size": 12892
+      },
+      {
+        "path": "wall-wood-arch.glb",
+        "from": "Models/GLB format/wall-wood-arch.glb",
+        "sha256": "bdfa9cfc79b0e7fd272d726acd8f087e97acbd2db7ec36348c2736b7bb7c046a",
+        "size": 4856
+      },
+      {
+        "path": "wall-wood-block-half.glb",
+        "from": "Models/GLB format/wall-wood-block-half.glb",
+        "sha256": "8a31ac1fba82a195a02ef225f83e0bbe35208b604b4bd733142aa3c26810b490",
+        "size": 8580
+      },
+      {
+        "path": "wall-wood-block.glb",
+        "from": "Models/GLB format/wall-wood-block.glb",
+        "sha256": "c405053f4ac8ae0c85e9973613d205f0bc9dff0a5fe95a4910823384e131e824",
+        "size": 8548
+      },
+      {
+        "path": "wall-wood-broken.glb",
+        "from": "Models/GLB format/wall-wood-broken.glb",
+        "sha256": "53b61a341f0d6bd82256955f8dc29c4c714fcee115a9e803b28938fcfe1ae597",
+        "size": 16344
+      },
+      {
+        "path": "wall-wood-corner-diagonal-half.glb",
+        "from": "Models/GLB format/wall-wood-corner-diagonal-half.glb",
+        "sha256": "712d57235e7d58e5b38b6766681834cb196c4efac5ffae5f0b5e5e270fdd91f6",
+        "size": 4804
+      },
+      {
+        "path": "wall-wood-corner-diagonal.glb",
+        "from": "Models/GLB format/wall-wood-corner-diagonal.glb",
+        "sha256": "43926de9d29254661bb5ee5cd939c3a32d495e763139c321d5c0a41fc362d801",
+        "size": 6048
+      },
+      {
+        "path": "wall-wood-corner-edge.glb",
+        "from": "Models/GLB format/wall-wood-corner-edge.glb",
+        "sha256": "f70b92efea5af19f4ac9c0c19af7727e8105f28a4c415313e8878fc4bde9d326",
+        "size": 5432
+      },
+      {
+        "path": "wall-wood-corner.glb",
+        "from": "Models/GLB format/wall-wood-corner.glb",
+        "sha256": "f4c38de352c80c110874fabe7323577d985af191c25242887574238146dc7d82",
+        "size": 6804
+      },
+      {
+        "path": "wall-wood-curved.glb",
+        "from": "Models/GLB format/wall-wood-curved.glb",
+        "sha256": "2b7a46fea0256cb09262242a32e4842ca78a33d4e9feb89aeed0e7da3b67327f",
+        "size": 11444
+      },
+      {
+        "path": "wall-wood-detail-cross.glb",
+        "from": "Models/GLB format/wall-wood-detail-cross.glb",
+        "sha256": "0335f9f55d541a2c044d11242103d5de70359ca5758e6734c8936ec27ab58043",
+        "size": 8480
+      },
+      {
+        "path": "wall-wood-detail-diagonal.glb",
+        "from": "Models/GLB format/wall-wood-detail-diagonal.glb",
+        "sha256": "3b1ef50674432944f3f9561e511c0867571393c58e3c73d475d383c5bfc469fc",
+        "size": 6684
+      },
+      {
+        "path": "wall-wood-detail-horizontal.glb",
+        "from": "Models/GLB format/wall-wood-detail-horizontal.glb",
+        "sha256": "ee27ac4f7b2a9dd944e1d3ee3e52d0018281033c768017afbc248b66e0d99764",
+        "size": 6256
+      },
+      {
+        "path": "wall-wood-diagonal.glb",
+        "from": "Models/GLB format/wall-wood-diagonal.glb",
+        "sha256": "760c3c9b8a3330a47c895e653e811ebf8be530a08a694d93514a601632a6c79e",
+        "size": 5228
+      },
+      {
+        "path": "wall-wood-door.glb",
+        "from": "Models/GLB format/wall-wood-door.glb",
+        "sha256": "2aa4e982fcb6434be4e6051fcee7972799ff5350a3f36ca8bf71530b84608123",
+        "size": 30744
+      },
+      {
+        "path": "wall-wood-doorway-base.glb",
+        "from": "Models/GLB format/wall-wood-doorway-base.glb",
+        "sha256": "041c898ba4de75f1b1b163dd379b126d72abcd319ba5fa9b510521742543cb5e",
+        "size": 8044
+      },
+      {
+        "path": "wall-wood-doorway-round.glb",
+        "from": "Models/GLB format/wall-wood-doorway-round.glb",
+        "sha256": "5dcc990fa07242d74dc4382ed3f95a22f29777068c1c1795b22ef5d4448ac127",
+        "size": 15068
+      },
+      {
+        "path": "wall-wood-doorway-square-wide-curved.glb",
+        "from": "Models/GLB format/wall-wood-doorway-square-wide-curved.glb",
+        "sha256": "a246e8c19492085694a4874634b6027e12dfc8aea189872dee0b9085baf296b6",
+        "size": 14332
+      },
+      {
+        "path": "wall-wood-doorway-square-wide.glb",
+        "from": "Models/GLB format/wall-wood-doorway-square-wide.glb",
+        "sha256": "572c223df38d8b1e206446983dd9e3c92c944e7719c655a65880690a78ae0b14",
+        "size": 5876
+      },
+      {
+        "path": "wall-wood-doorway-square.glb",
+        "from": "Models/GLB format/wall-wood-doorway-square.glb",
+        "sha256": "58b8f042cb1bafc282887d216340f406220b3407685f94e33c6a2f127dc68380",
+        "size": 8664
+      },
+      {
+        "path": "wall-wood-half.glb",
+        "from": "Models/GLB format/wall-wood-half.glb",
+        "sha256": "4b56875dcb488a0c17c01ebe8ce7337e891b3326860799b49f163f793cb882df",
+        "size": 4824
+      },
+      {
+        "path": "wall-wood-rounded.glb",
+        "from": "Models/GLB format/wall-wood-rounded.glb",
+        "sha256": "79fcfcfcf37716139ae76cc5fde7aea993a542751aa0df90a39cb569b2f319b8",
+        "size": 12632
+      },
+      {
+        "path": "wall-wood-side.glb",
+        "from": "Models/GLB format/wall-wood-side.glb",
+        "sha256": "2d0ae2509f596a929ae6ca24ff27ab96c0a2dbdd43847b02a2b8732106e9356c",
+        "size": 3868
+      },
+      {
+        "path": "wall-wood-slope.glb",
+        "from": "Models/GLB format/wall-wood-slope.glb",
+        "sha256": "56bdc7b8755fab80c753c1f6a7c856be15442fd89d0e53a1588ac2baba2401b8",
+        "size": 8544
+      },
+      {
+        "path": "wall-wood-window-glass.glb",
+        "from": "Models/GLB format/wall-wood-window-glass.glb",
+        "sha256": "e0bb383a908d473181ad89ad7c676a0632f7ecd0f23e5f912216391d3e62bb69",
+        "size": 11184
+      },
+      {
+        "path": "wall-wood-window-round.glb",
+        "from": "Models/GLB format/wall-wood-window-round.glb",
+        "sha256": "8bc2d9ce7246b1c9896ff2b285668f908755131faf2c2096b23b4a411f7e9aa9",
+        "size": 23636
+      },
+      {
+        "path": "wall-wood-window-shutters.glb",
+        "from": "Models/GLB format/wall-wood-window-shutters.glb",
+        "sha256": "c45a63690760cd5de3842ffbe222092e8cd483524679c4ba92fef4d1e52f7248",
+        "size": 10612
+      },
+      {
+        "path": "wall-wood-window-small.glb",
+        "from": "Models/GLB format/wall-wood-window-small.glb",
+        "sha256": "3c9118d167d8e75ee78f884b9edb90101f9c1928d4fcc2afaedcc349bf8c672b",
+        "size": 11808
+      },
+      {
+        "path": "wall-wood-window-stone.glb",
+        "from": "Models/GLB format/wall-wood-window-stone.glb",
+        "sha256": "d40eb3fe491c09e48fe17168d2445d60ca6d6b4ecc7c2f1caeafa22051000d98",
+        "size": 16844
+      },
+      {
+        "path": "wall-wood.glb",
+        "from": "Models/GLB format/wall-wood.glb",
+        "sha256": "8699614fdbc99f565942709c0977c964e2c12f3b3c60098a6e2c397c973f08db",
+        "size": 4808
+      },
+      {
+        "path": "wall.glb",
+        "from": "Models/GLB format/wall.glb",
+        "sha256": "cab1dff37610e2a214237cc62ec0b1506e8fd76bb66c29f6c585b4b643b569c4",
+        "size": 4792
+      },
+      {
+        "path": "watermill-wide.glb",
+        "from": "Models/GLB format/watermill-wide.glb",
+        "sha256": "3644d4092799f5ff672a5b07ff124f68259c8c9bd45d37f9659eea4426534b7d",
+        "size": 53872
+      },
+      {
+        "path": "watermill.glb",
+        "from": "Models/GLB format/watermill.glb",
+        "sha256": "177e76c12f43845303638d1375c323675c3937b053b8762042fe19d3d7d27c5d",
+        "size": 53856
+      },
+      {
+        "path": "wheel.glb",
+        "from": "Models/GLB format/wheel.glb",
+        "sha256": "c049e479d0fa31d7cae7a3f4fe239172e7117789fdd10be4be5bddde6239d59f",
+        "size": 17184
+      },
+      {
+        "path": "windmill.glb",
+        "from": "Models/GLB format/windmill.glb",
+        "sha256": "72562df164f5fd36670521462da8f4161cf2c4c1c889799443f0fb44532ad5db",
+        "size": 71160
+      }
+    ]
+  },
+  {
+    "id": "kenney-nature-kit-2.1",
+    "creator": "Kenney (www.kenney.nl)",
+    "sourceUrl": "https://kenney.nl/assets/nature-kit",
+    "version": "2.1 (creation date 29-04-2020)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kenney-nature-kit-2.1.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/environment/kenney-nature",
+    "modified": false,
+    "notes": "Curated subset of \"Models/GLTF format/*.glb\" copied unmodified.",
+    "usedIn": "Trees, pines, flowers, bushes, rocks, campfire, logs.",
+    "source": {
+      "kind": "zip",
+      "url": "https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip",
+      "sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+      "size": 10537521
+    },
+    "fileCount": 208,
+    "totalBytes": 1675391,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "size": 611
+      },
+      {
+        "path": "campfire_bricks.glb",
+        "from": "Models/GLTF format/campfire_bricks.glb",
+        "sha256": "ecdca761c6c07ee417261140d5449872b7f51f3671df2d536e2a03b65480563f",
+        "size": 10220
+      },
+      {
+        "path": "campfire_logs.glb",
+        "from": "Models/GLTF format/campfire_logs.glb",
+        "sha256": "98d87cdcf9095b94fd348d0946e911dd4ca6c0956bac3318cfd2b0030b86055a",
+        "size": 9284
+      },
+      {
+        "path": "campfire_planks.glb",
+        "from": "Models/GLTF format/campfire_planks.glb",
+        "sha256": "0d26e842f7f5cb607ad37205e930822656b7c6ba570f9d0ba6b039cea90f8ab7",
+        "size": 8148
+      },
+      {
+        "path": "campfire_stones.glb",
+        "from": "Models/GLTF format/campfire_stones.glb",
+        "sha256": "54869db23243a3f4905bc00bd4cd93b1037b28556ab3ef93e7a893a093791e35",
+        "size": 17344
+      },
+      {
+        "path": "cliff_blockCave_rock.glb",
+        "from": "Models/GLTF format/cliff_blockCave_rock.glb",
+        "sha256": "2c373a596840a4f3bffa1aba7a93d7da9d2aa1dded54f7a9966e4e4b3fce7d43",
+        "size": 5432
+      },
+      {
+        "path": "cliff_blockCave_stone.glb",
+        "from": "Models/GLTF format/cliff_blockCave_stone.glb",
+        "sha256": "f02a4190d8428722f00583dc751168c84fb1227bac35c517f2dcad58cb327c7a",
+        "size": 5436
+      },
+      {
+        "path": "cliff_blockDiagonal_rock.glb",
+        "from": "Models/GLTF format/cliff_blockDiagonal_rock.glb",
+        "sha256": "32b61e963ba99695624f213e4d893c5d2ac028dd831ba65bcd220ee5a6006114",
+        "size": 2564
+      },
+      {
+        "path": "cliff_blockDiagonal_stone.glb",
+        "from": "Models/GLTF format/cliff_blockDiagonal_stone.glb",
+        "sha256": "62835e048b252fc2283352ef301b671e3f77f5ca511ffc5b6c90a5eac6869c54",
+        "size": 2568
+      },
+      {
+        "path": "cliff_blockHalf_rock.glb",
+        "from": "Models/GLTF format/cliff_blockHalf_rock.glb",
+        "sha256": "a3d29368524dd6968d5920f1aba2bdf6e6d189ccc60123f5d036c56653c31c5e",
+        "size": 2788
+      },
+      {
+        "path": "cliff_blockHalf_stone.glb",
+        "from": "Models/GLTF format/cliff_blockHalf_stone.glb",
+        "sha256": "fa932c3107dcabebafb005f1aeefea5bddb585909320ac7b2781a35caa0b187c",
+        "size": 2792
+      },
+      {
+        "path": "cliff_blockQuarter_rock.glb",
+        "from": "Models/GLTF format/cliff_blockQuarter_rock.glb",
+        "sha256": "748f3f4c8695e46567819f3ae73ba53bbc7db827254bc68f9fca27f01f481666",
+        "size": 2796
+      },
+      {
+        "path": "cliff_blockQuarter_stone.glb",
+        "from": "Models/GLTF format/cliff_blockQuarter_stone.glb",
+        "sha256": "991afa18fbfce25d4b1b758b7266c74e14793351a7875f00be01874b00bc7abb",
+        "size": 2800
+      },
+      {
+        "path": "cliff_blockSlopeHalfWalls_rock.glb",
+        "from": "Models/GLTF format/cliff_blockSlopeHalfWalls_rock.glb",
+        "sha256": "95a25398990b978071d461998c442c034feb517ecea6538e88ed2ee957a2c3e6",
+        "size": 8880
+      },
+      {
+        "path": "cliff_blockSlopeHalfWalls_stone.glb",
+        "from": "Models/GLTF format/cliff_blockSlopeHalfWalls_stone.glb",
+        "sha256": "afc1db3ed3cde8d7bb5669f220ea4e6998b59414208bc046e6356829fac581a0",
+        "size": 8884
+      },
+      {
+        "path": "cliff_blockSlopeWalls_rock.glb",
+        "from": "Models/GLTF format/cliff_blockSlopeWalls_rock.glb",
+        "sha256": "055776add47ad3a13c53900a728ace7533c02f7afa27fdb57557ca117d44a55d",
+        "size": 8900
+      },
+      {
+        "path": "cliff_blockSlopeWalls_stone.glb",
+        "from": "Models/GLTF format/cliff_blockSlopeWalls_stone.glb",
+        "sha256": "cd2c3d5ce44db2705146b0992ba494ab5d625136ff4e10dab6b94f67f600e3a6",
+        "size": 8904
+      },
+      {
+        "path": "cliff_blockSlope_rock.glb",
+        "from": "Models/GLTF format/cliff_blockSlope_rock.glb",
+        "sha256": "82fe2e0477c7ce2c5994435f44074022cb2a36f56ff40bd34598cbfc87286885",
+        "size": 6720
+      },
+      {
+        "path": "cliff_blockSlope_stone.glb",
+        "from": "Models/GLTF format/cliff_blockSlope_stone.glb",
+        "sha256": "88fbc6e54df6bff3793dd4b296471173220e0f88800c7cb744ce9747150a4c5b",
+        "size": 6724
+      },
+      {
+        "path": "cliff_block_rock.glb",
+        "from": "Models/GLTF format/cliff_block_rock.glb",
+        "sha256": "2f31de8502288d6adcdae4d5605cfe65d4bcd4369dd0decd116c2615b9d3d01f",
+        "size": 2776
+      },
+      {
+        "path": "cliff_block_stone.glb",
+        "from": "Models/GLTF format/cliff_block_stone.glb",
+        "sha256": "5c73f45e20848747b38695ba155882f8645630fb47f7d4f80ab565786fcf65a3",
+        "size": 2780
+      },
+      {
+        "path": "cliff_cave_rock.glb",
+        "from": "Models/GLTF format/cliff_cave_rock.glb",
+        "sha256": "2d83296b0166ad0e980152ad4f45b4e45349e932a6b6c2adbe7eb606a6472d8d",
+        "size": 5480
+      },
+      {
+        "path": "cliff_cave_stone.glb",
+        "from": "Models/GLTF format/cliff_cave_stone.glb",
+        "sha256": "8795c3d3bf3311d30403c10a8d1225d1e2075535554dab8a5235146668168c5c",
+        "size": 5484
+      },
+      {
+        "path": "cliff_cornerInnerLarge_rock.glb",
+        "from": "Models/GLTF format/cliff_cornerInnerLarge_rock.glb",
+        "sha256": "03b7038dfc6449f646e789819014f3a26548a64ef42d028979c00df949c5d49f",
+        "size": 4296
+      },
+      {
+        "path": "cliff_cornerInnerLarge_stone.glb",
+        "from": "Models/GLTF format/cliff_cornerInnerLarge_stone.glb",
+        "sha256": "3f8956c7c3c9cad4a93d54f9fed1aac138e32767b3d1811ca0056331007237bf",
+        "size": 4300
+      },
+      {
+        "path": "cliff_cornerInnerTop_rock.glb",
+        "from": "Models/GLTF format/cliff_cornerInnerTop_rock.glb",
+        "sha256": "2eab4f506d45ee35da03da6ab222d90108c96b267edc8d969262a4c7a42008f9",
+        "size": 7608
+      },
+      {
+        "path": "cliff_cornerInnerTop_stone.glb",
+        "from": "Models/GLTF format/cliff_cornerInnerTop_stone.glb",
+        "sha256": "fc18f8195c2850731bec89b99b0102f625bab539ef4fdd9dee6d618986125abf",
+        "size": 7612
+      },
+      {
+        "path": "cliff_cornerInner_rock.glb",
+        "from": "Models/GLTF format/cliff_cornerInner_rock.glb",
+        "sha256": "fd04f7428e961511dc3fba4ee5127f1a048b89dcbd65f88578579c2b134ac44c",
+        "size": 5008
+      },
+      {
+        "path": "cliff_cornerInner_stone.glb",
+        "from": "Models/GLTF format/cliff_cornerInner_stone.glb",
+        "sha256": "6b4cbd2f5d1de770ba862f9d7a405ea6ef382628da5593ea6fbf9ec3b8216f3d",
+        "size": 8568
+      },
+      {
+        "path": "cliff_cornerLarge_rock.glb",
+        "from": "Models/GLTF format/cliff_cornerLarge_rock.glb",
+        "sha256": "05a24065218db62977cc66032348213f6ab8e00ab6b7e359600f8c261e33704c",
+        "size": 2376
+      },
+      {
+        "path": "cliff_cornerLarge_stone.glb",
+        "from": "Models/GLTF format/cliff_cornerLarge_stone.glb",
+        "sha256": "14f4277abed51493896bbf223fbc9cda9d1813a6b34a6e6ccb859e00ac1dd38a",
+        "size": 3296
+      },
+      {
+        "path": "cliff_cornerTop_rock.glb",
+        "from": "Models/GLTF format/cliff_cornerTop_rock.glb",
+        "sha256": "1cebec53101f64332d911dfffb752b9d465224e7a2f91a25f8532fa749fee1b6",
+        "size": 3108
+      },
+      {
+        "path": "cliff_cornerTop_stone.glb",
+        "from": "Models/GLTF format/cliff_cornerTop_stone.glb",
+        "sha256": "cb008d764f7196fa6240942413d894cb19deee0d38dfe343e5d7984b16df8522",
+        "size": 3112
+      },
+      {
+        "path": "cliff_corner_rock.glb",
+        "from": "Models/GLTF format/cliff_corner_rock.glb",
+        "sha256": "4a22b80e18ac1798035867b7ff6e4d78161fa25b507112c903ad6f80765cf181",
+        "size": 2360
+      },
+      {
+        "path": "cliff_corner_stone.glb",
+        "from": "Models/GLTF format/cliff_corner_stone.glb",
+        "sha256": "3cd59838e68f195f42b107935f7930e5bf74affe2b9d8d7e525b62188191a921",
+        "size": 2364
+      },
+      {
+        "path": "cliff_diagonal_rock.glb",
+        "from": "Models/GLTF format/cliff_diagonal_rock.glb",
+        "sha256": "648bdb3118cda8900bad55e281f56c245a1a0252cc1c0e1bf4fa085d8ef75a0b",
+        "size": 4296
+      },
+      {
+        "path": "cliff_diagonal_stone.glb",
+        "from": "Models/GLTF format/cliff_diagonal_stone.glb",
+        "sha256": "6c6f93c685053d2dc50e2befa45fc45e3c5beac1c35b693f277056a990e8850c",
+        "size": 4236
+      },
+      {
+        "path": "cliff_halfCornerInner_rock.glb",
+        "from": "Models/GLTF format/cliff_halfCornerInner_rock.glb",
+        "sha256": "aaa3e59a48e56547199c212037d0ee06fa5de3a58a9ac25355c8932bc7b096fe",
+        "size": 8016
+      },
+      {
+        "path": "cliff_halfCornerInner_stone.glb",
+        "from": "Models/GLTF format/cliff_halfCornerInner_stone.glb",
+        "sha256": "5fb3e4e213d082d829eb12486f5d28f373086fec74dce65056d4863f846c7fcf",
+        "size": 8020
+      },
+      {
+        "path": "cliff_halfCorner_rock.glb",
+        "from": "Models/GLTF format/cliff_halfCorner_rock.glb",
+        "sha256": "66bf0d002431f55e99aad464862c133420b3e4b78cf878091c7b5d94ed371ec9",
+        "size": 3128
+      },
+      {
+        "path": "cliff_halfCorner_stone.glb",
+        "from": "Models/GLTF format/cliff_halfCorner_stone.glb",
+        "sha256": "0f0b76f0e219eecc81f0f27b8ce46c22502e8c66fb766f68d4b0b2d1991cb76f",
+        "size": 3132
+      },
+      {
+        "path": "cliff_half_rock.glb",
+        "from": "Models/GLTF format/cliff_half_rock.glb",
+        "sha256": "ceeb985b16171ac5b30794239de27779ad0b39f389f8b8a8b1e03f1f89961995",
+        "size": 5316
+      },
+      {
+        "path": "cliff_half_stone.glb",
+        "from": "Models/GLTF format/cliff_half_stone.glb",
+        "sha256": "b78e96f149d349b11cea4d8cba50b8e1fd8a9e45d459d2c6cd3f3138b465772f",
+        "size": 5320
+      },
+      {
+        "path": "cliff_large_rock.glb",
+        "from": "Models/GLTF format/cliff_large_rock.glb",
+        "sha256": "f9bf79cd3a76bbe11f4887053655585e467e14f2528678215a820896669e4e8e",
+        "size": 3560
+      },
+      {
+        "path": "cliff_large_stone.glb",
+        "from": "Models/GLTF format/cliff_large_stone.glb",
+        "sha256": "d63595d0a8727a7a339dd315117fbb85e000224c0add26b6cc907054df046dac",
+        "size": 3564
+      },
+      {
+        "path": "cliff_stepsCornerInner_rock.glb",
+        "from": "Models/GLTF format/cliff_stepsCornerInner_rock.glb",
+        "sha256": "e076973baeedd79dc24fe90610978cde5805d04bc629b9034b4bb34d80ded6af",
+        "size": 15632
+      },
+      {
+        "path": "cliff_stepsCornerInner_stone.glb",
+        "from": "Models/GLTF format/cliff_stepsCornerInner_stone.glb",
+        "sha256": "ff81f319fc30783eced2f60bf1022389d51212de251bb7f4667bf0520e60fa3b",
+        "size": 15636
+      },
+      {
+        "path": "cliff_stepsCorner_rock.glb",
+        "from": "Models/GLTF format/cliff_stepsCorner_rock.glb",
+        "sha256": "5a44b8d6be16b43e007818bb55e9558aac980caae30b6b3dfb20a24c6cc7d5d3",
+        "size": 17544
+      },
+      {
+        "path": "cliff_stepsCorner_stone.glb",
+        "from": "Models/GLTF format/cliff_stepsCorner_stone.glb",
+        "sha256": "df0fe800aa10384ddf961896dc07e17f7ece73783a728708e458656b793e9ee2",
+        "size": 17548
+      },
+      {
+        "path": "cliff_steps_rock.glb",
+        "from": "Models/GLTF format/cliff_steps_rock.glb",
+        "sha256": "f290e67a836ec459efcedb013f67258c2043fec128f07d6a16454e8505b7530f",
+        "size": 15952
+      },
+      {
+        "path": "cliff_steps_stone.glb",
+        "from": "Models/GLTF format/cliff_steps_stone.glb",
+        "sha256": "38dd9531a716738f5204e6f523d1bc2711b618daf3b34b02e6a39ff1db787793",
+        "size": 15956
+      },
+      {
+        "path": "cliff_topDiagonal_rock.glb",
+        "from": "Models/GLTF format/cliff_topDiagonal_rock.glb",
+        "sha256": "005c3bf817333dc2e5e6e1bc08439641a8340ebb93f637208b6c1b00878f3b2e",
+        "size": 6220
+      },
+      {
+        "path": "cliff_topDiagonal_stone.glb",
+        "from": "Models/GLTF format/cliff_topDiagonal_stone.glb",
+        "sha256": "866d18b509592e88cba8b0e9414727e17c3d615f1a8731a241258a70fde417f4",
+        "size": 10540
+      },
+      {
+        "path": "cliff_top_rock.glb",
+        "from": "Models/GLTF format/cliff_top_rock.glb",
+        "sha256": "8c3b4d37fad0bacf39d0315a51850dfe9c55eea03de74854e3d92ce4157bbebb",
+        "size": 5312
+      },
+      {
+        "path": "cliff_top_stone.glb",
+        "from": "Models/GLTF format/cliff_top_stone.glb",
+        "sha256": "0327759fe95f6be7e263a2f07bf72f212a8df3e16ef1240643f5641a76ec0ec7",
+        "size": 5316
+      },
+      {
+        "path": "cliff_waterfallTop_rock.glb",
+        "from": "Models/GLTF format/cliff_waterfallTop_rock.glb",
+        "sha256": "c5f7b299f3a8ec16c138bd962eace461f06a882f3614c396d3ba8020f1a8bbe6",
+        "size": 7076
+      },
+      {
+        "path": "cliff_waterfallTop_stone.glb",
+        "from": "Models/GLTF format/cliff_waterfallTop_stone.glb",
+        "sha256": "92ea675e7d42f81f1b4e185e8caf3518e33a7ef5044198d6a02641a4bf19fad7",
+        "size": 7508
+      },
+      {
+        "path": "cliff_waterfall_rock.glb",
+        "from": "Models/GLTF format/cliff_waterfall_rock.glb",
+        "sha256": "08063b24498cae385c204e9038a72f0dd438fdfa29ecf106a0df5e656b7edff6",
+        "size": 4488
+      },
+      {
+        "path": "cliff_waterfall_stone.glb",
+        "from": "Models/GLTF format/cliff_waterfall_stone.glb",
+        "sha256": "a246a52a974b25cd530909c4a512693515aad5f3493983a4c1050050ce4a0093",
+        "size": 6100
+      },
+      {
+        "path": "fence_bend.glb",
+        "from": "Models/GLTF format/fence_bend.glb",
+        "sha256": "3f46171bdfbc8878b59216102bf4ac67f7ca35e9b66420604199b3e305321fef",
+        "size": 16276
+      },
+      {
+        "path": "fence_bendCenter.glb",
+        "from": "Models/GLTF format/fence_bendCenter.glb",
+        "sha256": "07963bccfd2f69aafdeb5165cfb0b20937cb390b9770a38c9b469ffd0f0dd745",
+        "size": 20016
+      },
+      {
+        "path": "fence_corner.glb",
+        "from": "Models/GLTF format/fence_corner.glb",
+        "sha256": "f37060de68c5680e518183d44e7ac498e0bfe7b04f3fe71e355d8a4670ef83f1",
+        "size": 8644
+      },
+      {
+        "path": "fence_gate.glb",
+        "from": "Models/GLTF format/fence_gate.glb",
+        "sha256": "34d10d5620179b8a211a01eea837caa828c0782422f0b408e1a5838788888436",
+        "size": 27652
+      },
+      {
+        "path": "fence_planks.glb",
+        "from": "Models/GLTF format/fence_planks.glb",
+        "sha256": "2db68f60d24443dbeab05dedd92fcc665d0e21bd261c6a668ea9022a732a06a9",
+        "size": 7720
+      },
+      {
+        "path": "fence_planksDouble.glb",
+        "from": "Models/GLTF format/fence_planksDouble.glb",
+        "sha256": "0bbc8fe43f7a1d20de8ff2d687b5b08675beacb431e43ebbb0b1705b9c684f55",
+        "size": 11160
+      },
+      {
+        "path": "fence_simple.glb",
+        "from": "Models/GLTF format/fence_simple.glb",
+        "sha256": "ecaf6c29532aa9fd305a8ef71df769d60748bd797f2eb1c63bdefc4edb8062a7",
+        "size": 5712
+      },
+      {
+        "path": "fence_simpleCenter.glb",
+        "from": "Models/GLTF format/fence_simpleCenter.glb",
+        "sha256": "dd2eba4993ee8f3777685ce09a2652a7af4e592604002188f2440da4217c85b5",
+        "size": 8660
+      },
+      {
+        "path": "fence_simpleDiagonal.glb",
+        "from": "Models/GLTF format/fence_simpleDiagonal.glb",
+        "sha256": "47529aa3517e4d785e7e5635c1347ab551273a70d094656ebcfbda4fe5167c8a",
+        "size": 6688
+      },
+      {
+        "path": "fence_simpleDiagonalCenter.glb",
+        "from": "Models/GLTF format/fence_simpleDiagonalCenter.glb",
+        "sha256": "9b5cfd500250b7310f3cf94e1a395f6730d18bfa9239edc07ee44e12ef792ead",
+        "size": 11064
+      },
+      {
+        "path": "fence_simpleHigh.glb",
+        "from": "Models/GLTF format/fence_simpleHigh.glb",
+        "sha256": "12fec55c302bdcfc7d67946e8c4bed8d96bcb2a8d42817c3021cc94b7272891e",
+        "size": 4300
+      },
+      {
+        "path": "fence_simpleLow.glb",
+        "from": "Models/GLTF format/fence_simpleLow.glb",
+        "sha256": "f48ce73576b4976da6416f4b4c1e221cb4b617dba6f9f52affda283910f75755",
+        "size": 4312
+      },
+      {
+        "path": "flower_purpleA.glb",
+        "from": "Models/GLTF format/flower_purpleA.glb",
+        "sha256": "f6fc34c96a03420a74fe36d4c2d0ec88f15204fcad99cd1416c3c4ecb22e48c4",
+        "size": 7112
+      },
+      {
+        "path": "flower_purpleB.glb",
+        "from": "Models/GLTF format/flower_purpleB.glb",
+        "sha256": "2afb10cd68a9a7b185fc46110be0da550ea2aef86ef9ac6b7339f217eb4b636a",
+        "size": 8084
+      },
+      {
+        "path": "flower_purpleC.glb",
+        "from": "Models/GLTF format/flower_purpleC.glb",
+        "sha256": "beb85b66766c9943a89a5ee27114d3befe22569db9a6f0b5f8366b687f9c1e42",
+        "size": 7600
+      },
+      {
+        "path": "flower_redA.glb",
+        "from": "Models/GLTF format/flower_redA.glb",
+        "sha256": "171930b7789ddbf735af3745576b5393750beb9133b9ff4a444bb6bb2986c020",
+        "size": 7104
+      },
+      {
+        "path": "flower_redB.glb",
+        "from": "Models/GLTF format/flower_redB.glb",
+        "sha256": "1ed430a4ee2be9e86649e1ce22ec23162814a3f8c2ad133117315db19293fc16",
+        "size": 8080
+      },
+      {
+        "path": "flower_redC.glb",
+        "from": "Models/GLTF format/flower_redC.glb",
+        "sha256": "5a5c9c8572e8f56287ee1f5f836f98ac08e275f31325b4bc91d2832bc142ceb7",
+        "size": 7600
+      },
+      {
+        "path": "flower_yellowA.glb",
+        "from": "Models/GLTF format/flower_yellowA.glb",
+        "sha256": "8a3b08cd2ca411c21f9c581d5bda651d78b13c50cba45ad8fa0389398ead6d1d",
+        "size": 7120
+      },
+      {
+        "path": "flower_yellowB.glb",
+        "from": "Models/GLTF format/flower_yellowB.glb",
+        "sha256": "aaa8707779a5de59f881f80185bc507b35ec3fd5f23a39d6447ef61141dcd4f5",
+        "size": 11256
+      },
+      {
+        "path": "flower_yellowC.glb",
+        "from": "Models/GLTF format/flower_yellowC.glb",
+        "sha256": "4115c017390b3e157466a8719e9e2af6c5385505135e7012982b9410760ba9f3",
+        "size": 7616
+      },
+      {
+        "path": "grass.glb",
+        "from": "Models/GLTF format/grass.glb",
+        "sha256": "260e41d3e5f2472492ed7b475c5b92a30b13ce2bad408535b5ff50574d4575e7",
+        "size": 11496
+      },
+      {
+        "path": "grass_large.glb",
+        "from": "Models/GLTF format/grass_large.glb",
+        "sha256": "af49a595624abca7249824eeefb944d4baf974abeeb5b16110d175da3563d6cd",
+        "size": 18504
+      },
+      {
+        "path": "grass_leafs.glb",
+        "from": "Models/GLTF format/grass_leafs.glb",
+        "sha256": "8bc4c0b17c2e64c34e1acbf7c4a2fd8c04cfcd7155328e61767887b2ced112c7",
+        "size": 4608
+      },
+      {
+        "path": "grass_leafsLarge.glb",
+        "from": "Models/GLTF format/grass_leafsLarge.glb",
+        "sha256": "a68b9b3d9639afaeb4ace840d5a8e3f21ffc4e8afc1eab15566500fbb2bee3e3",
+        "size": 13988
+      },
+      {
+        "path": "hanging_moss.glb",
+        "from": "Models/GLTF format/hanging_moss.glb",
+        "sha256": "2124c2d038054f1ea89d470a6095d35c2fbdb2674916db93400ea6ed5f499cb0",
+        "size": 4776
+      },
+      {
+        "path": "lily_large.glb",
+        "from": "Models/GLTF format/lily_large.glb",
+        "sha256": "c8f7080df0ae3166e9d33f523b66360c2ac7556dff36cc9c8ee78b6a676c7db2",
+        "size": 8044
+      },
+      {
+        "path": "lily_small.glb",
+        "from": "Models/GLTF format/lily_small.glb",
+        "sha256": "38184c9eeb560acabd4d7f1d16852422df056edf0b318c97854c250e048cad3c",
+        "size": 5664
+      },
+      {
+        "path": "log.glb",
+        "from": "Models/GLTF format/log.glb",
+        "sha256": "8c8fe8f6adfc03a3c0cd6cb24961ff74be96c2da284d70322f05797d049972d6",
+        "size": 14288
+      },
+      {
+        "path": "log_large.glb",
+        "from": "Models/GLTF format/log_large.glb",
+        "sha256": "e7a92369062d491e5a31a163d390e07db04ee573605bbfa84c00660d18896b4c",
+        "size": 7924
+      },
+      {
+        "path": "log_stack.glb",
+        "from": "Models/GLTF format/log_stack.glb",
+        "sha256": "90eaae4a01ba1f25c2f0c6d83087e4a7a8fac684f2452615245333968d118d68",
+        "size": 10896
+      },
+      {
+        "path": "log_stackLarge.glb",
+        "from": "Models/GLTF format/log_stackLarge.glb",
+        "sha256": "58dc0ce3321b3b57f7b8c5aea47e1a212a5f462822af57a26f9ba5c4d48e65ab",
+        "size": 17604
+      },
+      {
+        "path": "mushroom_red.glb",
+        "from": "Models/GLTF format/mushroom_red.glb",
+        "sha256": "843e2de43dce78920a5675a67bac4b72f500e6220315e713fe08381642cfc571",
+        "size": 6364
+      },
+      {
+        "path": "mushroom_redGroup.glb",
+        "from": "Models/GLTF format/mushroom_redGroup.glb",
+        "sha256": "29f02df0589dd2b09e8d2aff6a4662394dac5cfcf1fec701640dcbd6127e0802",
+        "size": 14960
+      },
+      {
+        "path": "mushroom_redTall.glb",
+        "from": "Models/GLTF format/mushroom_redTall.glb",
+        "sha256": "d982f6c5dce9ca870132448034eced9e84573aeed87e9158e18a3a033124f810",
+        "size": 6504
+      },
+      {
+        "path": "mushroom_tan.glb",
+        "from": "Models/GLTF format/mushroom_tan.glb",
+        "sha256": "455cbacdcdac82cc20420c3f21eaba3ff2fbceadb2e13d35a39d52130dba5a80",
+        "size": 5804
+      },
+      {
+        "path": "mushroom_tanGroup.glb",
+        "from": "Models/GLTF format/mushroom_tanGroup.glb",
+        "sha256": "2dc979485f164d7dce34329096271f44e0c9ea329c104251d94bcfbc8f8fe05e",
+        "size": 14956
+      },
+      {
+        "path": "mushroom_tanTall.glb",
+        "from": "Models/GLTF format/mushroom_tanTall.glb",
+        "sha256": "58d0078e531d6118c0cb39110c77fe3d564398379bb7f2e3f5f572321c0fc4ff",
+        "size": 6500
+      },
+      {
+        "path": "plant_bush.glb",
+        "from": "Models/GLTF format/plant_bush.glb",
+        "sha256": "ae7b1beb39e242b13f5f29e3ec23ef21034b814f82297b8aa00a9bf4e1b09590",
+        "size": 4396
+      },
+      {
+        "path": "plant_bushDetailed.glb",
+        "from": "Models/GLTF format/plant_bushDetailed.glb",
+        "sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406",
+        "size": 10172
+      },
+      {
+        "path": "plant_bushLarge.glb",
+        "from": "Models/GLTF format/plant_bushLarge.glb",
+        "sha256": "10e1d9fbf29d96d1d1a56fb2ce25ae66537505101759229afe01ae22c6c45e02",
+        "size": 6436
+      },
+      {
+        "path": "plant_bushLargeTriangle.glb",
+        "from": "Models/GLTF format/plant_bushLargeTriangle.glb",
+        "sha256": "098af3618e20e5a2cb5f6e24a7c67c0a80663f989137d86430bc9e2b1b2d52e4",
+        "size": 4564
+      },
+      {
+        "path": "plant_bushSmall.glb",
+        "from": "Models/GLTF format/plant_bushSmall.glb",
+        "sha256": "a9620a7d1fb165ae68d323676f80dbb2a9e3aafb21110d18d18d90b07026b91d",
+        "size": 3212
+      },
+      {
+        "path": "plant_bushTriangle.glb",
+        "from": "Models/GLTF format/plant_bushTriangle.glb",
+        "sha256": "e944e19adda28436fdc63d77019aa490e6591358659a14abea8aa654181fc417",
+        "size": 3956
+      },
+      {
+        "path": "plant_flatShort.glb",
+        "from": "Models/GLTF format/plant_flatShort.glb",
+        "sha256": "5885f6bb6ce004eb7ccc887fd30b7671492a94be76ffeb1e64c07c47d6b7bae1",
+        "size": 3936
+      },
+      {
+        "path": "plant_flatTall.glb",
+        "from": "Models/GLTF format/plant_flatTall.glb",
+        "sha256": "b192523736f32754788de4dc7a5dcf30a58322b260ec8969120c91432a10b633",
+        "size": 3480
+      },
+      {
+        "path": "pot_large.glb",
+        "from": "Models/GLTF format/pot_large.glb",
+        "sha256": "57e60214bc6ab1dc3764c9ffe80091ff45f2bfd49fbc313c1b68dcaab1537aef",
+        "size": 6168
+      },
+      {
+        "path": "pot_small.glb",
+        "from": "Models/GLTF format/pot_small.glb",
+        "sha256": "1141d9e16099c2103f1a177de0cae4ea979a3246439e33074923e4cfe3098df8",
+        "size": 7004
+      },
+      {
+        "path": "rock_largeA.glb",
+        "from": "Models/GLTF format/rock_largeA.glb",
+        "sha256": "6dd15390fd96501dcd1454765a17ba61dbbd8d47705dfe5149c8dd92b353ce25",
+        "size": 7552
+      },
+      {
+        "path": "rock_largeB.glb",
+        "from": "Models/GLTF format/rock_largeB.glb",
+        "sha256": "caa8b025833d4dabf6d98fe2e96cf2fbd886693ac990df0db75f9d827194374b",
+        "size": 8560
+      },
+      {
+        "path": "rock_largeC.glb",
+        "from": "Models/GLTF format/rock_largeC.glb",
+        "sha256": "23aee8b727adeaf260207af3e0615dc69aa766c6d87de1d44cbc8c2711d74dd1",
+        "size": 7004
+      },
+      {
+        "path": "rock_largeD.glb",
+        "from": "Models/GLTF format/rock_largeD.glb",
+        "sha256": "e4fefd8d8d7deab42be61bd222bcd088330012f0025789146b81f25a46095ffd",
+        "size": 7992
+      },
+      {
+        "path": "rock_largeE.glb",
+        "from": "Models/GLTF format/rock_largeE.glb",
+        "sha256": "8207ce8100b7c756e55e67bee030edadeb332d7d72220027b5818f1987039def",
+        "size": 6464
+      },
+      {
+        "path": "rock_largeF.glb",
+        "from": "Models/GLTF format/rock_largeF.glb",
+        "sha256": "4222107db4a47471494bdbf1eb2ad0ff297628afbcb7c392618e5742d831e0d4",
+        "size": 7516
+      },
+      {
+        "path": "rock_smallA.glb",
+        "from": "Models/GLTF format/rock_smallA.glb",
+        "sha256": "df9fff9d711e61370e8df0caa2514c89b8f8a8dc6c6fafaf4eb2ec79c5ae07c1",
+        "size": 3044
+      },
+      {
+        "path": "rock_smallB.glb",
+        "from": "Models/GLTF format/rock_smallB.glb",
+        "sha256": "11b26bc0a12e971a3b69df1401e530e24432d528c262df94b99c412e7f372763",
+        "size": 3528
+      },
+      {
+        "path": "rock_smallC.glb",
+        "from": "Models/GLTF format/rock_smallC.glb",
+        "sha256": "5cbc0a805f275771baf19165c7132288e4834ba97ec0fb16ce9cc37e1c2522e2",
+        "size": 3044
+      },
+      {
+        "path": "rock_smallD.glb",
+        "from": "Models/GLTF format/rock_smallD.glb",
+        "sha256": "d5a09ec917231fbaf5a0d6868e1c0320fd4cb139851dcefbe9e3794eec73ee6c",
+        "size": 4012
+      },
+      {
+        "path": "rock_smallE.glb",
+        "from": "Models/GLTF format/rock_smallE.glb",
+        "sha256": "e6e03586ca03316bab707ced869f5d4fa50dccc67dd056e94b667fc1e929c05c",
+        "size": 5932
+      },
+      {
+        "path": "rock_smallF.glb",
+        "from": "Models/GLTF format/rock_smallF.glb",
+        "sha256": "51099549e8dd6a68db2afe2e5c514a8601ee59e11766d5975c540314f9b7deb8",
+        "size": 5700
+      },
+      {
+        "path": "rock_smallFlatA.glb",
+        "from": "Models/GLTF format/rock_smallFlatA.glb",
+        "sha256": "40ceafacfaabb0f04f93688fd8696c1464c65512bef219e1459c1f238cbbbe21",
+        "size": 3300
+      },
+      {
+        "path": "rock_smallFlatB.glb",
+        "from": "Models/GLTF format/rock_smallFlatB.glb",
+        "sha256": "83e4af8ef8050974de45e255cb7a6959116d77174d6931fd95b219b74e23fb8d",
+        "size": 3056
+      },
+      {
+        "path": "rock_smallFlatC.glb",
+        "from": "Models/GLTF format/rock_smallFlatC.glb",
+        "sha256": "dc889263e79ab77a147d6b413e1d099de00c4dab10eb8fbe284e3c95ce715120",
+        "size": 4508
+      },
+      {
+        "path": "rock_smallG.glb",
+        "from": "Models/GLTF format/rock_smallG.glb",
+        "sha256": "d7135a8763b685dcc8c6c839c668d8e9efbfd25b203d878d66e0198dc28fa30f",
+        "size": 4204
+      },
+      {
+        "path": "rock_smallH.glb",
+        "from": "Models/GLTF format/rock_smallH.glb",
+        "sha256": "c798f7445350e8d79710a1d3e344b9ce4d4bcff5416a50268781d5121a353a7f",
+        "size": 6200
+      },
+      {
+        "path": "rock_smallI.glb",
+        "from": "Models/GLTF format/rock_smallI.glb",
+        "sha256": "f7bbf2f4efbfe63977c4c6520762143ede95c63bff6484b9719db5e666a618e4",
+        "size": 5120
+      },
+      {
+        "path": "rock_smallTopA.glb",
+        "from": "Models/GLTF format/rock_smallTopA.glb",
+        "sha256": "758063d1f535da58c6a0d40416b011b268e5f9f888bbb7eddef0a31ba37e30b5",
+        "size": 5220
+      },
+      {
+        "path": "rock_smallTopB.glb",
+        "from": "Models/GLTF format/rock_smallTopB.glb",
+        "sha256": "134e2a324190f6093b80c05fb3e1b6c46681d6462953de99bb54bf4c8a7665c6",
+        "size": 6660
+      },
+      {
+        "path": "rock_tallA.glb",
+        "from": "Models/GLTF format/rock_tallA.glb",
+        "sha256": "88250f236a3b75f8b55c1d8afb6af020f8a91b1e81f9fb51f7ef513420d45a2d",
+        "size": 12072
+      },
+      {
+        "path": "rock_tallB.glb",
+        "from": "Models/GLTF format/rock_tallB.glb",
+        "sha256": "b3fb7899c317a3b026fa6ced0e1eaaa596d9dd0d95efeacfb5e05d25322f19b9",
+        "size": 14060
+      },
+      {
+        "path": "rock_tallC.glb",
+        "from": "Models/GLTF format/rock_tallC.glb",
+        "sha256": "87943b8b0d244ec9832d5dca9bf3cee2ab62aaa81797749f21a972f85c1f3be4",
+        "size": 5184
+      },
+      {
+        "path": "rock_tallD.glb",
+        "from": "Models/GLTF format/rock_tallD.glb",
+        "sha256": "c0c6965e87e81cda1524110243f158aba8fbd0218af74432fb352fe4f647cb78",
+        "size": 5132
+      },
+      {
+        "path": "rock_tallE.glb",
+        "from": "Models/GLTF format/rock_tallE.glb",
+        "sha256": "21f135fa85c5fde5f1136ceefe7f9c9103f292109a5b1d77a6675e97d7a782fb",
+        "size": 5192
+      },
+      {
+        "path": "rock_tallF.glb",
+        "from": "Models/GLTF format/rock_tallF.glb",
+        "sha256": "823cecdfa45e9b23c608a4b3ade9e699e0dea0e0141dde4e757fe97ad5850c10",
+        "size": 5608
+      },
+      {
+        "path": "rock_tallG.glb",
+        "from": "Models/GLTF format/rock_tallG.glb",
+        "sha256": "831683e6f920d0d6156132f73a1078ed4d0470bc3e862eff4436763898c68a96",
+        "size": 6772
+      },
+      {
+        "path": "rock_tallH.glb",
+        "from": "Models/GLTF format/rock_tallH.glb",
+        "sha256": "bc1db23172176726c4f9fac55c1114a7619fb414e4ca62f242bc48a89d7a9300",
+        "size": 7792
+      },
+      {
+        "path": "rock_tallI.glb",
+        "from": "Models/GLTF format/rock_tallI.glb",
+        "sha256": "653ac732b440346ad7addd65e92caa54e34e150d78f0ea6fec8863a07cdb9e4c",
+        "size": 5584
+      },
+      {
+        "path": "rock_tallJ.glb",
+        "from": "Models/GLTF format/rock_tallJ.glb",
+        "sha256": "3ddaae3745f5f99b335c7888bc9ee9a8fc4da28ddb206ec61a518d90e618a051",
+        "size": 5424
+      },
+      {
+        "path": "sign.glb",
+        "from": "Models/GLTF format/sign.glb",
+        "sha256": "c658c21672ecd63c5d3e53f06f875d68e6509edb1ab7e3b75374df7c61e7dd0c",
+        "size": 5040
+      },
+      {
+        "path": "statue_block.glb",
+        "from": "Models/GLTF format/statue_block.glb",
+        "sha256": "5caa9f4d0ede962d36f78355b73e59c88e4c978ba4ef44e6df6e52d484c60bac",
+        "size": 11252
+      },
+      {
+        "path": "statue_column.glb",
+        "from": "Models/GLTF format/statue_column.glb",
+        "sha256": "5d7f6c8bce8d1dc7ee62b1841376cda331c4359acfa2b9a11dd7e78c14ea9dbb",
+        "size": 10472
+      },
+      {
+        "path": "statue_columnDamaged.glb",
+        "from": "Models/GLTF format/statue_columnDamaged.glb",
+        "sha256": "ce8f21c31ec16ad67759dd171860bd85fd57fc3857963610c4ed8a39c8d91b95",
+        "size": 8824
+      },
+      {
+        "path": "statue_head.glb",
+        "from": "Models/GLTF format/statue_head.glb",
+        "sha256": "02a0c58e713176004f9054f6a6181b965e2cc25ff7c77f5d17458b00c270b60e",
+        "size": 14704
+      },
+      {
+        "path": "statue_obelisk.glb",
+        "from": "Models/GLTF format/statue_obelisk.glb",
+        "sha256": "e18013044ad6453a1850226be29f63c37d67e0002141f5f6a4d14a46bde69e00",
+        "size": 4416
+      },
+      {
+        "path": "statue_ring.glb",
+        "from": "Models/GLTF format/statue_ring.glb",
+        "sha256": "5c62e4165f7a76436faa0b20e98b47d0a9e5021dcbf2a0eef0cdf0912180f02c",
+        "size": 6568
+      },
+      {
+        "path": "stone_largeA.glb",
+        "from": "Models/GLTF format/stone_largeA.glb",
+        "sha256": "fe486a13775e833b1aca99413a89e013f300841de80f42ecd44ceaf43720f17b",
+        "size": 7124
+      },
+      {
+        "path": "stone_largeB.glb",
+        "from": "Models/GLTF format/stone_largeB.glb",
+        "sha256": "2b6b96b701b42d96efaa92ad4aba0cc8d23417f1bc07f0e996ee1a5acd52b4b8",
+        "size": 8132
+      },
+      {
+        "path": "stone_largeC.glb",
+        "from": "Models/GLTF format/stone_largeC.glb",
+        "sha256": "f78e984f04f2c9d3a242d42b1c8f65b8a095b9ccf9f74ac55a97b7cdd1c4668c",
+        "size": 6580
+      },
+      {
+        "path": "stone_largeD.glb",
+        "from": "Models/GLTF format/stone_largeD.glb",
+        "sha256": "db945df5cc1fb3113777dc208bac3f46d3fb970aaf39f2c517612f99fbf3532b",
+        "size": 7564
+      },
+      {
+        "path": "stone_largeE.glb",
+        "from": "Models/GLTF format/stone_largeE.glb",
+        "sha256": "392cf28f85aa4b7b7c5e12b1a3b87fe2b3a7c5ec1797d5d1d0d58edca6da9de8",
+        "size": 6036
+      },
+      {
+        "path": "stone_largeF.glb",
+        "from": "Models/GLTF format/stone_largeF.glb",
+        "sha256": "6fd7761da24e492b9e763cfc8ebb5f3c2bb33aa68fb0f320a8769ab71fcc6c9e",
+        "size": 7092
+      },
+      {
+        "path": "stone_smallA.glb",
+        "from": "Models/GLTF format/stone_smallA.glb",
+        "sha256": "b48e731e6c4b453e8e5e8caace6edc18da40bc09874d831b7914e840fc853ae4",
+        "size": 2620
+      },
+      {
+        "path": "stone_smallB.glb",
+        "from": "Models/GLTF format/stone_smallB.glb",
+        "sha256": "27765cdf708ff130be161eeee22eb56c014cb23b6b0c657e2a7659d02dc25459",
+        "size": 3100
+      },
+      {
+        "path": "stone_smallC.glb",
+        "from": "Models/GLTF format/stone_smallC.glb",
+        "sha256": "dfc8129bc9290155c524aeaf3b845aa68eb72580afccd5b969d598294d147136",
+        "size": 2620
+      },
+      {
+        "path": "stone_smallD.glb",
+        "from": "Models/GLTF format/stone_smallD.glb",
+        "sha256": "0ef496ce0f17e18a12a66ba8ec69889fb5b5247fed04b58c0d417a0f5221f579",
+        "size": 3584
+      },
+      {
+        "path": "stone_smallE.glb",
+        "from": "Models/GLTF format/stone_smallE.glb",
+        "sha256": "17cb3e6f6c58f5fdc0bf4080bbfb7c72c4fe1ddfc65682637f4b335ff98fa291",
+        "size": 5504
+      },
+      {
+        "path": "stone_smallF.glb",
+        "from": "Models/GLTF format/stone_smallF.glb",
+        "sha256": "b845a25c9b92ede6aeb78c1c5d5264b721674be707576fe7b16a430af99b4bbc",
+        "size": 5272
+      },
+      {
+        "path": "stone_smallFlatA.glb",
+        "from": "Models/GLTF format/stone_smallFlatA.glb",
+        "sha256": "04f2d1bf9dba77426a5fa076a07d7b1319fb78021b7fe619a6ca3599d96d762a",
+        "size": 2872
+      },
+      {
+        "path": "stone_smallFlatB.glb",
+        "from": "Models/GLTF format/stone_smallFlatB.glb",
+        "sha256": "1a0b6363f66a31372656e40f83c9d604325a8bb91a7de3697400b92b1cdf6fae",
+        "size": 2632
+      },
+      {
+        "path": "stone_smallFlatC.glb",
+        "from": "Models/GLTF format/stone_smallFlatC.glb",
+        "sha256": "8c7069b5c9b9fee5afa8bb7949df82f43935f7d4b513852b0846da5bb8337d91",
+        "size": 4080
+      },
+      {
+        "path": "stone_smallG.glb",
+        "from": "Models/GLTF format/stone_smallG.glb",
+        "sha256": "07c24e47be85709a54beca6396c2252ce918039d8ef0ec7ffc2faa01e523b28d",
+        "size": 3776
+      },
+      {
+        "path": "stone_smallH.glb",
+        "from": "Models/GLTF format/stone_smallH.glb",
+        "sha256": "c13f8f724cb64f06df2fd7fa1b9964690f2f44f5f45c459874d6e9546c90613b",
+        "size": 5772
+      },
+      {
+        "path": "stone_smallI.glb",
+        "from": "Models/GLTF format/stone_smallI.glb",
+        "sha256": "f210ea4a4e60c3fa0b6d1601a33ef8efb6e1d0ea17121319c1c685ae72ac5a79",
+        "size": 4692
+      },
+      {
+        "path": "stone_smallTopA.glb",
+        "from": "Models/GLTF format/stone_smallTopA.glb",
+        "sha256": "544faf6690361eaa291b20be0c31787440dabc35548d130b9fb56d086c9ca0dc",
+        "size": 4792
+      },
+      {
+        "path": "stone_smallTopB.glb",
+        "from": "Models/GLTF format/stone_smallTopB.glb",
+        "sha256": "b9a2deeafdd2fa1e15cea0a9a37c5e1b70c74b58b21738202654aae5313a7fb0",
+        "size": 6232
+      },
+      {
+        "path": "stone_tallA.glb",
+        "from": "Models/GLTF format/stone_tallA.glb",
+        "sha256": "3070bd574104abce19f5e3c82c917cb7f52801720377beba7aad76058408d5db",
+        "size": 11644
+      },
+      {
+        "path": "stone_tallB.glb",
+        "from": "Models/GLTF format/stone_tallB.glb",
+        "sha256": "4dc2798870b56fe4028f47418994c8b7c336baf7045bf034fe8117cb7e635ba1",
+        "size": 13596
+      },
+      {
+        "path": "stone_tallC.glb",
+        "from": "Models/GLTF format/stone_tallC.glb",
+        "sha256": "5fe5c30a5afe1aba91d998e295c1a95c26901cb8bb3f44b68b29eb052b7e019d",
+        "size": 4788
+      },
+      {
+        "path": "stone_tallD.glb",
+        "from": "Models/GLTF format/stone_tallD.glb",
+        "sha256": "51c9337a482cc2c00e7c2861d99a29c9116e61be814949c95510516c54505c1c",
+        "size": 4704
+      },
+      {
+        "path": "stone_tallE.glb",
+        "from": "Models/GLTF format/stone_tallE.glb",
+        "sha256": "626eb1f842d8bdfe4c2be86dc7b469ebceadaed2402871c21a90324a0231a318",
+        "size": 4764
+      },
+      {
+        "path": "stone_tallF.glb",
+        "from": "Models/GLTF format/stone_tallF.glb",
+        "sha256": "2c7698f979742da434f0dd928706b7ee9fb1abd0e3ac13ca6651c624165f7992",
+        "size": 5180
+      },
+      {
+        "path": "stone_tallG.glb",
+        "from": "Models/GLTF format/stone_tallG.glb",
+        "sha256": "a686a7bde391b49822ab299aac00c18fa3422c8099585be12fd594ecb0580137",
+        "size": 6344
+      },
+      {
+        "path": "stone_tallH.glb",
+        "from": "Models/GLTF format/stone_tallH.glb",
+        "sha256": "e00d9e5219f8caed495eb1594fa6eb39c9c9df7d4950e5b1945a89e0375cda00",
+        "size": 7364
+      },
+      {
+        "path": "stone_tallI.glb",
+        "from": "Models/GLTF format/stone_tallI.glb",
+        "sha256": "5667332535676fd95d23ea9be0da8b70af196fff7b648cddd26a3e8e4e9bee65",
+        "size": 5160
+      },
+      {
+        "path": "stone_tallJ.glb",
+        "from": "Models/GLTF format/stone_tallJ.glb",
+        "sha256": "b7f50a935be4e98da74d665658b31c0b7039416ccf0d6f330c0a3fe230e72ab6",
+        "size": 4808
+      },
+      {
+        "path": "tree_default.glb",
+        "from": "Models/GLTF format/tree_default.glb",
+        "sha256": "562d29638c902de3c7bee465d3a53bb77117efbc392ae04ed894faf6b5dc691d",
+        "size": 9428
+      },
+      {
+        "path": "tree_default_dark.glb",
+        "from": "Models/GLTF format/tree_default_dark.glb",
+        "sha256": "f2dc452b8fa98e68e3f892526b7d3f5e8d27d6acf4dd3c6f4b3795d64b879cce",
+        "size": 9436
+      },
+      {
+        "path": "tree_default_fall.glb",
+        "from": "Models/GLTF format/tree_default_fall.glb",
+        "sha256": "f8e90ed7f7771644998a7c361302213af04350150b3ea0631e8384d26506efa2",
+        "size": 16940
+      },
+      {
+        "path": "tree_detailed.glb",
+        "from": "Models/GLTF format/tree_detailed.glb",
+        "sha256": "c041daf2f0fb1d49e4325227cbcd58667adbe51e9b55e8c1f0a94b74cc521b3b",
+        "size": 31412
+      },
+      {
+        "path": "tree_detailed_dark.glb",
+        "from": "Models/GLTF format/tree_detailed_dark.glb",
+        "sha256": "1e2211dc6483b1d8a32130c3441afa108d4075f0d851825620fba85d2dc6e5d7",
+        "size": 31416
+      },
+      {
+        "path": "tree_detailed_fall.glb",
+        "from": "Models/GLTF format/tree_detailed_fall.glb",
+        "sha256": "eafa885b824c1ffcf7782e9d4084403130135b6b4ed82c90881b354ae9c987a8",
+        "size": 31404
+      },
+      {
+        "path": "tree_fat.glb",
+        "from": "Models/GLTF format/tree_fat.glb",
+        "sha256": "84b262c5dda3a91ac6c95f9d8b23a0ebbb1951d678c0e1375d3e32623cc43ee2",
+        "size": 5576
+      },
+      {
+        "path": "tree_fat_darkh.glb",
+        "from": "Models/GLTF format/tree_fat_darkh.glb",
+        "sha256": "92674861d2055abeef856c7d7d69f3efcf79b10c13d1a5f780df09d7a289cf39",
+        "size": 5584
+      },
+      {
+        "path": "tree_fat_fall.glb",
+        "from": "Models/GLTF format/tree_fat_fall.glb",
+        "sha256": "02fffc9b631a5f5834ac39b600d42ace0c9352fdcd3ed31912b0f6e8e685b660",
+        "size": 5572
+      },
+      {
+        "path": "tree_oak.glb",
+        "from": "Models/GLTF format/tree_oak.glb",
+        "sha256": "d7fd8773674928c50c11b66d12c636d49bdcc15a8b1c7fbb98e6f63a3439a3f3",
+        "size": 14644
+      },
+      {
+        "path": "tree_oak_dark.glb",
+        "from": "Models/GLTF format/tree_oak_dark.glb",
+        "sha256": "f2c455bb433fe98522d1b9391d5b587e7324176ecaee29ceefe55350a7e3fd47",
+        "size": 14648
+      },
+      {
+        "path": "tree_oak_fall.glb",
+        "from": "Models/GLTF format/tree_oak_fall.glb",
+        "sha256": "43a258d17b5428d8ef525a19e30e667caeeb330b6f3cb367a07da12093ff97a1",
+        "size": 14640
+      },
+      {
+        "path": "tree_pineDefaultA.glb",
+        "from": "Models/GLTF format/tree_pineDefaultA.glb",
+        "sha256": "60d8f352fa3659ed275e06cbddfecf8f92c8effe2977c2f2d7b29b6c9b582e46",
+        "size": 17220
+      },
+      {
+        "path": "tree_pineDefaultB.glb",
+        "from": "Models/GLTF format/tree_pineDefaultB.glb",
+        "sha256": "a752ea5775c6fb17513f764d57ead534f44dfdd85188b842995ac9ba0e7065c1",
+        "size": 18180
+      },
+      {
+        "path": "tree_pineGroundA.glb",
+        "from": "Models/GLTF format/tree_pineGroundA.glb",
+        "sha256": "dfffda4e4f0796076c502561cbf9527245656b7384b67657edc2a45205bbce51",
+        "size": 6704
+      },
+      {
+        "path": "tree_pineGroundB.glb",
+        "from": "Models/GLTF format/tree_pineGroundB.glb",
+        "sha256": "7af6719bfde2236210093d915e4eceff1e36c4c997259cb3565f149b270a4bfc",
+        "size": 6704
+      },
+      {
+        "path": "tree_pineRoundA.glb",
+        "from": "Models/GLTF format/tree_pineRoundA.glb",
+        "sha256": "7dc9711f31585eafdcb965d0649c30af5e19f2def1955f7a915081d30759ef8e",
+        "size": 14488
+      },
+      {
+        "path": "tree_pineRoundB.glb",
+        "from": "Models/GLTF format/tree_pineRoundB.glb",
+        "sha256": "d4b664a2ac27ffec4125d95dffebed23471595f3a86650a55bcb9ac6b7c54637",
+        "size": 18464
+      },
+      {
+        "path": "tree_pineRoundC.glb",
+        "from": "Models/GLTF format/tree_pineRoundC.glb",
+        "sha256": "29080a4935bae6b4ab29066f22c99c58f88b23ce4e2f79b4dcbb5e76de73f69d",
+        "size": 15332
+      },
+      {
+        "path": "tree_pineRoundD.glb",
+        "from": "Models/GLTF format/tree_pineRoundD.glb",
+        "sha256": "a5051944fbfae7900cef8314c4a5d977b6b29bcd4e4ae5dea9d80980e65a411a",
+        "size": 13748
+      },
+      {
+        "path": "tree_pineRoundE.glb",
+        "from": "Models/GLTF format/tree_pineRoundE.glb",
+        "sha256": "39178f614e1b4b2340a5db89cde410e897027a67e28f39ba95359c522d114f23",
+        "size": 15308
+      },
+      {
+        "path": "tree_pineRoundF.glb",
+        "from": "Models/GLTF format/tree_pineRoundF.glb",
+        "sha256": "fbeacc85c719a9e23e0d42f3ceb1cf44cf2537389e3d2141cb0716eefc40317d",
+        "size": 16264
+      },
+      {
+        "path": "tree_pineSmallA.glb",
+        "from": "Models/GLTF format/tree_pineSmallA.glb",
+        "sha256": "be1a438bbb2e157266c1fb093b775bff8ce3e29a4c8f04aaf9d44c7a4e1f1ff0",
+        "size": 12820
+      },
+      {
+        "path": "tree_pineSmallB.glb",
+        "from": "Models/GLTF format/tree_pineSmallB.glb",
+        "sha256": "59392aa6604adb9dccd4fb76df5ed12ae8ac7d7391eb7e04bc84fffe9f9b36c8",
+        "size": 7816
+      },
+      {
+        "path": "tree_pineSmallC.glb",
+        "from": "Models/GLTF format/tree_pineSmallC.glb",
+        "sha256": "c334c78379b2968b0c198a92b4e429e433c89e1685792b5c6ed730216c8512e3",
+        "size": 5376
+      },
+      {
+        "path": "tree_pineSmallD.glb",
+        "from": "Models/GLTF format/tree_pineSmallD.glb",
+        "sha256": "5128c47e7dc954b539245968d05fa518c9afa677d740fb11db0813aafadf17ef",
+        "size": 5368
+      },
+      {
+        "path": "tree_pineTallA.glb",
+        "from": "Models/GLTF format/tree_pineTallA.glb",
+        "sha256": "e0a56eb196d8a64ba86c7304d607136e17e6f9ad748dffcf86bd53b18b91b196",
+        "size": 7200
+      },
+      {
+        "path": "tree_pineTallA_detailed.glb",
+        "from": "Models/GLTF format/tree_pineTallA_detailed.glb",
+        "sha256": "9ba6337460e718b8baf165b23c02f39455e3d5757b1911505410c46bc88a86b5",
+        "size": 10708
+      },
+      {
+        "path": "tree_pineTallB.glb",
+        "from": "Models/GLTF format/tree_pineTallB.glb",
+        "sha256": "49b54146351e1e009e97ee592f997a90a16b10c5467baf734d352df1cddec5d1",
+        "size": 7204
+      },
+      {
+        "path": "tree_pineTallB_detailed.glb",
+        "from": "Models/GLTF format/tree_pineTallB_detailed.glb",
+        "sha256": "a26b4434e1592ec1a83f364a54688bb34c48d9521bfccbe63f0cc37b381c4696",
+        "size": 12632
+      },
+      {
+        "path": "tree_pineTallC.glb",
+        "from": "Models/GLTF format/tree_pineTallC.glb",
+        "sha256": "e8b97fa086e1ac9b2a2c84eeb02382df371703c23cfa414571d06e42d4dfea3d",
+        "size": 8080
+      },
+      {
+        "path": "tree_pineTallC_detailed.glb",
+        "from": "Models/GLTF format/tree_pineTallC_detailed.glb",
+        "sha256": "b538e229a9fb8cbbb579fa2a0df784d5354c8a70faa115fa80f8190f2e6bef47",
+        "size": 11588
+      },
+      {
+        "path": "tree_pineTallD.glb",
+        "from": "Models/GLTF format/tree_pineTallD.glb",
+        "sha256": "df5ffca50fc2e39a40bf8315077f6215b0b9fca0d9761b01945bfd59cca3bdd5",
+        "size": 8080
+      },
+      {
+        "path": "tree_pineTallD_detailed.glb",
+        "from": "Models/GLTF format/tree_pineTallD_detailed.glb",
+        "sha256": "a2fac08d7cb337e7b02c7d7f0d6911aa6fcef97b721da9cffb432b8dc3949e2d",
+        "size": 12548
+      }
+    ]
+  },
+  {
+    "id": "kenney-castle-kit-2.0",
+    "creator": "Kenney (www.kenney.nl)",
+    "sourceUrl": "https://kenney.nl/assets/castle-kit",
+    "version": "2.0 (creation date 27-03-2024)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kenney-castle-kit-2.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/environment/kenney-castle",
+    "modified": false,
+    "notes": "Curated subset of \"Models/GLB format/\" + Textures copied unmodified.",
+    "usedIn": "Far skyline castle towers, wall, pennant.",
+    "source": {
+      "kind": "zip",
+      "url": "https://kenney.nl/media/pages/assets/castle-kit/a395102d20-1711543616/kenney_castle-kit.zip",
+      "sha256": "921f3f73927bb23106cae34bc21d5ab4b033a9fc120475e96f714a406e3169df",
+      "size": 2232589
+    },
+    "fileCount": 24,
+    "totalBytes": 359986,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "License.txt",
+        "sha256": "aac944f18106b3a3e29c6fdeec02523d4cab4c735abc01f5a8fa88a79ae173ef",
+        "size": 713
+      },
+      {
+        "path": "Textures/colormap.png",
+        "from": "Models/GLB format/Textures/colormap.png",
+        "sha256": "66fd49be148f32e88f6c8cace67120250d1943a7856601158ad0ff24651db0b0",
+        "size": 7529
+      },
+      {
+        "path": "bridge-straight-pillar.glb",
+        "from": "Models/GLB format/bridge-straight-pillar.glb",
+        "sha256": "c85521e13dcf55ba8d015a04bbdbd0f063c31d01befb69a7c9fb097d128f195b",
+        "size": 14344
+      },
+      {
+        "path": "bridge-straight.glb",
+        "from": "Models/GLB format/bridge-straight.glb",
+        "sha256": "ef15989c3d5c7392563888bbedda86de3c1ec4b3013c71c61e25b5257a6f9180",
+        "size": 16832
+      },
+      {
+        "path": "flag-banner-long.glb",
+        "from": "Models/GLB format/flag-banner-long.glb",
+        "sha256": "e6a4433f5770b9fc31bf67d72424a877d5c010486d5b7373ce7af900566827e4",
+        "size": 6660
+      },
+      {
+        "path": "flag-pennant.glb",
+        "from": "Models/GLB format/flag-pennant.glb",
+        "sha256": "741368448bd21991700a488dfc5125330594c4dccd9395feecaa6bbfa682b65d",
+        "size": 13652
+      },
+      {
+        "path": "flag.glb",
+        "from": "Models/GLB format/flag.glb",
+        "sha256": "263fc3c7bedcfcd2b30f1aca6feb76c8f249f8f79dc9a694f47ec63b77b180d6",
+        "size": 15192
+      },
+      {
+        "path": "gate.glb",
+        "from": "Models/GLB format/gate.glb",
+        "sha256": "fdc3d5b07f619dcacbf2af36024dc9a356696e541f6ce409a5305be782665ec9",
+        "size": 13880
+      },
+      {
+        "path": "rocks-large.glb",
+        "from": "Models/GLB format/rocks-large.glb",
+        "sha256": "7ea1ee769eb063b192c3c3744cd32a11616320f7ca491fbe23289552f6655595",
+        "size": 16204
+      },
+      {
+        "path": "tower-hexagon-base.glb",
+        "from": "Models/GLB format/tower-hexagon-base.glb",
+        "sha256": "1185110eb885e70652558465bfabd07b80bb09afaa7b4be0a2e309fd685982b9",
+        "size": 8336
+      },
+      {
+        "path": "tower-hexagon-mid.glb",
+        "from": "Models/GLB format/tower-hexagon-mid.glb",
+        "sha256": "131045c750296bc84e8f6192918270a4424217484b03627a73e9f584ac4f4888",
+        "size": 33568
+      },
+      {
+        "path": "tower-hexagon-roof.glb",
+        "from": "Models/GLB format/tower-hexagon-roof.glb",
+        "sha256": "6bd3fb7fd8069419787e806990c9cf3869396e766a1b8cd16c2b3a1414961a0a",
+        "size": 8400
+      },
+      {
+        "path": "tower-hexagon-top.glb",
+        "from": "Models/GLB format/tower-hexagon-top.glb",
+        "sha256": "22a043cde795ebc6e5720daee4944f468de5f0ef62296495d0374d4b169ec892",
+        "size": 13848
+      },
+      {
+        "path": "tower-square-base.glb",
+        "from": "Models/GLB format/tower-square-base.glb",
+        "sha256": "996887e98957eeea2ba7b5d14f0d17877c91e4e99e1c5b8ee57d87b7f7c9d5e8",
+        "size": 4456
+      },
+      {
+        "path": "tower-square-mid-windows.glb",
+        "from": "Models/GLB format/tower-square-mid-windows.glb",
+        "sha256": "68c186f978135ba77969cdbee502a1c0d9d8f40bd01e8aa33b7cc6859a2ba766",
+        "size": 30852
+      },
+      {
+        "path": "tower-square-mid.glb",
+        "from": "Models/GLB format/tower-square-mid.glb",
+        "sha256": "34a43b162b0984df0c691cb12fcd169ff374412deca0de5fdfdd702a9fa0c98f",
+        "size": 7744
+      },
+      {
+        "path": "tower-square-roof.glb",
+        "from": "Models/GLB format/tower-square-roof.glb",
+        "sha256": "94215209b27f5274188d70906d2a4df357529abd878b6b916bfb61ac5e64d1c8",
+        "size": 14036
+      },
+      {
+        "path": "tower-square-top-roof-high-windows.glb",
+        "from": "Models/GLB format/tower-square-top-roof-high-windows.glb",
+        "sha256": "8e673350705e369a25afd6e8706946f0e41abeaf01b94abfe06c358e2e31876b",
+        "size": 22788
+      },
+      {
+        "path": "tower-square-top-roof-high.glb",
+        "from": "Models/GLB format/tower-square-top-roof-high.glb",
+        "sha256": "b9345255366bc88744eea5469dddb4dedf2c70f33075b0fde53144ca251e25ea",
+        "size": 11288
+      },
+      {
+        "path": "wall-corner.glb",
+        "from": "Models/GLB format/wall-corner.glb",
+        "sha256": "82d27b869162b6a9ee19b0d7480913f56928b6620708f3b3899131495803cc9a",
+        "size": 15264
+      },
+      {
+        "path": "wall-doorway.glb",
+        "from": "Models/GLB format/wall-doorway.glb",
+        "sha256": "8daf5cccceace888d51d74b0e0254e192004faf926e07f1b28e94191879af3a6",
+        "size": 37560
+      },
+      {
+        "path": "wall-half.glb",
+        "from": "Models/GLB format/wall-half.glb",
+        "sha256": "4f0baca90eb52d96717aaabf36db98f1f2b554876f44da533b57dd92b6f67965",
+        "size": 12132
+      },
+      {
+        "path": "wall-pillar.glb",
+        "from": "Models/GLB format/wall-pillar.glb",
+        "sha256": "22d359abfaa3cf3dc5a2fece09a108024a07a4e263b21a4a0689da0e630699ed",
+        "size": 18156
+      },
+      {
+        "path": "wall.glb",
+        "from": "Models/GLB format/wall.glb",
+        "sha256": "b2ea00acbf4ba91ff0d4b8b942edf9fa12d821abd0b2c945c57a2b9b3153cfe3",
+        "size": 16552
+      }
+    ]
+  },
+  {
+    "id": "kaykit-dungeon-remastered-1.0",
+    "creator": "Kay Lousberg (www.kaylousberg.com)",
+    "sourceUrl": "https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0",
+    "version": "git b0ca9bd96a8072ab36a3a5464f00ed1e06a16d07 (2023-09-29)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kaykit-dungeon-remastered-1.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/props/kaykit-dungeon",
+    "modified": false,
+    "notes": "Files are addons/kaykit_dungeon_remastered/Assets/gltf/<name>.gltf.glb, renamed to <name>.glb; content unmodified.",
+    "usedIn": "Props: barrels, kegs, crates, tables, workbenches, candles, banners.",
+    "source": {
+      "kind": "git",
+      "repository": "https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0",
+      "commit": "b0ca9bd96a8072ab36a3a5464f00ed1e06a16d07",
+      "raw": "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0/b0ca9bd96a8072ab36a3a5464f00ed1e06a16d07/"
+    },
+    "fileCount": 51,
+    "totalBytes": 2376049,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "LICENSE.txt",
+        "sha256": "c5f17abf619731f57f6bbff450f6484214605c13aa96bb75bbcfc70930941ff7",
+        "size": 829
+      },
+      {
+        "path": "banner_patternA_blue.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_patternA_blue.gltf.glb",
+        "sha256": "041c272b889fad4ae82d1b73817fe988759cb16129183a86fe5560e123eab75d",
+        "size": 25164
+      },
+      {
+        "path": "banner_patternA_red.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_patternA_red.gltf.glb",
+        "sha256": "64243b0a8110bbc6e5a02f5c0acbe447dc7ea65319123319c402dd26486dad25",
+        "size": 25164
+      },
+      {
+        "path": "banner_patternB_blue.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_patternB_blue.gltf.glb",
+        "sha256": "a86be2d4bc01207ab694b614a9bb9e358ed498467a8e8bcd695c838be0f4f88a",
+        "size": 24224
+      },
+      {
+        "path": "banner_shield_blue.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_shield_blue.gltf.glb",
+        "sha256": "27fc58e296e15ce180f212be6998677ab191b5055d194d2b062c95ce8c7acef7",
+        "size": 55104
+      },
+      {
+        "path": "banner_thin_blue.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_thin_blue.gltf.glb",
+        "sha256": "e22a1381c5832a6cc3019c2b62d5406cee8a470b4bd2e53110e29231fcd18637",
+        "size": 23084
+      },
+      {
+        "path": "banner_thin_yellow.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_thin_yellow.gltf.glb",
+        "sha256": "0ea08b5b279e186d2f1e088c3a5f600273afa8af12beea016a4e8dd4d450b842",
+        "size": 23084
+      },
+      {
+        "path": "banner_triple_blue.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/banner_triple_blue.gltf.glb",
+        "sha256": "58e9a9625c99b199e7ae3f387e1594915a4d6091b0e93da0d0b2ac18aeb691bc",
+        "size": 36232
+      },
+      {
+        "path": "barrel_large.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/barrel_large.gltf.glb",
+        "sha256": "9fae6a79056241baf253fe9272dc7a7ddb174e1caf153eb5013c58a596722148",
+        "size": 44292
+      },
+      {
+        "path": "barrel_large_decorated.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/barrel_large_decorated.gltf.glb",
+        "sha256": "d3ad760d5005500a8755e5a816e574dd7e4227c5bb038685a3cb0ab2ad8bb6cb",
+        "size": 73628
+      },
+      {
+        "path": "barrel_small.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/barrel_small.gltf.glb",
+        "sha256": "f46d0c421e46080aff079286ce9459a22da25e1b4f3489a04243f17617175212",
+        "size": 32060
+      },
+      {
+        "path": "barrel_small_stack.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/barrel_small_stack.gltf.glb",
+        "sha256": "c23dc73a11c5a57ed33cb8a9df99f2b2793517341c5d62c6e50b0150652e8e99",
+        "size": 98092
+      },
+      {
+        "path": "bottle_A_brown.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/bottle_A_brown.gltf.glb",
+        "sha256": "14180809d494fdd48fd3771e02c36a076e8e729b5efb3bea18e1e157d1c11874",
+        "size": 26140
+      },
+      {
+        "path": "bottle_A_green.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/bottle_A_green.gltf.glb",
+        "sha256": "32759c64c6e8fe5634753134748f4b759b698aafb1245b8ed9fe62afe390faa5",
+        "size": 26460
+      },
+      {
+        "path": "bottle_B_brown.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/bottle_B_brown.gltf.glb",
+        "sha256": "930b73e80da06d0c7deb03067029472e6208705bd84375a1dc45893c8914a8dc",
+        "size": 26140
+      },
+      {
+        "path": "bottle_C_green.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/bottle_C_green.gltf.glb",
+        "sha256": "f5a58323b1ea2443d52e6bfb28a8e33326f573dd975fe8d9f9f59a45ab8eff00",
+        "size": 26460
+      },
+      {
+        "path": "box_large.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/box_large.gltf.glb",
+        "sha256": "6dacda267f04769f8ebbb7e991885785054923ea3d5eb19e833768a911d5b661",
+        "size": 28740
+      },
+      {
+        "path": "box_small.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/box_small.gltf.glb",
+        "sha256": "3052015d7cd670c170742317fd9c728e5643221450857abbae9eefe6dbc66092",
+        "size": 28692
+      },
+      {
+        "path": "box_stacked.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/box_stacked.gltf.glb",
+        "sha256": "c9035de1145d1cee058941abc4bc9ea7b039c98e94c56712cb5e9626a3d18017",
+        "size": 146968
+      },
+      {
+        "path": "candle.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/candle.gltf.glb",
+        "sha256": "0c1dfc1e792ed64193a166f4c39ed301f00277703041063daa847c3d4526b9bb",
+        "size": 20784
+      },
+      {
+        "path": "candle_lit.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/candle_lit.gltf.glb",
+        "sha256": "a884f27540b8b91e3d47914453cbf2c4d48f4ca8504ace9960a8d9b4e79a6c48",
+        "size": 22648
+      },
+      {
+        "path": "candle_triple.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/candle_triple.gltf.glb",
+        "sha256": "3536f0a55df50c728ec9c369c4a6a81c913b33a507ac4a192d418d28fd6677c2",
+        "size": 28240
+      },
+      {
+        "path": "chair.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/chair.gltf.glb",
+        "sha256": "5f133281686d398304c0a458c4d407dd483eeea8aba67220b585ceb89366efa2",
+        "size": 36252
+      },
+      {
+        "path": "coin_stack_medium.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/coin_stack_medium.gltf.glb",
+        "sha256": "a6b3f67cf395820c75fafb09337009be7faf1d6a9de93a3f77cfc04c565374b2",
+        "size": 63996
+      },
+      {
+        "path": "column.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/column.gltf.glb",
+        "sha256": "761adf0fcc1a86ab1c42740b7a8ad340d73982f94257e7892b2c7998f98c304e",
+        "size": 20260
+      },
+      {
+        "path": "crates_stacked.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/crates_stacked.gltf.glb",
+        "sha256": "43182b077ead9b033804300ef453b7402bdc979f00cfce2d7f0c91dcf6bb5d3c",
+        "size": 103704
+      },
+      {
+        "path": "keg.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/keg.gltf.glb",
+        "sha256": "cc620e27439ab8dbbf93b1c4bd94d1d634798757c0314b2c9f12bb445afd0f51",
+        "size": 59912
+      },
+      {
+        "path": "keg_decorated.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/keg_decorated.gltf.glb",
+        "sha256": "02a31f44f66de39375510cd1ef35c5d19cee4cf910d78f38bc5f89093a6a2670",
+        "size": 142052
+      },
+      {
+        "path": "pillar.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/pillar.gltf.glb",
+        "sha256": "e31da496461921475384c62ce761cd23924892bd6f32aeea68bd913545caee33",
+        "size": 25552
+      },
+      {
+        "path": "plate.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/plate.gltf.glb",
+        "sha256": "c4c0e52b75a8f283e724f9e7695870f8fad7b608e0f67c90db0c1781406d3f38",
+        "size": 22884
+      },
+      {
+        "path": "plate_food_A.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/plate_food_A.gltf.glb",
+        "sha256": "4549db448834c615e753f65327d01b8f55b9d20d915e004c8a0da123cb76e86e",
+        "size": 41236
+      },
+      {
+        "path": "plate_food_B.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/plate_food_B.gltf.glb",
+        "sha256": "b3ca88e56eeab02e969c38a25bb7dedb34989a401afb7aee44a408f37937701c",
+        "size": 31980
+      },
+      {
+        "path": "plate_stack.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/plate_stack.gltf.glb",
+        "sha256": "bd872e234a18896f6e9634e9509efc5bf59fdd1b6cf6e36d74530e8239024387",
+        "size": 35728
+      },
+      {
+        "path": "shelf_large.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/shelf_large.gltf.glb",
+        "sha256": "886feece503686307dd041c986b1ea6f1fd63792c7e4217eb16f95904e6a9767",
+        "size": 22012
+      },
+      {
+        "path": "shelf_small.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/shelf_small.gltf.glb",
+        "sha256": "270615f38648d2ab9d5d67e390a97929a07d6df81b7a7e131c8d73a6d2767078",
+        "size": 20932
+      },
+      {
+        "path": "shelves.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/shelves.gltf.glb",
+        "sha256": "8df148ae0f4909512295302491f2b40dc3ae84d072f2cacdfd929c7848d7062e",
+        "size": 26996
+      },
+      {
+        "path": "stool.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/stool.gltf.glb",
+        "sha256": "f9170499ea599e6283d35be600150d2171d9a7af1ae0e8a1ccbe98ef29b71d8e",
+        "size": 28528
+      },
+      {
+        "path": "sword_shield.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/sword_shield.gltf.glb",
+        "sha256": "4dc33b156a166b2c47cf3ac0344f9462946e952ee8c12945bbe6aedddf63af72",
+        "size": 47764
+      },
+      {
+        "path": "table_long.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_long.gltf.glb",
+        "sha256": "83996a7a544a257630510b61eadebb8842e4313ca3c774b35774cad9b6f949c8",
+        "size": 35128
+      },
+      {
+        "path": "table_long_decorated_A.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_long_decorated_A.gltf.glb",
+        "sha256": "47564d874e79f04212c05487d88ac8cbe9bb50b1865a8eeb1178bcb711aa444d",
+        "size": 120792
+      },
+      {
+        "path": "table_long_tablecloth_decorated_A.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_long_tablecloth_decorated_A.gltf.glb",
+        "sha256": "43becc5ada637e494e617e5abdb13f15b53054d3581679162e3098d8fc0d5376",
+        "size": 124064
+      },
+      {
+        "path": "table_medium.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_medium.gltf.glb",
+        "sha256": "9686a202ea2f825062dfab02d89cded25d7acc07847b88c1e39f0e09e085872a",
+        "size": 33832
+      },
+      {
+        "path": "table_medium_decorated_A.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_medium_decorated_A.gltf.glb",
+        "sha256": "dc5beae322011acbce5c3dccb3c5cbaffae9757ad67d6ab0cf574c11b7ce014c",
+        "size": 82588
+      },
+      {
+        "path": "table_medium_tablecloth_decorated_B.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_medium_tablecloth_decorated_B.gltf.glb",
+        "sha256": "5f8d91096f1748a5f5991b7dacfa90ad205219616cb25312d2640b12f3e521e4",
+        "size": 83916
+      },
+      {
+        "path": "table_small.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_small.gltf.glb",
+        "sha256": "92e644e5251b5f003762948c55ca0aa86e7b1a945ab7c843e2a5ce218ae7940c",
+        "size": 29908
+      },
+      {
+        "path": "table_small_decorated_A.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_small_decorated_A.gltf.glb",
+        "sha256": "8b079b22cc25ae79241ab29f94d3118d0214eadfa2c5711da88852ffdd554223",
+        "size": 67672
+      },
+      {
+        "path": "table_small_decorated_B.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/table_small_decorated_B.gltf.glb",
+        "sha256": "7ef39cdd7a04fb30279415a7fb62e98e6d4fdce1256d5857b81cbc3c56dce63e",
+        "size": 105068
+      },
+      {
+        "path": "torch_lit.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/torch_lit.gltf.glb",
+        "sha256": "45fcfeb3b129722019d42aef0acae8f6c5f8f6dbdf5d3346ceea1f084b69b396",
+        "size": 31244
+      },
+      {
+        "path": "torch_mounted.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/torch_mounted.gltf.glb",
+        "sha256": "a617c159e02932db48ca81ec46f1f100acc8904fb6ece43e919d2f93c13950e9",
+        "size": 33220
+      },
+      {
+        "path": "trunk_large_A.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/trunk_large_A.gltf.glb",
+        "sha256": "fb915dc521a92708dfe548922cfb09af23392a83a356e65c837cfbc406f237a9",
+        "size": 30180
+      },
+      {
+        "path": "trunk_medium_B.glb",
+        "from": "addons/kaykit_dungeon_remastered/Assets/gltf/trunk_medium_B.gltf.glb",
+        "sha256": "4d0da78c351495995aa5192df7f64c37a486f4fdd23b59f2f173a97f720def57",
+        "size": 26420
+      }
+    ]
+  },
+  {
+    "id": "kaykit-restaurant-bits-1.0",
+    "creator": "Kay Lousberg (www.kaylousberg.com)",
+    "sourceUrl": "https://github.com/KayKit-Game-Assets/KayKit-Restaurant-Bits-1.0",
+    "version": "git 153c8a7535b48237854cb54ff6890679f8c574d1 (2023-09-29)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kaykit-restaurant-bits-1.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/props/kaykit-restaurant",
+    "modified": false,
+    "notes": "Curated .gltf/.bin + restaurantbits_texture.png from addons/kaykit_restaurant_bits/Assets/gltf/, unmodified.",
+    "usedIn": "Props: round tables, chairs, produce crates and jars.",
+    "source": {
+      "kind": "git",
+      "repository": "https://github.com/KayKit-Game-Assets/KayKit-Restaurant-Bits-1.0",
+      "commit": "153c8a7535b48237854cb54ff6890679f8c574d1",
+      "raw": "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Restaurant-Bits-1.0/153c8a7535b48237854cb54ff6890679f8c574d1/"
+    },
+    "fileCount": 50,
+    "totalBytes": 981574,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "LICENSE.txt",
+        "sha256": "4da4ad3a3face68a71c11c8adc8e93017fdeb8fd67fcb0ca8286bd9c3dbbf674",
+        "size": 862
+      },
+      {
+        "path": "bowl.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/bowl.bin",
+        "sha256": "63e58259e0f92cad6d4cab88ac89609b1ee877b059c2f9658343e809b543fe73",
+        "size": 8256
+      },
+      {
+        "path": "bowl.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/bowl.gltf",
+        "sha256": "cc10f197bd52be38352c1c7bf1371a577ca5e9a64f05059cae357eff138f8916",
+        "size": 3041
+      },
+      {
+        "path": "chair_A.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/chair_A.bin",
+        "sha256": "c95a15bc30e2bb9f122762590819c99934db31b7e7dbf3e54b68eb105e36148b",
+        "size": 16872
+      },
+      {
+        "path": "chair_A.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/chair_A.gltf",
+        "sha256": "0d0abdc382abedb3e4bc2e0260af663c16ff2dab0d441f09d675e0709a7a7310",
+        "size": 3037
+      },
+      {
+        "path": "chair_B.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/chair_B.bin",
+        "sha256": "bd49e308ee3ba0c68a8ded2aebbdf3575c6b676adfc291dcf7e0748b5bdce2fa",
+        "size": 16872
+      },
+      {
+        "path": "chair_B.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/chair_B.gltf",
+        "sha256": "99f967a4de8d458fb4c75e9c32e64e3871fa0d18d4a0df65b40120e3b6d35707",
+        "size": 3037
+      },
+      {
+        "path": "chair_stool.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/chair_stool.bin",
+        "sha256": "dc5b44cad6aece8dc5c6de343f76ff6d600a8bf3c24da27dc44e62a583176325",
+        "size": 10016
+      },
+      {
+        "path": "chair_stool.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/chair_stool.gltf",
+        "sha256": "6b224ab4884e7fff7083c02f630afc63cad698dbd4a99860d6f8988f308069b6",
+        "size": 3009
+      },
+      {
+        "path": "crate.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate.bin",
+        "sha256": "252687039209b62a3283319d2836d0e0d6745dd638ea53e2315df981c75a6c07",
+        "size": 8984
+      },
+      {
+        "path": "crate.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate.gltf",
+        "sha256": "f745014f6239147f2528ac24ef988a5833d048bd3aede81085f4c4fc879a8e16",
+        "size": 3017
+      },
+      {
+        "path": "crate_buns.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_buns.bin",
+        "sha256": "027f1511a12f4b4bd7926ef592731e2a3f2414e30195f5648f8df016c352781e",
+        "size": 102776
+      },
+      {
+        "path": "crate_buns.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_buns.gltf",
+        "sha256": "1bf19d10a601dc62820df5c2ccb239cd1fb35f5a5866363810b8c3c33b2a3594",
+        "size": 3041
+      },
+      {
+        "path": "crate_carrots.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_carrots.bin",
+        "sha256": "40e0bf2bced5f00d6d5af93ec3769a335a37291c47e6d6bab82db7fd940f1454",
+        "size": 63184
+      },
+      {
+        "path": "crate_carrots.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_carrots.gltf",
+        "sha256": "874ce9c535908dbc355b42c99c1b04dc8e5ba0e3b5b3c7687b21165dd09a2429",
+        "size": 3046
+      },
+      {
+        "path": "crate_cheese.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_cheese.bin",
+        "sha256": "19e9337e9fa91d0b93ae7811650e08e2c381f5f079841ffa74895a919662af36",
+        "size": 50248
+      },
+      {
+        "path": "crate_cheese.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_cheese.gltf",
+        "sha256": "33e677e0ed4a7b89fd1e03316827cc8160dccab6ef6e29417b2f914caff13d0f",
+        "size": 3043
+      },
+      {
+        "path": "crate_ham.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_ham.bin",
+        "sha256": "5cbe769bcdfc32cea94a1ce7e65e1acfdc4246085b52d3958d9099d884df7aa6",
+        "size": 26392
+      },
+      {
+        "path": "crate_ham.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_ham.gltf",
+        "sha256": "b053509349cb31f48cf512d387ede276b6d3a08ac50d0daec1363478b27d699e",
+        "size": 3030
+      },
+      {
+        "path": "crate_lettuce.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_lettuce.bin",
+        "sha256": "52646e26ffeff9b5ffc1e43ab04a02bc1f7be5f8fa979130d22fa6add086c208",
+        "size": 69416
+      },
+      {
+        "path": "crate_lettuce.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_lettuce.gltf",
+        "sha256": "cdc567b305563ffc9d49020e5baddfce95b26a9d76f375e5652b7671addcd5ee",
+        "size": 3046
+      },
+      {
+        "path": "crate_onions.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_onions.bin",
+        "sha256": "44cad75a538bd9f9d3801df15df9d64ee1b37596aff9d74b72850614e1297510",
+        "size": 60664
+      },
+      {
+        "path": "crate_onions.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_onions.gltf",
+        "sha256": "ef56ebc45c3607301743205af71b1af7df5840fde234ae5f8cc04ae1834bc757",
+        "size": 3043
+      },
+      {
+        "path": "crate_potatoes.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_potatoes.bin",
+        "sha256": "0f77c9bdef536155f586907f3d100d373c8a62a7a017f032e5e623e604794996",
+        "size": 29960
+      },
+      {
+        "path": "crate_potatoes.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_potatoes.gltf",
+        "sha256": "4d04acf2bfebdee4d1f3585cf7e0507d50c61b729c255231271416171af564f5",
+        "size": 3040
+      },
+      {
+        "path": "crate_tomatoes.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_tomatoes.bin",
+        "sha256": "8b5f6e2796aaf8f205e2130d571ba59bdc0c00f35059a4c457bf91228295d0fe",
+        "size": 81904
+      },
+      {
+        "path": "crate_tomatoes.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/crate_tomatoes.gltf",
+        "sha256": "ac6f8440203300763a3381b0fac4937707096832d91267eead1647d5a2e01846",
+        "size": 3048
+      },
+      {
+        "path": "food_dinner.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/food_dinner.bin",
+        "sha256": "cdab092747bd4cdafaf8966e0d510f227e7becd695d71d312a3055fdfa098e47",
+        "size": 44744
+      },
+      {
+        "path": "food_dinner.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/food_dinner.gltf",
+        "sha256": "d5882d178346c41305152ee9199d7fbee3fa8e34704292e906d13372f374a242",
+        "size": 3065
+      },
+      {
+        "path": "food_stew.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/food_stew.bin",
+        "sha256": "74cd8cfe414a46bc5308e93e37bb810694f752e9924ec2abcbb165874cb396eb",
+        "size": 22944
+      },
+      {
+        "path": "food_stew.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/food_stew.gltf",
+        "sha256": "753f6b30842589c744f959f5ddb90bf07fba4aba30c5d72dc0ba300549b5bff4",
+        "size": 3056
+      },
+      {
+        "path": "jar_A_large.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/jar_A_large.bin",
+        "sha256": "d8c85da629a0a80823720e64bc2885fd8b85783db569a333185f1e5c1534050f",
+        "size": 6448
+      },
+      {
+        "path": "jar_A_large.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/jar_A_large.gltf",
+        "sha256": "593f586c816ff1cf542a4e249da8f27c39ebc22511a75dacc692a0f4092cb60b",
+        "size": 3027
+      },
+      {
+        "path": "jar_B_medium.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/jar_B_medium.bin",
+        "sha256": "195369a3f5589cb5e50fa41c1070d753f11e4034ca34bbe45260be67569431c3",
+        "size": 7208
+      },
+      {
+        "path": "jar_B_medium.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/jar_B_medium.gltf",
+        "sha256": "c730924b7b6ea11613b236c3bf5225343ae8c89c969cd721b50111402f0f9c6a",
+        "size": 3029
+      },
+      {
+        "path": "jar_C_small.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/jar_C_small.bin",
+        "sha256": "863cfbb0041a93d7286160a9ab8d1f22f6d555a58df7e8029ed0fa5620dbe7e0",
+        "size": 6976
+      },
+      {
+        "path": "jar_C_small.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/jar_C_small.gltf",
+        "sha256": "e098bf6baddf81dd3bbdfc24f7268b5f3b90831b0ee87c01ad66d767fed54b5e",
+        "size": 3056
+      },
+      {
+        "path": "menu.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/menu.bin",
+        "sha256": "56bee60b3e949e829f4801d9c01dae2706d9a3f36d326b336881c9ec21cc5650",
+        "size": 5448
+      },
+      {
+        "path": "menu.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/menu.gltf",
+        "sha256": "8f71400aa63c18c893dc85144e5ea5fa4f152525510548d68e0f6f5f5d3966fb",
+        "size": 2990
+      },
+      {
+        "path": "pot_large.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/pot_large.bin",
+        "sha256": "e35e7577dd6b855a55051b2cd8f0b1a1cd489dff2f31fce61ffcdc6eb9e22c62",
+        "size": 16760
+      },
+      {
+        "path": "pot_large.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/pot_large.gltf",
+        "sha256": "5289242fc02b708cfd2ef8318cf2bf5a3ee6c06263d636e75350960fa8d4f4b9",
+        "size": 2985
+      },
+      {
+        "path": "restaurantbits_texture.png",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/restaurantbits_texture.png",
+        "sha256": "1bfff8f880c5e5e1b793bc46fa1f91149b7f70766174a817b3d5962495c5e40f",
+        "size": 21070
+      },
+      {
+        "path": "stew_pot.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/stew_pot.bin",
+        "sha256": "f5201cea5ac83687c2df57192e6166b7cda020b5c30edd28be85d20b78c27875",
+        "size": 14688
+      },
+      {
+        "path": "stew_pot.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/stew_pot.gltf",
+        "sha256": "a8cb68c28917a23bc06f1f1c0773bec00966e7029272e355518bd004ce9d77dc",
+        "size": 3046
+      },
+      {
+        "path": "table_round_A.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/table_round_A.bin",
+        "sha256": "d6122d1b2b5c5b7348f033b97e6cac7f897dd0978a4b7a9c383d2f15a02a5844",
+        "size": 12528
+      },
+      {
+        "path": "table_round_A.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/table_round_A.gltf",
+        "sha256": "20a3b1b8d1cf6cad642f3f9590667bb9b7fa3c318dd603604280a3254be5cf33",
+        "size": 3001
+      },
+      {
+        "path": "table_round_A_decorated.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/table_round_A_decorated.bin",
+        "sha256": "6c095e9fc82a138da8809cbe97f11c129b811b6c613553d4e3e5ef5410d7e1d8",
+        "size": 172612
+      },
+      {
+        "path": "table_round_A_decorated.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/table_round_A_decorated.gltf",
+        "sha256": "4e1e3a78f39eedd74cb274d77e35c1582324aab81aeef0bf74cd43c5d51a430d",
+        "size": 3034
+      },
+      {
+        "path": "table_round_A_small_decorated.bin",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/table_round_A_small_decorated.bin",
+        "sha256": "0bb14d0b133e9bc093d76c390ef0ee360a0ee902fa008965c062dfa60dbd3f54",
+        "size": 30936
+      },
+      {
+        "path": "table_round_A_small_decorated.gltf",
+        "from": "addons/kaykit_restaurant_bits/Assets/gltf/table_round_A_small_decorated.gltf",
+        "sha256": "e7ec4792ff25dd495aa9ccc485b771a762f1aa052382a973b8253ddc82b91199",
+        "size": 3039
+      }
+    ]
+  },
+  {
+    "id": "kaykit-halloween-bits-1.0",
+    "creator": "Kay Lousberg (www.kaylousberg.com)",
+    "sourceUrl": "https://github.com/KayKit-Game-Assets/KayKit-Halloween-Bits-1.0",
+    "version": "git 6dc69bf6b2fa766a985754f35ec6a0324090e6c6 (2023-10-06)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kaykit-halloween-bits-1.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/props/kaykit-halloween",
+    "modified": false,
+    "notes": "Curated non-spooky pieces (lanterns, benches, fence, plaques) .gltf/.bin + texture, unmodified.",
+    "usedIn": "Props: hanging and standing lanterns, benches.",
+    "source": {
+      "kind": "git",
+      "repository": "https://github.com/KayKit-Game-Assets/KayKit-Halloween-Bits-1.0",
+      "commit": "6dc69bf6b2fa766a985754f35ec6a0324090e6c6",
+      "raw": "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Halloween-Bits-1.0/6dc69bf6b2fa766a985754f35ec6a0324090e6c6/"
+    },
+    "fileCount": 26,
+    "totalBytes": 315903,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "LICENSE.txt",
+        "sha256": "a514c41d8d5f2a07c94c55acd29ba94f50b86837f972e37edb4cbdeb7ba0e0e0",
+        "size": 877
+      },
+      {
+        "path": "arch.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/arch.bin",
+        "sha256": "fa7f31b0332c8bade6c1855f3790944a6eab7831da045d0f337d7152f2876df0",
+        "size": 28856
+      },
+      {
+        "path": "arch.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/arch.gltf",
+        "sha256": "166ac2da5f72d843e79ecc250a30b4a8075175afe5036c6f590e755c38d43f01",
+        "size": 3035
+      },
+      {
+        "path": "bench.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/bench.bin",
+        "sha256": "9176f239a3783d116b6cc5f68f4000a17c891d0f944841ccf06c6f9dbc1e734e",
+        "size": 10888
+      },
+      {
+        "path": "bench.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/bench.gltf",
+        "sha256": "3d01b23bf2cb341b16304c4264053248863af9df4d94c72e09793621dea79a06",
+        "size": 3035
+      },
+      {
+        "path": "bench_decorated.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/bench_decorated.bin",
+        "sha256": "93b58297f0c3cb993b59ab9e1d310493bcbfb4c80c553aebb280e234278a14cd",
+        "size": 47404
+      },
+      {
+        "path": "bench_decorated.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/bench_decorated.gltf",
+        "sha256": "3cee73daff0d50f9a9746ae1df2601970170da579e820e2e1738129444cd19e6",
+        "size": 3065
+      },
+      {
+        "path": "candle_triple.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/candle_triple.bin",
+        "sha256": "387e220f5c4367aae3025aea7ddbfccf987513da52276dc3833faa669b183c43",
+        "size": 9924
+      },
+      {
+        "path": "candle_triple.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/candle_triple.gltf",
+        "sha256": "e7b0f28c03e4b19fde8af713f952660ad786bd3a80932a2bbe48dfe0d0edede5",
+        "size": 3056
+      },
+      {
+        "path": "fence.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/fence.bin",
+        "sha256": "5542f695ba30b0f8d1d57d0d27ea6c310de823e73524acb042adb83f9ef63e4f",
+        "size": 26728
+      },
+      {
+        "path": "fence.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/fence.gltf",
+        "sha256": "341bdb0bc8c4d6895a7184daebf76522866677909992701efbd3a719b348d4a7",
+        "size": 2976
+      },
+      {
+        "path": "fence_gate.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/fence_gate.bin",
+        "sha256": "7c889d9be8a43cd94758bcafcae19ce80fbd1f168d5f6bff016894ab53e85d78",
+        "size": 42056
+      },
+      {
+        "path": "fence_gate.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/fence_gate.gltf",
+        "sha256": "398277ba630e41636df67ab7632f08a9e1613c7a2b8d5adac79045dd8b12b547",
+        "size": 7001
+      },
+      {
+        "path": "fence_pillar.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/fence_pillar.bin",
+        "sha256": "58f08ab74bc73a6ecc018eedc9be9fd46984017271b112bca3da0d9e5220c129",
+        "size": 6324
+      },
+      {
+        "path": "fence_pillar.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/fence_pillar.gltf",
+        "sha256": "95042fd32654eab298866a3505a16375e587b2bbc3200d7e00b4ec3d680e0259",
+        "size": 3005
+      },
+      {
+        "path": "halloweenbits_texture.png",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/halloweenbits_texture.png",
+        "sha256": "1e671e9b176b290a35ce8f5f22c773b3f5e9c7a9cf0e1991de51e44dd3a23e7c",
+        "size": 15093
+      },
+      {
+        "path": "lantern_hanging.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/lantern_hanging.bin",
+        "sha256": "70b22bad9a65b155b5f574ea523e63fa576b1946a4b77c6645e8023c82ac18db",
+        "size": 19472
+      },
+      {
+        "path": "lantern_hanging.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/lantern_hanging.gltf",
+        "sha256": "b78ac136d5e7edc169247f42d3ddc87478bb9c511c80b6830a666fcfc745b054",
+        "size": 3080
+      },
+      {
+        "path": "lantern_standing.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/lantern_standing.bin",
+        "sha256": "aaaf6525e6a7d70c50f631fff91b8931e1571418e097ef0ecc99c8da9cc24387",
+        "size": 12400
+      },
+      {
+        "path": "lantern_standing.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/lantern_standing.gltf",
+        "sha256": "7fbaed7c4f33181d22c015e11aa9b3d8d04f77f1658b6a80ed2dc23746fb7fc5",
+        "size": 3084
+      },
+      {
+        "path": "plaque.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/plaque.bin",
+        "sha256": "9f1d79db02d7ff6d242fa42239d85bbfa31bc9af4635280172567bc5e4d1efe9",
+        "size": 5648
+      },
+      {
+        "path": "plaque.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/plaque.gltf",
+        "sha256": "02a11d33633f81b2104c5ef6832ed8a23eec538e13700d060550a3f474eae229",
+        "size": 2984
+      },
+      {
+        "path": "plaque_candles.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/plaque_candles.bin",
+        "sha256": "c65ca731d2c65b680b7add15a96015bf06c864e62089bb20635e03e7251c1897",
+        "size": 22188
+      },
+      {
+        "path": "plaque_candles.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/plaque_candles.gltf",
+        "sha256": "51b8e7fb1dc0a02ab3d8e90a7cc7ce60d5609ae863b7ea73fca7ff43c91ae87b",
+        "size": 3005
+      },
+      {
+        "path": "post_lantern.bin",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/post_lantern.bin",
+        "sha256": "4fe74fc99942043312a311e013d0d9e82135b896f4c7ab6289abbc93738638b8",
+        "size": 25584
+      },
+      {
+        "path": "post_lantern.gltf",
+        "from": "addons/kaykit_halloween_bits/Assets/gltf/post_lantern.gltf",
+        "sha256": "e2db415a575458f7c4077ed45349d33327a2f431479123e2b276736484dd45bb",
+        "size": 5135
+      }
+    ]
+  },
+  {
+    "id": "kaykit-medieval-hexagon-pack-1.0",
+    "creator": "Kay Lousberg (www.kaylousberg.com)",
+    "sourceUrl": "https://github.com/KayKit-Game-Assets/KayKit-Medieval-Hexagon-Pack-1.0",
+    "version": "git 84fa4e91af6a88989be7c99e0891cede11f2ca38 (2024-04-26)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kaykit-medieval-hexagon-pack-1.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/props/kaykit-medieval",
+    "modified": false,
+    "notes": "Curated .gltf/.bin + hexagons_medieval.png, unmodified: decoration/props, plus the blue building variants (castle, towers A/B/base, church), wall pieces and the mountain/hill/tree pieces. All files from the same pack commit; one shared palette texture.",
+    "usedIn": "Props (crates, lumber, wheelbarrow, ladder, sacks) and building kit pieces: curtain walls, wall towers, castles, church and towers, rock peaks and pines (grass recoloured in a shader at runtime, files untouched).",
+    "source": {
+      "kind": "git",
+      "repository": "https://github.com/KayKit-Game-Assets/KayKit-Medieval-Hexagon-Pack-1.0",
+      "commit": "84fa4e91af6a88989be7c99e0891cede11f2ca38",
+      "raw": "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Medieval-Hexagon-Pack-1.0/84fa4e91af6a88989be7c99e0891cede11f2ca38/"
+    },
+    "fileCount": 78,
+    "totalBytes": 1541701,
+    "files": [
+      {
+        "path": "LICENSE.txt",
+        "from": "LICENSE.txt",
+        "sha256": "881e50d3629fba90629bedc65e9e6f47cfab3609598c296dcb7f70ea83174360",
+        "size": 1027
+      },
+      {
+        "path": "barrel.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/barrel.bin",
+        "sha256": "ff1b034f1ac95b063a2baa3d72a0ad0b33f25337f776e7a25fbc811d9c77dee8",
+        "size": 15552
+      },
+      {
+        "path": "barrel.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/barrel.gltf",
+        "sha256": "24673663eb53ffab6c8db612654856f051c4877bfc02ea25fee89cd95ee4d100",
+        "size": 3042
+      },
+      {
+        "path": "bucket_water.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/bucket_water.bin",
+        "sha256": "715a23aa28232449c1b99d62a5f9d432f080dda0e766cbe09ef2fee38b4be958",
+        "size": 6976
+      },
+      {
+        "path": "bucket_water.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/bucket_water.gltf",
+        "sha256": "5e7ba97fe666f4a05d1933ea6d2d8555f5846ca4fc0f19e673e922d8441c8c4b",
+        "size": 3058
+      },
+      {
+        "path": "building_castle_blue.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_castle_blue.bin",
+        "sha256": "519004b02fe38eeadecf1f12722e47e40c342fa4bb01ade370734c63936d66a5",
+        "size": 317732
+      },
+      {
+        "path": "building_castle_blue.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_castle_blue.gltf",
+        "sha256": "f23ede8641122d2226f02a5fdb4957dfedec99accf27240f07ef7fb312696759",
+        "size": 3072
+      },
+      {
+        "path": "building_church_blue.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_church_blue.bin",
+        "sha256": "f1609a2910972dd82f948b7265e65646a93cbe303d5deb7c69d5b3d6f4f50dda",
+        "size": 89736
+      },
+      {
+        "path": "building_church_blue.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_church_blue.gltf",
+        "sha256": "ac2d9dfbdcffd1604e1522ddb26fe27c1feae2bc01bf90664c8044b22926867b",
+        "size": 3089
+      },
+      {
+        "path": "building_tower_A_blue.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_tower_A_blue.bin",
+        "sha256": "5feb3e59e0a48d3bfaf852374c870b28452526c795ac54c344a23e57f4e5211d",
+        "size": 112860
+      },
+      {
+        "path": "building_tower_A_blue.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_tower_A_blue.gltf",
+        "sha256": "792eee30a2c4524a1c26eace28cd7b324ef86a72120766399e695923ea06058c",
+        "size": 5047
+      },
+      {
+        "path": "building_tower_B_blue.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_tower_B_blue.bin",
+        "sha256": "3b01d5ece1aa3a8f5ebb48ae344f0be8678d329ec68822634955e27468a5bc85",
+        "size": 130956
+      },
+      {
+        "path": "building_tower_B_blue.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_tower_B_blue.gltf",
+        "sha256": "41c06933eec6ddcd043c2411e4e6c82ba2efd8371e09d8565b22e14b7d57b33e",
+        "size": 5048
+      },
+      {
+        "path": "building_tower_base_blue.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_tower_base_blue.bin",
+        "sha256": "3f2e11bc4c7cde36a01c9d5fb5dbb98d78d02e6708800fe12b7914698e34da35",
+        "size": 81708
+      },
+      {
+        "path": "building_tower_base_blue.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/building_tower_base_blue.gltf",
+        "sha256": "60c9ea992b4dd584f57183a6c9b89619ff36eda2c81be71cefdb8704bdf84f4a",
+        "size": 3065
+      },
+      {
+        "path": "crate_A_big.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_A_big.bin",
+        "sha256": "600d29bdf010f891dcabfb014b6271789e7b45fec7317989a13ccca92908c5c8",
+        "size": 7000
+      },
+      {
+        "path": "crate_A_big.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_A_big.gltf",
+        "sha256": "a96ce5522e45104b5a04cf9605ca30b9572cc79c7633d41f3434b9843010a225",
+        "size": 3055
+      },
+      {
+        "path": "crate_A_small.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_A_small.bin",
+        "sha256": "f46debeb9ad1f44b174f9bd62c382412172676b1cdfa714d15e3b11227f1eeb3",
+        "size": 7000
+      },
+      {
+        "path": "crate_A_small.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_A_small.gltf",
+        "sha256": "3a7fee2b962949d44bdac360405f2cd9c442bf41eea65e057f08b6b2e2d6f6d8",
+        "size": 3059
+      },
+      {
+        "path": "crate_B_small.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_B_small.bin",
+        "sha256": "2ec0a4cd4f5f1d78963362ecef29ff759985e488b10cdb7001ab43055a978dfb",
+        "size": 7000
+      },
+      {
+        "path": "crate_B_small.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_B_small.gltf",
+        "sha256": "fcee6a90365ce514c14119c0df0e6872008087817918682fa0e753fcd59c047b",
+        "size": 3059
+      },
+      {
+        "path": "crate_long_A.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_long_A.bin",
+        "sha256": "1fb1050d8da5dfa703ed1d5a6c853682161dd299dfa23112941f625f63eae1c3",
+        "size": 14204
+      },
+      {
+        "path": "crate_long_A.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_long_A.gltf",
+        "sha256": "36b6bc187c410f3a4d7ec1bd88161e20ffd43f4b3a952c14165cfb83f65a06ff",
+        "size": 3041
+      },
+      {
+        "path": "crate_open.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_open.bin",
+        "sha256": "e7f3ace70545116f56844b14ab2191efac4d3ed96a454439a6a58b66ad5319c8",
+        "size": 12056
+      },
+      {
+        "path": "crate_open.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/crate_open.gltf",
+        "sha256": "e82806d7cd3d905c4915e81cad1973415aecec83a8d3ad968e0298d8920265ed",
+        "size": 3054
+      },
+      {
+        "path": "flag_blue.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/flag_blue.bin",
+        "sha256": "2ff9fa2caea9c02a2eda8092c203e378ef92dca7741d41110627740211fc03a7",
+        "size": 2464
+      },
+      {
+        "path": "flag_blue.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/flag_blue.gltf",
+        "sha256": "de33035f0e9945f8d4e6ca3242e18f4822227cc8cc3a1afd9f0d193419573f08",
+        "size": 3023
+      },
+      {
+        "path": "flag_red.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/flag_red.bin",
+        "sha256": "04aea453efb0632960b2395a356fd0ee2fd4c24e16fe726be956b1ee182cf4b5",
+        "size": 2464
+      },
+      {
+        "path": "flag_red.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/flag_red.gltf",
+        "sha256": "c1f76b1ca3d47a30a868500ecbe2844e89b75b4bebc7283f41bd37561aa58c1f",
+        "size": 3020
+      },
+      {
+        "path": "flag_yellow.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/flag_yellow.bin",
+        "sha256": "f64d1627cd1222f79c02d0e999528aee9030e4d898b9ea7f633ffd8a12f23cea",
+        "size": 2464
+      },
+      {
+        "path": "flag_yellow.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/flag_yellow.gltf",
+        "sha256": "0e68155151ea610a3a4f37c30127b1275e51c66c2c7afc48803196730b10119a",
+        "size": 3029
+      },
+      {
+        "path": "hexagons_medieval.png",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/blue/hexagons_medieval.png",
+        "sha256": "5301a06866ba3be68dcc14cc429bd6d0f69004b72884283715d7e233f2e9782e",
+        "size": 15783
+      },
+      {
+        "path": "hills_A_trees.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/hills_A_trees.bin",
+        "sha256": "8554d4e0c5e9d049cfc82602bac8db69e3050b7eb6a020039dc7fe6d84ddd272",
+        "size": 31044
+      },
+      {
+        "path": "hills_A_trees.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/hills_A_trees.gltf",
+        "sha256": "6e7e71bd37856c442dc7cf562a1cc1e9eb172050dc002d2d65c3fb5b90ae1d28",
+        "size": 3043
+      },
+      {
+        "path": "hills_B_trees.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/hills_B_trees.bin",
+        "sha256": "ca48d2b45eb7793d7ffc7e8ecfde4ce08248d716c9a7c67ade720c1923de3f0a",
+        "size": 25220
+      },
+      {
+        "path": "hills_B_trees.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/hills_B_trees.gltf",
+        "sha256": "7cc42569d75c661951ca96db8f9d1e1ed163b8fb1d5cce893256648a4f9c20ef",
+        "size": 3058
+      },
+      {
+        "path": "hills_C_trees.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/hills_C_trees.bin",
+        "sha256": "6fd833d5ab2603ea0ddf9f506f291a686de240e2fb1967d91d46fe095e997f8a",
+        "size": 39376
+      },
+      {
+        "path": "hills_C_trees.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/hills_C_trees.gltf",
+        "sha256": "fc168c9bb436f25580715fb17dcb470d8426ae693f7f3dbf0aed6dc0db219092",
+        "size": 3065
+      },
+      {
+        "path": "ladder.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/ladder.bin",
+        "sha256": "07d5f9271a58ae9cc93f3b3877103a6c037b727077b44a5d7a6dc1ae90c2b173",
+        "size": 5880
+      },
+      {
+        "path": "ladder.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/ladder.gltf",
+        "sha256": "de1f471e8c11615388a9caad79aef97414903390ff54924b33bff2547bc19e72",
+        "size": 3040
+      },
+      {
+        "path": "mountain_A_grass.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_A_grass.bin",
+        "sha256": "80ccf91b226646b74d61b99a6c3ab02ada2096bad4f995f2c9f580733f698b74",
+        "size": 15360
+      },
+      {
+        "path": "mountain_A_grass.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_A_grass.gltf",
+        "sha256": "f8e7e228a5c5ec2edb1f8abb899328f085c6a951ca006fabb75df117150a8cd5",
+        "size": 3066
+      },
+      {
+        "path": "mountain_A_grass_trees.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_A_grass_trees.bin",
+        "sha256": "fb278182f717586e4d44a5dcc08b1cfbf4ba42ce25cc6b18c53c3af6e6cc44b1",
+        "size": 27320
+      },
+      {
+        "path": "mountain_A_grass_trees.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_A_grass_trees.gltf",
+        "sha256": "defb29e0132afd4ec5cb33281efb890c9ed9603b5181471b31ff4f21d71c143a",
+        "size": 3085
+      },
+      {
+        "path": "mountain_B_grass.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_B_grass.bin",
+        "sha256": "b69692eb3c98912423315b31f262625074f22e214312d964a8a227339ae7f136",
+        "size": 15232
+      },
+      {
+        "path": "mountain_B_grass.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_B_grass.gltf",
+        "sha256": "4df9f7e2479b581061f3369e9da18de672e89dd896d7cb116d6078c823150afc",
+        "size": 3066
+      },
+      {
+        "path": "mountain_B_grass_trees.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_B_grass_trees.bin",
+        "sha256": "dcc54c16a9c24478c3c8ba10ccc91490640bd6cbec73f293d05b05af1e1ae9f6",
+        "size": 33172
+      },
+      {
+        "path": "mountain_B_grass_trees.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_B_grass_trees.gltf",
+        "sha256": "bdab5e7879a6ac0d783470b2cf7435425b273d101ef38f8aa43b8e19424097f8",
+        "size": 3089
+      },
+      {
+        "path": "mountain_C_grass.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_C_grass.bin",
+        "sha256": "bec03d5977766260c041c443ac5df8eced1e6f2da1d0dc6f42749e1363d3c43a",
+        "size": 25408
+      },
+      {
+        "path": "mountain_C_grass.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_C_grass.gltf",
+        "sha256": "e056305d7080c44fa22125eb17cb00b82d3c04ee67828e8240501672b9cc990b",
+        "size": 3068
+      },
+      {
+        "path": "mountain_C_grass_trees.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_C_grass_trees.bin",
+        "sha256": "3e17063c0a4135f2fcb1ba6aee9468db5ffcc223b2dd809b6f8f9ca6c5ce8ce1",
+        "size": 43348
+      },
+      {
+        "path": "mountain_C_grass_trees.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/mountain_C_grass_trees.gltf",
+        "sha256": "511b1475445b2918cbe3475862550f9fb8bc61ad0224e33d20f55a91770f2975",
+        "size": 3091
+      },
+      {
+        "path": "pallet.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/pallet.bin",
+        "sha256": "b3e0e50ac5aaf3784ebc3ac601bf8f9e04474a575a026ba4cbf9d164dfa14e12",
+        "size": 5040
+      },
+      {
+        "path": "pallet.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/pallet.gltf",
+        "sha256": "4e55587c2f2017e7e2965482b0976c75339e7dafcb627de2d275077bb6a97dc3",
+        "size": 3019
+      },
+      {
+        "path": "resource_lumber.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/resource_lumber.bin",
+        "sha256": "90bb1e1f23dbc3de372059b45ae289ec414b1fb50b49852ce0a3b30dc370db8b",
+        "size": 11880
+      },
+      {
+        "path": "resource_lumber.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/resource_lumber.gltf",
+        "sha256": "601a69f44f0c4a9b5070a80bd4a20887960e01f1523a6125c1edc8ba19168f1f",
+        "size": 3060
+      },
+      {
+        "path": "sack.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/sack.bin",
+        "sha256": "5c3e6f5c63f8c4420ed3dfb2027beffc981740b5af9c89be148b56c19b993e02",
+        "size": 3240
+      },
+      {
+        "path": "sack.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/sack.gltf",
+        "sha256": "b61929d6161907aff4f1fd211cd0a8300d002d1a686ba43d07c4aff171fbd9f0",
+        "size": 3031
+      },
+      {
+        "path": "tent.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/tent.bin",
+        "sha256": "fce10cd8e153d14b53a4f0fd902124c214ea29fac370707bb3a604ce2a718fc2",
+        "size": 6148
+      },
+      {
+        "path": "tent.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/tent.gltf",
+        "sha256": "d8920394ddec09d8afa0cfaa2dad1c75b55fd21819fbd7c31392b3b8dce5dca0",
+        "size": 3008
+      },
+      {
+        "path": "trees_A_large.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_A_large.bin",
+        "sha256": "0f4fe0b3677bfc15b841632db34db8b50c45319492a8e89b6663f679b2525227",
+        "size": 57024
+      },
+      {
+        "path": "trees_A_large.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_A_large.gltf",
+        "sha256": "8747dd5f3d7209e0b01c4b6af662a776db451374b7ee11671d8fa9676d89c33f",
+        "size": 3066
+      },
+      {
+        "path": "trees_A_medium.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_A_medium.bin",
+        "sha256": "3cc6f0f007aa2dc0042583741f35d9b0b8e65496e7289b9e312626c3936ff8b2",
+        "size": 31680
+      },
+      {
+        "path": "trees_A_medium.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_A_medium.gltf",
+        "sha256": "c330d7c775c50b7ccbc6ce7799e699fbdbbeb14a390315e85419dc0dfe5178a6",
+        "size": 3066
+      },
+      {
+        "path": "trees_B_large.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_B_large.bin",
+        "sha256": "125ccb49803100448883631c079c5b95c2d4d2cf6551dd59d31f46eb063702af",
+        "size": 51960
+      },
+      {
+        "path": "trees_B_large.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_B_large.gltf",
+        "sha256": "96079d9ef389d4f51512bed4a8da3d05f89b8bb6a24e1ef0e04711de27f141fd",
+        "size": 3067
+      },
+      {
+        "path": "trees_B_medium.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_B_medium.bin",
+        "sha256": "1e9220c141074ce2d530a14996cd1fc1d02dc49f76c1717cd4e55b8cd3cf1936",
+        "size": 37096
+      },
+      {
+        "path": "trees_B_medium.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/nature/trees_B_medium.gltf",
+        "sha256": "339abd58c47a5d7f2da2b30fe448c72452471a99b22007bc412d7439ef5384ca",
+        "size": 3066
+      },
+      {
+        "path": "wall_corner_A_outside.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/neutral/wall_corner_A_outside.bin",
+        "sha256": "8c899f68972f3c78589fd69a99540fd537886f207bdeb37f78ef0bd3f06f255f",
+        "size": 24788
+      },
+      {
+        "path": "wall_corner_A_outside.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/neutral/wall_corner_A_outside.gltf",
+        "sha256": "75a1adaba70ec6df4ead3a955d3ac02007c8d7b45081ba087584748e805ebd61",
+        "size": 3063
+      },
+      {
+        "path": "wall_straight.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/neutral/wall_straight.bin",
+        "sha256": "919cfc7da53ddfba6143eccfbdf8bdffa4bdb5a01e7099d289b99832971d18f4",
+        "size": 31088
+      },
+      {
+        "path": "wall_straight.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/neutral/wall_straight.gltf",
+        "sha256": "7f466420a00fac9c6eb568178a81ef2719ac3c710f1fdc4027f8fc46a262ad7a",
+        "size": 3009
+      },
+      {
+        "path": "wall_straight_gate.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/neutral/wall_straight_gate.bin",
+        "sha256": "9e64ec5b8c23113bc1bdb57ae824e067216dcf3d8475e6303e3198556fb8da28",
+        "size": 47288
+      },
+      {
+        "path": "wall_straight_gate.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/buildings/neutral/wall_straight_gate.gltf",
+        "sha256": "877f3e95f89c23741c38b9d2f8f307c1369042ec5c354d7858d72ab2b9666c3a",
+        "size": 7198
+      },
+      {
+        "path": "weaponrack.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/weaponrack.bin",
+        "sha256": "3773a0eab3da0c7526a13880b3dc7f2c8c42f97e5b8970d5bf5a522f0ea7f0ea",
+        "size": 2940
+      },
+      {
+        "path": "weaponrack.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/weaponrack.gltf",
+        "sha256": "e6985e05285ae219a0a6317522debb9d48c8b39334820e0c9694f195f1519be5",
+        "size": 3027
+      },
+      {
+        "path": "wheelbarrow.bin",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/wheelbarrow.bin",
+        "sha256": "72ca612b0dc940c856ed5abbbb9df9562c09bff52cfb2258375b16cbaad29e12",
+        "size": 19016
+      },
+      {
+        "path": "wheelbarrow.gltf",
+        "from": "addons/kaykit_medieval_hexagon_pack/Assets/gltf/decoration/props/wheelbarrow.gltf",
+        "sha256": "bb037662a3e5be1f4fe597ffc4927d2a6ad88d307da10388cfb178ca5fdae63d",
+        "size": 3059
+      }
+    ]
+  },
+  {
+    "id": "kaykit-character-pack-adventures-1.0",
+    "creator": "Kay Lousberg (www.kaylousberg.com)",
+    "sourceUrl": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+    "version": "git 672074b73ba276876a19e8816ecdc5241817ab47 (2023-09-16)",
+    "license": "CC0-1.0 (Creative Commons Zero)",
+    "licenseFile": "assets/licenses/kaykit-character-pack-adventures-1.0.txt",
+    "licenseConfidence": "5/5 — licence file shipped inside the pack; verbatim copy in licenseFile",
+    "location": "apps/web/public/assets/characters/kaykit-adventures",
+    "modified": true,
+    "notes": "Built from Characters/gltf/<Name>.glb by scripts/assets/process-characters.mjs: the held weapons, shields and mugs are removed and only the 11 clips the game plays are kept (Idle, Unarmed_Idle, Walking_A, Walking_B, Running_A, Sit_Chair_Idle, Sit_Floor_Idle, Cheer, Interact, Use_Item, Spellcasting). `npm run assets:fetch` rebuilds them and checks `fetchedSha256` (~0.73 MB each). The hosted build's files (`sha256`) went through the same pruning followed by glTF-Transform 4.5.1 `resample` and `quantize` (KHR_mesh_quantization, ~0.52 MB each); both versions have the same nodes, meshes, skins and clips.",
+    "usedIn": "Ambient resident NPCs; Rogue_Hooded is the temporary player avatar on the high quality tier.",
+    "source": {
+      "kind": "git",
+      "repository": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0",
+      "commit": "672074b73ba276876a19e8816ecdc5241817ab47",
+      "raw": "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/672074b73ba276876a19e8816ecdc5241817ab47/"
+    },
+    "fileCount": 6,
+    "totalBytes": 2599339,
+    "files": [
+      {
+        "path": "Barbarian.glb",
+        "from": "addons/kaykit_character_pack_adventures/Characters/gltf/Barbarian.glb",
+        "sha256": "03b6e57544158db805f77077d922131b378146a2b94a2492d79cead6e5de3303",
+        "size": 520052,
+        "process": "character",
+        "sourceSha256": "cefc311a0e10c7858b6141f5ada7e33268727564fb8ac1347aab97d000669cc6",
+        "fetchedSha256": "cd73d35a6a6ca883ef0a244f0fdd41a98127c4163a440bd98303234c8fd43116",
+        "fetchedSize": 727688
+      },
+      {
+        "path": "Knight.glb",
+        "from": "addons/kaykit_character_pack_adventures/Characters/gltf/Knight.glb",
+        "sha256": "f8205784c8754a165cba9729115b42a74237240eb11df68e58a04d2a144bbadf",
+        "size": 524856,
+        "process": "character",
+        "sourceSha256": "60428e3abc09ba83e595d256e3af8c5c976b46cdae599f0802fc82b4a3445168",
+        "fetchedSha256": "cb150f00ebf7a9efef2125191d045d1e2c7742fee0966cfceb69f553f4bcc47b",
+        "fetchedSize": 745104
+      },
+      {
+        "path": "LICENSE.txt",
+        "from": "LICENSE.txt",
+        "sha256": "ae322141814056dda0deea7540d74c41d87aee1da319977cd1bd84ee5a923629",
+        "size": 891
+      },
+      {
+        "path": "Mage.glb",
+        "from": "addons/kaykit_character_pack_adventures/Characters/gltf/Mage.glb",
+        "sha256": "c5d7b06a2ea3299bd4498922c2f16fb8dcef7471f11afcbc2d730b7ee53151a4",
+        "size": 515972,
+        "process": "character",
+        "sourceSha256": "cf898585da33fab50c724d31605fb931eb2912e6d2280092141e98ca81ad507d",
+        "fetchedSha256": "3c97a20b65edbdb0bdb5e88bcf8cb0401f107fb9e1261ad858eeb8bfabf49d6e",
+        "fetchedSize": 723540
+      },
+      {
+        "path": "Rogue.glb",
+        "from": "addons/kaykit_character_pack_adventures/Characters/gltf/Rogue.glb",
+        "sha256": "289708304f838bfcb61bab157a4aa922a266f58bbd7120e7b0f5c659c1a3d732",
+        "size": 524216,
+        "process": "character",
+        "sourceSha256": "e825437cd4d2ee9c1960b517a74a69101e33eb409ae7fa8cedc7134a998fbb7d",
+        "fetchedSha256": "8b38283c6ec9e265c361f211a67d7a05bd2e577e810a26a065bfbba267df70c0",
+        "fetchedSize": 746164
+      },
+      {
+        "path": "Rogue_Hooded.glb",
+        "from": "addons/kaykit_character_pack_adventures/Characters/gltf/Rogue_Hooded.glb",
+        "sha256": "5263221732f0b696797c84abaf3315266fc4bd9d68b397ea968775fd0fb28dae",
+        "size": 513352,
+        "process": "character",
+        "sourceSha256": "93e6e25213009952276d9cf34f5d96a243767334c66f280db0433ddfabb91545",
+        "fetchedSha256": "0e9b6922b937189c74fef0788506f0fa0a8f57f63ba30f90159cfa8e73aa5b6a",
+        "fetchedSize": 727736
+      }
+    ]
+  }
+]

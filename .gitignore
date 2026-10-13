@@ -18,20 +18,14 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Game server data (ADR-016: the owned-name store, data/names.json under apps/server by default)
+apps/server/data/
+
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-
-# Coverage
-/coverage/
-
-# Local wallet/key data (future)
-*.key
-*.pem
-*.seed
-wallet-data.json
 
 # Editor directories and files
 .vscode/*

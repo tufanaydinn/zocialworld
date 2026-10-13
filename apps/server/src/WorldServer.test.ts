@@ -4,7 +4,7 @@ import { WebSocketServer } from "ws";
 import { WorldServer, type WorldServerOptions } from "./WorldServer.js";
 
 /**
- * CORE-002 §25 Tests 1-6. Each test spins up a real WorldServer on an
+ * Each test spins up a real WorldServer on an
  * ephemeral port and drives it with real WebSocket clients (Node's
  * built-in global `WebSocket`) — these are integration tests of the
  * actual wire behavior, not mocks of it.
@@ -82,12 +82,12 @@ async function startServer(options: WorldServerOptions = {}): Promise<{ port: nu
   };
 }
 
-test("Test 1: client connects and receives a unique temporary playerId", async () => {
+test("client connects and receives a unique temporary playerId", async () => {
   const { port, stop } = await startServer();
   try {
     const client = createClient(port);
     await client.waitForOpen();
-    client.send({ type: "join", nickname: "Alice" });
+    client.send({ type: "join", wallet: true, nickname: "Alice" });
 
     const welcome = await client.waitFor((m) => m.type === "welcome");
     assert.equal(typeof welcome.playerId, "string");
@@ -100,17 +100,17 @@ test("Test 1: client connects and receives a unique temporary playerId", async (
   }
 });
 
-test("Test 2: a second client joining causes the first to receive player_joined", async () => {
+test("a second client joining causes the first to receive player_joined", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "A" });
+    a.send({ type: "join", wallet: true, nickname: "A" });
     const aWelcome = await a.waitFor((m) => m.type === "welcome");
 
     const b = createClient(port);
     await b.waitForOpen();
-    b.send({ type: "join", nickname: "B" });
+    b.send({ type: "join", wallet: true, nickname: "B" });
 
     const joinedEvent = await a.waitFor((m) => m.type === "player_joined");
     assert.equal(joinedEvent.nickname, "B");
@@ -123,7 +123,7 @@ test("Test 2: a second client joining causes the first to receive player_joined"
   }
 });
 
-test("Test 3: a transform sent by A is relayed to B (and not echoed back to A)", async () => {
+test("a transform sent by A is relayed to B (and not echoed back to A)", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
@@ -155,7 +155,7 @@ test("Test 3: a transform sent by A is relayed to B (and not echoed back to A)",
   }
 });
 
-test("Test 4: disconnecting A causes B to receive player_left", async () => {
+test("disconnecting A causes B to receive player_left", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
@@ -179,7 +179,7 @@ test("Test 4: disconnecting A causes B to receive player_left", async () => {
   }
 });
 
-test("Test 5: invalid transform payloads are rejected without crashing the server", async () => {
+test("invalid transform payloads are rejected without crashing the server", async () => {
   const { port, world, stop } = await startServer();
   try {
     const a = createClient(port);
@@ -212,7 +212,7 @@ test("Test 5: invalid transform payloads are rejected without crashing the serve
   }
 });
 
-test("CORE-003 Test 9: the protocol has no block-related message type — a block_player message is silently dropped like any other unknown type", async () => {
+test("the protocol has no block-related message type — a block_player message is silently dropped like any other unknown type", async () => {
   const { port, world, stop } = await startServer();
   try {
     const a = createClient(port);
@@ -235,26 +235,26 @@ test("CORE-003 Test 9: the protocol has no block-related message type — a bloc
   }
 });
 
-test("CORE-003 Test 5: two clients joining with the same nickname get a deterministic conflict-safe result", async () => {
+test("two clients joining with the same nickname get a deterministic conflict-safe result", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "Tufan" });
+    a.send({ type: "join", wallet: true, nickname: "Nadia" });
     const aWelcome = await a.waitFor((m) => m.type === "welcome");
-    assert.equal(aWelcome.nickname, "Tufan");
+    assert.equal(aWelcome.nickname, "Nadia");
 
     const b = createClient(port);
     await b.waitForOpen();
-    b.send({ type: "join", nickname: "Tufan" });
+    b.send({ type: "join", wallet: true, nickname: "Nadia" });
     const bWelcome = await b.waitFor((m) => m.type === "welcome");
-    assert.equal(bWelcome.nickname, "Tufan-2");
+    assert.equal(bWelcome.nickname, "Nadia-2");
 
     const c = createClient(port);
     await c.waitForOpen();
-    c.send({ type: "join", nickname: "Tufan" });
+    c.send({ type: "join", wallet: true, nickname: "Nadia" });
     const cWelcome = await c.waitFor((m) => m.type === "welcome");
-    assert.equal(cWelcome.nickname, "Tufan-3");
+    assert.equal(cWelcome.nickname, "Nadia-3");
 
     a.close();
     b.close();
@@ -264,18 +264,18 @@ test("CORE-003 Test 5: two clients joining with the same nickname get a determin
   }
 });
 
-test("CORE-003 Test 2/4 (integration): an invalid join nickname falls back to a generated Guest-#### rather than erroring", async () => {
+test("an invalid join nickname falls back to a generated Guest-#### rather than erroring", async () => {
   const { port, stop } = await startServer();
   try {
     const whitespace = createClient(port);
     await whitespace.waitForOpen();
-    whitespace.send({ type: "join", nickname: "   " });
+    whitespace.send({ type: "join", wallet: true, nickname: "   " });
     const welcome1 = await whitespace.waitFor((m) => m.type === "welcome");
     assert.match(welcome1.nickname as string, /^Guest-\d{4}$/);
 
     const controlChar = createClient(port);
     await controlChar.waitForOpen();
-    controlChar.send({ type: "join", nickname: "Tu\u0007fan" });
+    controlChar.send({ type: "join", wallet: true, nickname: "Na\u0007dia" });
     const welcome2 = await controlChar.waitFor((m) => m.type === "welcome");
     assert.match(welcome2.nickname as string, /^Guest-\d{4}$/);
 
@@ -286,17 +286,17 @@ test("CORE-003 Test 2/4 (integration): an invalid join nickname falls back to a 
   }
 });
 
-test("CORE-003 Test 6: a nickname change (set_nickname) reaches another connected client via nickname_updated", async () => {
+test("a nickname change (set_nickname) reaches another connected client via nickname_updated", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "Alice" });
+    a.send({ type: "join", wallet: true, nickname: "Alice" });
     const aWelcome = await a.waitFor((m) => m.type === "welcome");
 
     const b = createClient(port);
     await b.waitForOpen();
-    b.send({ type: "join", nickname: "Bob" });
+    b.send({ type: "join", wallet: true, nickname: "Bob" });
     await b.waitFor((m) => m.type === "welcome");
     await a.waitFor((m) => m.type === "player_joined"); // A has registered B before the rename
 
@@ -318,17 +318,17 @@ test("CORE-003 Test 6: a nickname change (set_nickname) reaches another connecte
   }
 });
 
-test("CORE-003: set_nickname resolves a conflict with another connected client's current nickname", async () => {
+test("set_nickname resolves a conflict with another connected client's current nickname", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "Alice" });
+    a.send({ type: "join", wallet: true, nickname: "Alice" });
     await a.waitFor((m) => m.type === "welcome");
 
     const b = createClient(port);
     await b.waitForOpen();
-    b.send({ type: "join", nickname: "Bob" });
+    b.send({ type: "join", wallet: true, nickname: "Bob" });
     const bWelcome = await b.waitFor((m) => m.type === "welcome");
     await a.waitFor((m) => m.type === "player_joined");
 
@@ -345,12 +345,12 @@ test("CORE-003: set_nickname resolves a conflict with another connected client's
   }
 });
 
-test("CORE-003: an invalid set_nickname request is dropped and the session keeps its current nickname", async () => {
+test("an invalid set_nickname request is dropped and the session keeps its current nickname", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "Alice" });
+    a.send({ type: "join", wallet: true, nickname: "Alice" });
     await a.waitFor((m) => m.type === "welcome");
 
     a.send({ type: "set_nickname", nickname: "<script>alert(1)</script>" });
@@ -364,12 +364,12 @@ test("CORE-003: an invalid set_nickname request is dropped and the session keeps
   }
 });
 
-// --- Nickname trim/length contract fix (merge-gate revision) --------------
-// CORE-003 final revision Tests A, B, C, E: the wire parser must not reject
+// --- Nickname trim/length contract -----------------------------------------
+// The wire parser must not reject
 // based on RAW (untrimmed) nickname length, and conflict-suffix resolution
 // must never produce a nickname longer than MAX_NICKNAME_LENGTH.
 
-test("Test A: a raw nickname with surrounding whitespace whose TRIMMED value is exactly max-length is accepted and normalized", async () => {
+test("a raw nickname with surrounding whitespace whose TRIMMED value is exactly max-length is accepted and normalized", async () => {
   const { port, stop } = await startServer();
   try {
     const exactly24 = "a".repeat(24);
@@ -377,7 +377,7 @@ test("Test A: a raw nickname with surrounding whitespace whose TRIMMED value is 
     await a.waitForOpen();
     // Raw length is 28 (2 leading + 24 + 2 trailing spaces) — over
     // MAX_NICKNAME_LENGTH (24) before trimming, but exactly 24 after.
-    a.send({ type: "join", nickname: `  ${exactly24}  ` });
+    a.send({ type: "join", wallet: true, nickname: `  ${exactly24}  ` });
 
     const welcome = await a.waitFor((m) => m.type === "welcome");
     assert.equal(welcome.nickname, exactly24, "the join must succeed with the trimmed, normalized nickname, not fall back to Guest-####");
@@ -388,13 +388,13 @@ test("Test A: a raw nickname with surrounding whitespace whose TRIMMED value is 
   }
 });
 
-test("Test B: a nickname whose TRIMMED value exceeds max-length still falls back to Guest-####", async () => {
+test("a nickname whose TRIMMED value exceeds max-length still falls back to Guest-####", async () => {
   const { port, stop } = await startServer();
   try {
     const tooLongAfterTrim = "a".repeat(25); // 25 > MAX_NICKNAME_LENGTH even after trimming
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: `  ${tooLongAfterTrim}  ` });
+    a.send({ type: "join", wallet: true, nickname: `  ${tooLongAfterTrim}  ` });
 
     const welcome = await a.waitFor((m) => m.type === "welcome");
     assert.match(welcome.nickname as string, /^Guest-\d{4}$/);
@@ -405,20 +405,20 @@ test("Test B: a nickname whose TRIMMED value exceeds max-length still falls back
   }
 });
 
-test("Test C: two clients requesting the same exactly-max-length nickname both get a <= max-length, conflict-safe result", async () => {
+test("two clients requesting the same exactly-max-length nickname both get a <= max-length, conflict-safe result", async () => {
   const { port, stop } = await startServer();
   try {
     const exactly24 = "a".repeat(24);
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: exactly24 });
+    a.send({ type: "join", wallet: true, nickname: exactly24 });
     const aWelcome = await a.waitFor((m) => m.type === "welcome");
     assert.equal(aWelcome.nickname, exactly24);
     assert.ok((aWelcome.nickname as string).length <= 24);
 
     const b = createClient(port);
     await b.waitForOpen();
-    b.send({ type: "join", nickname: exactly24 });
+    b.send({ type: "join", wallet: true, nickname: exactly24 });
     const bWelcome = await b.waitFor((m) => m.type === "welcome");
     assert.equal(bWelcome.nickname, "a".repeat(22) + "-2");
     assert.ok((bWelcome.nickname as string).length <= 24, "the conflict-suffixed nickname must still fit MAX_NICKNAME_LENGTH");
@@ -431,12 +431,12 @@ test("Test C: two clients requesting the same exactly-max-length nickname both g
   }
 });
 
-test("Test E: set_nickname with harmless surrounding whitespace is normalized correctly before conflict resolution", async () => {
+test("set_nickname with harmless surrounding whitespace is normalized correctly before conflict resolution", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "Alice" });
+    a.send({ type: "join", wallet: true, nickname: "Alice" });
     await a.waitFor((m) => m.type === "welcome");
 
     const exactly24 = "b".repeat(24);
@@ -451,12 +451,12 @@ test("Test E: set_nickname with harmless surrounding whitespace is normalized co
   }
 });
 
-test("Test F: existing control-character / markup rejection still holds at join (unaffected by the trim-order fix)", async () => {
+test("existing control-character / markup rejection still holds at join (unaffected by the trim-order fix)", async () => {
   const { port, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "<script>alert(1)</script>" });
+    a.send({ type: "join", wallet: true, nickname: "<script>alert(1)</script>" });
 
     const welcome = await a.waitFor((m) => m.type === "welcome");
     assert.match(welcome.nickname as string, /^Guest-\d{4}$/, "a markup-shaped nickname must still fall back to Guest-####, never be accepted as-is");
@@ -467,7 +467,7 @@ test("Test F: existing control-character / markup rejection still holds at join 
   }
 });
 
-test("Test 6: a stale connection (no messages) is cleaned up and others are notified", async () => {
+test("a stale connection (no messages) is cleaned up and others are notified", async () => {
   const { port, stop } = await startServer({ staleTimeoutMs: 100, sweepIntervalMs: 30 });
   try {
     const a = createClient(port);
@@ -497,9 +497,8 @@ test("Test 6: a stale connection (no messages) is cleaned up and others are noti
 });
 
 // ---------------------------------------------------------------------------
-// CORE-004 security revision ():
-// voice capability issuance/resolution/invalidation, replacing the original
-// (vulnerable) client-supplied-playerId trust model. See
+// Voice capability issuance/resolution/invalidation: the server never trusts
+// a client-supplied playerId for voice. See
 // apps/server/src/voice/capability.ts and WorldServer.resolveVoiceSession().
 // ---------------------------------------------------------------------------
 
@@ -518,23 +517,24 @@ test("welcome carries a voiceCapability string, owner-only", async () => {
   }
 });
 
-test("Test A: a valid current-session capability resolves to that session's own playerId and nickname", async () => {
+test("a valid current-session capability resolves to that session's own playerId and nickname", async () => {
   const { port, world, stop } = await startServer();
   try {
     const client = createClient(port);
     await client.waitForOpen();
-    client.send({ type: "join", nickname: "Builder" });
+    client.send({ type: "join", wallet: true, nickname: "Builder" });
     const welcome = await client.waitFor((m) => m.type === "welcome");
 
     const resolved = world.resolveVoiceSession(welcome.voiceCapability as string);
-    assert.deepEqual(resolved, { playerId: welcome.playerId, nickname: "Builder" });
+    // Without a name registry the holder flag also decides canTalk (ADR-015's honour mode).
+    assert.deepEqual(resolved, { playerId: welcome.playerId, nickname: "Builder", canReceive: true, canTalk: true });
     client.close();
   } finally {
     await stop();
   }
 });
 
-test("Test B: an unknown/random capability is rejected (resolves to null)", async () => {
+test("an unknown/random capability is rejected (resolves to null)", async () => {
   const { port, world, stop } = await startServer();
   try {
     assert.equal(world.resolveVoiceSession("completely-made-up-value"), null);
@@ -544,17 +544,17 @@ test("Test B: an unknown/random capability is rejected (resolves to null)", asyn
   }
 });
 
-test("Test C: player A's capability cannot resolve to player B's identity, and vice versa", async () => {
+test("player A's capability cannot resolve to player B's identity, and vice versa", async () => {
   const { port, world, stop } = await startServer();
   try {
     const a = createClient(port);
     await a.waitForOpen();
-    a.send({ type: "join", nickname: "Alice" });
+    a.send({ type: "join", wallet: true, nickname: "Alice" });
     const aWelcome = await a.waitFor((m) => m.type === "welcome");
 
     const b = createClient(port);
     await b.waitForOpen();
-    b.send({ type: "join", nickname: "Bob" });
+    b.send({ type: "join", wallet: true, nickname: "Bob" });
     const bWelcome = await b.waitFor((m) => m.type === "welcome");
 
     const resolvedA = world.resolveVoiceSession(aWelcome.voiceCapability as string);
@@ -574,12 +574,12 @@ test("Test C: player A's capability cannot resolve to player B's identity, and v
   }
 });
 
-test("Test F: after set_nickname, the capability resolves to the CURRENT server-authoritative nickname, not the stale join-time one", async () => {
+test("after set_nickname, the capability resolves to the CURRENT server-authoritative nickname, not the stale join-time one", async () => {
   const { port, world, stop } = await startServer();
   try {
     const client = createClient(port);
     await client.waitForOpen();
-    client.send({ type: "join", nickname: "OldName" });
+    client.send({ type: "join", wallet: true, nickname: "OldName" });
     const welcome = await client.waitFor((m) => m.type === "welcome");
 
     client.send({ type: "set_nickname", nickname: "NewName" });
@@ -593,7 +593,7 @@ test("Test F: after set_nickname, the capability resolves to the CURRENT server-
   }
 });
 
-test("Test G: after disconnect, that session's capability no longer resolves", async () => {
+test("after disconnect, that session's capability no longer resolves", async () => {
   const { port, world, stop } = await startServer();
   try {
     const client = createClient(port);
@@ -616,7 +616,7 @@ test("Test G: after disconnect, that session's capability no longer resolves", a
   }
 });
 
-test("Test H: after stale-session cleanup, that capability no longer resolves", async () => {
+test("after stale-session cleanup, that capability no longer resolves", async () => {
   const { port, world, stop } = await startServer({ staleTimeoutMs: 100, sweepIntervalMs: 30 });
   try {
     const a = createClient(port);
@@ -643,7 +643,7 @@ test("Test H: after stale-session cleanup, that capability no longer resolves", 
   }
 });
 
-test("Test I: a reconnect receives a different capability, and the previous session's capability stays invalid", async () => {
+test("a reconnect receives a different capability, and the previous session's capability stays invalid", async () => {
   const { port, world, stop } = await startServer();
   try {
     const first = createClient(port);
@@ -657,7 +657,7 @@ test("Test I: a reconnect receives a different capability, and the previous sess
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // A "reconnect" in this protocol is a brand-new WebSocket connection
-    // (CORE-002's existing identity model has no session resumption) —
+    // (the identity model has no session resumption) —
     // it gets a fresh playerId and, now, a fresh capability.
     const second = createClient(port);
     await second.waitForOpen();
@@ -669,6 +669,280 @@ test("Test I: a reconnect receives a different capability, and the previous sess
     assert.ok(world.resolveVoiceSession(secondWelcome.voiceCapability as string));
 
     second.close();
+  } finally {
+    await stop();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// ADR-015: wallet holders and guests — names, avatars,
+// set_wallet, set_avatar, nickname_check and the per-session limiters.
+// ---------------------------------------------------------------------------
+
+const GUEST = /^Guest-\d{4}$/;
+const pause = (ms = 120) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Opens a client and joins with `join` (any extra join fields); resolves with the client and its welcome. */
+async function joinWith(port: number, join: Record<string, unknown>): Promise<{ client: TestClient; welcome: Record<string, unknown> }> {
+  const client = createClient(port);
+  await client.waitForOpen();
+  client.send({ type: "join", ...join });
+  const welcome = await client.waitFor((m) => m.type === "welcome");
+  return { client, welcome };
+}
+
+test("ADR-015 (a): a guest asking for a name gets Guest-#### and canReceive false — in welcome, in the snapshot and in player_joined", async () => {
+  const { port, stop } = await startServer();
+  try {
+    const observer = await joinWith(port, { nickname: "Watcher", wallet: true });
+    const guest = await joinWith(port, { nickname: "Nadia", avatar: { model: "knight", color: 3 } });
+    assert.match(guest.welcome.nickname as string, GUEST);
+    assert.equal(guest.welcome.canReceive, false);
+    const joined = await observer.client.waitFor((m) => m.type === "player_joined");
+    assert.equal(joined.nickname, guest.welcome.nickname);
+    assert.equal(joined.canReceive, false);
+    assert.deepEqual(joined.avatar, guest.welcome.avatar, "a guest's join avatar is dropped: everyone sees the default");
+
+    const late = await joinWith(port, { wallet: true, nickname: "Late" });
+    const snapshot = await late.client.waitFor((m) => m.type === "player_snapshot");
+    const entry = (snapshot.players as Record<string, unknown>[]).find((p) => p.playerId === guest.welcome.playerId)!;
+    assert.equal(entry.canReceive, false);
+    assert.equal(entry.nickname, guest.welcome.nickname);
+    const holderEntry = (snapshot.players as Record<string, unknown>[]).find((p) => p.playerId === observer.welcome.playerId)!;
+    assert.equal(holderEntry.canReceive, true);
+    for (const c of [observer, guest, late]) c.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (b): a holder's name and avatar are accepted, canReceive true", async () => {
+  const { port, stop } = await startServer();
+  try {
+    const holder = await joinWith(port, { nickname: "Nadia", wallet: true, avatar: { model: "mage", color: 6 } });
+    assert.equal(holder.welcome.nickname, "Nadia");
+    assert.equal(holder.welcome.canReceive, true);
+    assert.deepEqual(holder.welcome.avatar, { model: "mage", color: 6 });
+    holder.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (c): a guest's set_nickname and set_avatar are dropped silently", async () => {
+  const { port, stop } = await startServer();
+  try {
+    const guest = await joinWith(port, {});
+    guest.client.send({ type: "set_nickname", nickname: "Builder" });
+    guest.client.send({ type: "set_avatar", avatar: { model: "knight", color: 1 } });
+    await pause();
+    assert.ok(!guest.client.messages.some((m) => m.type === "nickname_updated" || m.type === "avatar_updated"));
+    guest.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (d): set_wallet true broadcasts can_receive_updated to everyone; then a rename works", async () => {
+  const { port, world, stop } = await startServer();
+  try {
+    const other = await joinWith(port, { nickname: "Other", wallet: true });
+    const guest = await joinWith(port, {});
+    guest.client.send({ type: "set_wallet", connected: true });
+    for (const c of [other.client, guest.client]) {
+      const update = await c.waitFor((m) => m.type === "can_receive_updated");
+      assert.deepEqual(update, { type: "can_receive_updated", playerId: guest.welcome.playerId, canReceive: true });
+    }
+    assert.equal(world.resolveVoiceSession(guest.welcome.voiceCapability as string)?.canReceive, true);
+    guest.client.send({ type: "set_wallet", connected: true }); // the same value again: nothing happens
+    guest.client.send({ type: "set_nickname", nickname: "Builder" });
+    const renamed = await other.client.waitFor((m) => m.type === "nickname_updated");
+    assert.equal(renamed.nickname, "Builder");
+    await pause();
+    assert.equal(other.client.messages.filter((m) => m.type === "can_receive_updated").length, 1);
+    other.client.close();
+    guest.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (e): set_wallet false gives a fresh Guest name and the default avatar, then can_receive_updated false", async () => {
+  const { port, world, stop } = await startServer();
+  try {
+    const other = await joinWith(port, { nickname: "Other", wallet: true });
+    const holder = await joinWith(port, { nickname: "Nadia", wallet: true, avatar: { model: "barbarian", color: 7 } });
+    holder.client.send({ type: "set_wallet", connected: false });
+    const rename = await other.client.waitFor((m) => m.type === "nickname_updated");
+    assert.match(rename.nickname as string, GUEST);
+    const avatar = await other.client.waitFor((m) => m.type === "avatar_updated");
+    const seed = holder.welcome.colorSeed as number;
+    assert.deepEqual(avatar.avatar, { model: ["rogue_hooded", "rogue", "knight", "mage", "barbarian"][seed % 5], color: seed % 8 });
+    const flag = await other.client.waitFor((m) => m.type === "can_receive_updated");
+    assert.equal(flag.canReceive, false);
+    // Order: the new name, the avatar, then the flag (so no client ever shows a guest with a chosen name).
+    const order = other.client.messages.map((m) => m.type).filter((t) => t === "nickname_updated" || t === "avatar_updated" || t === "can_receive_updated");
+    assert.deepEqual(order, ["nickname_updated", "avatar_updated", "can_receive_updated"]);
+    await holder.client.waitFor((m) => m.type === "can_receive_updated");
+    assert.equal(world.resolveVoiceSession(holder.welcome.voiceCapability as string)?.canReceive, false);
+    other.client.close();
+    holder.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (f): a holder asking for a Guest-style or system name is refused — at join and with set_nickname", async () => {
+  const { port, stop } = await startServer();
+  try {
+    const fakeGuest = await joinWith(port, { nickname: "guest 12", wallet: true });
+    assert.match(fakeGuest.welcome.nickname as string, GUEST, "a look-alike at join falls back to a real guest number");
+    const holder = await joinWith(port, { nickname: "Ada", wallet: true });
+    for (const name of ["Guest-1234", "guest 12", "GUEST_77", "admin", "Zocial World"]) holder.client.send({ type: "set_nickname", nickname: name });
+    await pause();
+    assert.ok(!holder.client.messages.some((m) => m.type === "nickname_updated"), "every reserved rename was dropped");
+    fakeGuest.client.close();
+    holder.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (g): a guest rejoining with a free Guest number keeps it; a taken one is replaced by another number, never suffixed", async () => {
+  const { port, stop } = await startServer();
+  try {
+    const first = await joinWith(port, { nickname: "Guest-4321" });
+    assert.equal(first.welcome.nickname, "Guest-4321", "a free server-style guest name is kept (reconnect continuity)");
+    const second = await joinWith(port, { nickname: "Guest-4321" });
+    assert.match(second.welcome.nickname as string, GUEST);
+    assert.notEqual(second.welcome.nickname, "Guest-4321");
+    const holder = await joinWith(port, { nickname: "Guest-4321", wallet: true });
+    assert.match(holder.welcome.nickname as string, GUEST, "a holder without a chosen name keeps a guest-style name too");
+    assert.notEqual(holder.welcome.nickname, "Guest-4321");
+    for (const c of [first, second, holder]) c.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (h): avatars — a valid one is kept, an invalid one becomes the colorSeed default; set_avatar is broadcast to all and rate-limited", async () => {
+  let clock = 1_000_000;
+  const { port, stop } = await startServer({ now: () => clock, staleTimeoutMs: 10 ** 9 });
+  try {
+    const order = ["rogue_hooded", "rogue", "knight", "mage", "barbarian"];
+    for (const bad of [{ model: "dragon", color: 1 }, { model: "knight", color: 8 }, { model: "knight", color: 1.5 }, "knight", null]) {
+      const joined = await joinWith(port, { wallet: true, avatar: bad });
+      const seed = joined.welcome.colorSeed as number;
+      assert.deepEqual(joined.welcome.avatar, { model: order[seed % 5], color: seed % 8 }, JSON.stringify(bad));
+      joined.client.close();
+    }
+    const other = await joinWith(port, { nickname: "Other", wallet: true });
+    const holder = await joinWith(port, { nickname: "Ada", wallet: true, avatar: { model: "rogue", color: 0 } });
+    const avatars = [
+      { model: "knight", color: 1 },
+      { model: "mage", color: 2 },
+      { model: "barbarian", color: 3 },
+      { model: "rogue_hooded", color: 4 },
+    ];
+    for (const avatar of avatars) holder.client.send({ type: "set_avatar", avatar });
+    holder.client.send({ type: "set_avatar", avatar: { model: "knight", color: 99 } }); // malformed: dropped by the parser
+    await pause();
+    const seen = () => other.client.messages.filter((m) => m.type === "avatar_updated");
+    assert.equal(seen().length, 3, "burst of 3, then the limiter drops the 4th");
+    assert.deepEqual(seen()[0], { type: "avatar_updated", playerId: holder.welcome.playerId, avatar: { model: "knight", color: 1 } });
+    assert.equal(holder.client.messages.filter((m) => m.type === "avatar_updated").length, 3, "the sender gets its own update too");
+    clock += 20_000; // one token refills every 20 s
+    holder.client.send({ type: "set_avatar", avatar: avatars[3] });
+    await other.client.waitFor(() => seen().length === 4);
+    other.client.close();
+    holder.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (i): before join, nickname_check is answered while chat, transform, pay and identity requests are ignored", async () => {
+  const { port, world, stop } = await startServer();
+  try {
+    const taken = await joinWith(port, { nickname: "Nadia", wallet: true });
+    const early = createClient(port);
+    await early.waitForOpen();
+    early.send({ type: "chat_send", channel: "general", text: "hello?" });
+    early.send({ type: "player_transform", x: 1, y: 0, z: 1, rotationY: 0, animationState: "walk", seq: 1 });
+    early.send({ type: "pay_request", to: taken.welcome.playerId, requestId: "req-early-01", senderKey: "QUJDRA==" });
+    early.send({ type: "set_wallet", connected: true });
+    early.send({ type: "set_avatar", avatar: { model: "knight", color: 1 } });
+    early.send({ type: "nickname_check", nickname: "nadia" });
+    const result = await early.waitFor((m) => m.type === "nickname_check_result");
+    assert.deepEqual(result, { type: "nickname_check_result", nickname: "nadia", status: "taken", suggestion: "nadia-2" });
+    early.send({ type: "nickname_check", nickname: "Ada" });
+    early.send({ type: "nickname_check", nickname: "Guest-1234" });
+    early.send({ type: "nickname_check", nickname: "<b>" });
+    await early.waitFor(() => early.messages.filter((m) => m.type === "nickname_check_result").length === 4);
+    const statuses = early.messages.filter((m) => m.type === "nickname_check_result").map((m) => [m.nickname, m.status]);
+    assert.deepEqual(statuses.slice(1), [["Ada", "available"], ["Guest-1234", "reserved"], ["<b>", "invalid"]]);
+    await pause();
+    assert.equal(world.playerCount, 1, "the early connection never joined");
+    assert.ok(!taken.client.messages.some((m) => m.type === "chat_message" || m.type === "player_transform" || m.type === "pay_request" || m.type === "can_receive_updated"));
+    assert.ok(!early.messages.some((m) => m.type !== "nickname_check_result"), "nothing but check results reach a connection that has not joined");
+    // A check reserves nothing: the name is still free for whoever joins first.
+    const ada = await joinWith(port, { nickname: "Ada", wallet: true });
+    assert.equal(ada.welcome.nickname, "Ada");
+    taken.client.close();
+    early.close();
+    ada.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (j): uniqueness is case-insensitive — Nadia, then nadia, gives nadia-2 (join and set_nickname)", async () => {
+  const { port, stop } = await startServer();
+  try {
+    const a = await joinWith(port, { nickname: "Nadia", wallet: true });
+    const b = await joinWith(port, { nickname: "nadia", wallet: true });
+    assert.equal(b.welcome.nickname, "nadia-2");
+    const c = await joinWith(port, { nickname: "Cem", wallet: true });
+    c.client.send({ type: "set_nickname", nickname: "NADIA" });
+    const update = await c.client.waitFor((m) => m.type === "nickname_updated");
+    assert.equal(update.nickname, "NADIA-3");
+    for (const client of [a, b, c]) client.client.close();
+  } finally {
+    await stop();
+  }
+});
+
+test("ADR-015 (k): the rename, wallet and nickname-check limiters drop requests beyond their burst until tokens refill", async () => {
+  let clock = 5_000_000;
+  const { port, stop } = await startServer({ now: () => clock, staleTimeoutMs: 10 ** 9 });
+  try {
+    const holder = await joinWith(port, { nickname: "Ada", wallet: true });
+    for (let i = 1; i <= 5; i++) holder.client.send({ type: "set_nickname", nickname: `Ada${i}` });
+    await pause();
+    assert.equal(holder.client.messages.filter((m) => m.type === "nickname_updated").length, 3, "rename: burst 3");
+    clock += 10_000;
+    holder.client.send({ type: "set_nickname", nickname: "Ada9" });
+    await holder.client.waitFor((m) => m.type === "nickname_updated" && m.nickname === "Ada9");
+
+    const flipper = await joinWith(port, {});
+    for (const connected of [true, false, true, false]) flipper.client.send({ type: "set_wallet", connected });
+    await pause();
+    assert.equal(flipper.client.messages.filter((m) => m.type === "can_receive_updated").length, 2, "wallet: burst 2");
+    clock += 60_000;
+    flipper.client.send({ type: "set_wallet", connected: true });
+    await flipper.client.waitFor(() => flipper.client.messages.filter((m) => m.type === "can_receive_updated").length === 3);
+
+    const checker = createClient(port);
+    await checker.waitForOpen();
+    for (let i = 0; i < 8; i++) checker.send({ type: "nickname_check", nickname: `Name${i}` });
+    await pause();
+    assert.equal(checker.messages.filter((m) => m.type === "nickname_check_result").length, 5, "nickname_check: burst 5");
+    clock += 1_000;
+    checker.send({ type: "nickname_check", nickname: "Again" });
+    await checker.waitFor((m) => m.type === "nickname_check_result" && m.nickname === "Again");
+    holder.client.close();
+    flipper.client.close();
+    checker.close();
   } finally {
     await stop();
   }

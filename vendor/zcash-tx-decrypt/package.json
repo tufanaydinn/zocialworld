@@ -1,0 +1,13 @@
+{
+  "name": "zw-tx-decrypt",
+  "description": "Zocial World (ADR-018 § 5/§ 6, Stage 2): trial-decrypts a Zcash transaction (Sapling, Orchard and Ironwood outputs) with a viewing key, for the game server's name-fee and transfer-fee checks",
+  "version": "0.2.0",
+  "license": "MIT OR Apache-2.0",
+  "files": [
+    "zw_tx_decrypt_bg.wasm",
+    "zw_tx_decrypt.js",
+    "zw_tx_decrypt.d.ts"
+  ],
+  "main": "zw_tx_decrypt.js",
+  "types": "zw_tx_decrypt.d.ts"
+}

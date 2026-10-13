@@ -83,3 +83,22 @@ test("inserts an out-of-order sample in the correct position", () => {
   // Between the t=100 (x=10) and t=200 (x=20) samples, at the 50% mark.
   assert.equal(mid?.x, 15);
 });
+
+test("sampleInto (no allocation) matches sample everywhere and reuses the target", () => {
+  const buffer = new InterpolationBuffer();
+  const out = { x: 0, y: 0, z: 0, rotationY: 0 };
+  assert.equal(buffer.sampleInto(0, out), null, "nothing pushed yet");
+  let seed = 7;
+  const random = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  let t = 0;
+  for (let i = 0; i < 14; i++) {
+    t += i === 6 ? 0 : 40 + random() * 120; // one zero-length span
+    buffer.push({ t, x: random() * 10, y: random(), z: random() * -10, rotationY: (random() - 0.5) * 2 * Math.PI });
+    for (let probe = -50; probe <= t + 50; probe += 17) {
+      const expected = buffer.sample(probe);
+      const actual = buffer.sampleInto(probe, out);
+      assert.equal(actual, out);
+      assert.deepEqual({ ...actual }, expected, `t=${probe}`);
+    }
+  }
+});

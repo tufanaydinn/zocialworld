@@ -1,177 +1,131 @@
 # apps/server
 
-**Implemented as of CORE-002**: a minimal WebSocket presence relay for
-multiplayer. See `docs/protocols/multiplayer-protocol.md` for the wire
-protocol and `packages/multiplayer/README.md` for the full
-client+server architecture overview.
+The Zocial World game server: one Node.js process (TypeScript, `ws`, no framework, no database) that
+runs the shared world for every connected browser.
 
-## What this is
+## What it does
 
-```text
-Node.js + TypeScript + ws
-```
+| Area | What the server does | Code |
+|---|---|---|
+| Presence | Connection lifecycle, temporary session ids, join/leave, transform relay with sanity validation, stale-connection cleanup. Movement stays client-authoritative (ADR-005). | `src/WorldServer.ts`, `src/protocol.ts` |
+| Identity | Guests and wallet holders (ADR-015): nickname validation, NFKC normalisation, case-insensitive uniqueness and the `-2`/`-3` suffix rule. The server learns one wallet-derived bit per session (`canReceive`), never an address or balance. | `src/nickname.ts`, `src/identity.ts` |
+| Owned names | Optional fee-confirmed name registry (ADR-016, ADR-018 § 5): reservations, payment detection (dev, zcashd or lightwalletd backends), challenge signatures for returning players. The only persistent data the server keeps, in one small JSON file. | `src/identity/` |
+| Text chat | General, nearby, whisper and Watch Hall channels; sanitised, rate-limited, relayed and forgotten (never stored or logged). | `src/chat.ts` |
+| Payments | A relay for sealed player-to-player payment handshakes (ADR-013); the amount never reaches the server. Optional per-transaction cap and transfer fee (ADR-018 § 4 and § 6), checked with a viewing key. | `src/payments.ts`, `src/transferFees.ts` |
+| Wallet bridge | grpc-web → gRPC bridge to lightwalletd, so the lightwalletd operator never sees players' IP addresses; health-based failover across mirrors. | `src/zcash/lwdProxy.ts`, `src/zcash/upstreamPool.ts` |
+| Test chain | Test-coin faucet on a regtest/test chain run by the deployment (zcashd RPC); refused on mainnet. | `src/zcash/faucet.ts` |
+| Voice | Optional LiveKit token endpoint (`POST /voice/token`, ADR-007), authorised by a per-session capability, never by a client-supplied identity. | `src/voice/` |
+| Content gateway | Read-only community content (ZecHub bounties and wiki, the Zcash Community Forum, GitHub repositories) and the Watch Hall schedule and replays (ADR-009, ADR-014), fetched and cached server-side so the browser never contacts those services. | `src/content/` |
+| Watch Hall | Hall membership, the stage queue, seats, raised hands, the floor, reactions, the audience vote and the host role (ADR-014). In memory only. | `src/watchHall.ts` |
+| Moderation | Reports, mutes, kicks and bans by signed-in moderators, a per-network connection cap (ADR-019). Network addresses are kept only as keyed hashes. | `src/moderation/` |
+| Static site | Optionally serves the built web client with a strict Content-Security-Policy, so a deployment needs one HTTPS origin. | `src/staticSite.ts` |
 
-Connection lifecycle, temporary session identity, join/leave/presence,
-transform relay, sanity validation, and stale-connection cleanup. As of
-CORE-003, also nickname validation and deterministic uniqueness
-resolution (`src/nickname.ts`) for both `join` and `set_nickname` — see
-`docs/protocols/multiplayer-protocol.md` § Nickname validation and
-conflict resolution. As of CORE-004, also a small, structurally separate
-voice-token-minting endpoint (`src/voice/`, see its own section below) —
-`WorldServer` itself remains a presence relay only and has no voice
-responsibilities. No framework (no NestJS/Fastify), no database, no
-Redis — none of those were needed for CORE-002's, CORE-003's, or
-CORE-004's scope.
+Message shapes are shared with the client through `@project/shared` (`packages/shared`, ADR-006); the
+prose protocol is `docs/protocols/multiplayer-protocol.md`. What the server learns, keeps and never
+logs is described in the threat models under `docs/privacy/` (start with
+`docs/privacy/PRIVACY_MODEL.md`) and the decisions in `docs/decisions/`.
 
-## What this is NOT
-
-Still true as of CORE-002 through CORE-004, and not changed by any of
-them:
-
-```text
-wallet identity
-Zcash address
-payments
-authentication
-persistent accounts
-chat history
-voice RECORDING, transcription, or moderation (voice TRANSPORT itself is
-  implemented as of CORE-004 — see "Voice (CORE-004)" below)
-projects
-database
-inventory
-economy
-block/mute/report lists (local-session client state only — see
-  docs/privacy/PRIVACY_MODEL.md)
-```
-
-See `docs/privacy/PRIVACY_MODEL.md` for exactly what this server does
-and doesn't learn, log, or transmit.
-
-## Origin validation
-
-Every WebSocket handshake's `Origin` header is checked against an
-allowlist (`src/origin.ts`), resolved based on `NODE_ENV`: outside of
-`NODE_ENV=production`, local dev origins (`localhost:5173`,
-`127.0.0.1:5173`) are always allowed on top of whatever `ALLOWED_ORIGINS`
-adds; under `NODE_ENV=production`, the dev origins are excluded and the
-allowlist is exactly `ALLOWED_ORIGINS` (see `.env.example`) — an empty
-production allowlist makes the server refuse to start rather than run
-with zero allowed browser origins. A present-but-unlisted Origin is
-rejected, and a missing Origin is allowed either way (non-browser
-clients, including this project's own tests, legitimately send none).
-**This is a configuration safety check, not authentication** — there is
-no auth system in CORE-002 — see `docs/protocols/multiplayer-protocol.md` §
-Origin validation for the full reasoning.
-
-## Running it
+## Running it locally
 
 From the repository root:
 
 ```bash
-npm run dev:server      # tsx watch src/index.ts — restarts on change
+npm install
+npm run dev          # web client + this server + a local LiveKit for voice
+npm run dev:server   # this server only (tsx watch src/index.ts), voice off
 ```
 
-or `npm run dev` from the root to run both `apps/web` and `apps/server`
-together. Copy `.env.example` to `.env` to override the default port
-(8787), host, or stale-connection timeout — see that file for details.
-No secrets exist in this server's configuration (except, optionally, the
-voice signing key pair below — see its own security notes).
+The server listens on `127.0.0.1:8787` by default. Without any configuration it runs the public world
+with guest and wallet-holder identities, chat, payments without a fee, the wallet bridge to the public
+test-network lightwalletd, the content gateway with the built-in sample Watch Hall catalogue, and no
+name registry, faucet, moderators or host role.
 
-## Voice (CORE-004)
+`npm run dev` also starts a local LiveKit server (`scripts/dev/livekit.mjs`): the first run downloads
+`livekit-server` from the official GitHub release, checks its SHA-256 against the release checksums,
+caches it under `node_modules/.cache/livekit/` and starts it in `--dev` mode on `127.0.0.1:7880`. The
+game server then uses it with the `--dev` placeholder keys. On macOS install it once with
+`brew install livekit`, or point `LIVEKIT_BINARY` at a binary you already have.
 
-Voice (`/voice/token`, `src/voice/`) is **optional** — the server starts
-and runs the same with or without it configured; see
-`docs/decisions/ADR-003-proximity-voice-transport.md` for why
-self-hosted LiveKit was chosen and `docs/privacy/PRIVACY_MODEL.md`
-(CORE-004 section) for the full privacy review.
+### Local multi-user testing
 
-### 1. Run a local LiveKit server
+1. Run `npm run dev` and open two browser windows at `http://localhost:5174`. Microphone access works
+   on `localhost`.
+2. Window A: create an in-game wallet, choose a name, press **Enable Voice** and allow the microphone.
+   Window B: the same, or continue as a guest and press **Listen to voices**.
+3. Walk close to each other and hold `V`: the other window shows you speaking.
+4. Watch Hall: A requests the stage at the podium, presses **Start sharing** and picks a tab with
+   **Share tab audio** ticked; B inside the hall sees it on the big screen (a guest presses
+   **Watch the stage**).
 
-The normal path, for a developer with ordinary internet access, is one
-of:
+To try owned names without a chain, start the server with `NAME_REGISTRY=dev` (it confirms every
+reservation after about two seconds and refuses to start with `NODE_ENV=production`). To try moderation
+or the host role, set `MODERATOR_KEYS` or `WATCH_HALL_HOST_KEY` to a long random value
+(`openssl rand -base64 32`).
+
+If voice fails, the voice panel names the reason (no voice server, an insecure page, the microphone
+permission, no microphone, a guest session, LiveKit unreachable, UDP blocked). Other devices on your
+LAN can join the world and chat when `HOST=0.0.0.0`, but browsers block the microphone and screen
+sharing on plain-HTTP LAN addresses; that needs HTTPS.
+
+### Using your own LiveKit
+
+Set `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` (all three) in `apps/server/.env`, or opt
+out of the local one with `SKIP_LOCAL_LIVEKIT=1`. For a manual local server:
 
 ```bash
-# Option A — prebuilt binary (see https://github.com/livekit/livekit-server/releases)
 livekit-server --dev
-
-# Option B — Docker (no local Go toolchain needed)
+# or
 docker run --rm -p 7880:7880 -p 7881:7881 -p 7882:7882/udp livekit/livekit-server --dev
 ```
 
-`--dev` mode starts a single-node server with placeholder credentials
-(`devkey`/`secret`) printed to its own console — local development only,
-never a production credential, and never committed anywhere in this
-repository. If your machine has no IPv6 support, add `--bind 0.0.0.0`
-(this was required in this project's own CI/sandbox verification — see
-ADR-007's "Verification performed" section).
+`--dev` prints the placeholder pair `devkey` / `secret` (local development only). On a machine without
+IPv6, add `--bind 0.0.0.0`. Without a complete LiveKit configuration `/voice/token` answers `503`
+`{"error":"voice_unconfigured"}` and everything else runs unchanged.
 
-Docker is the only external infrastructure CORE-004 introduces, and only
-for this one narrowly-scoped local service — not required, not used for
-anything else, no Kubernetes, no cloud deployment, no paid account (see
-`packages/voice/README.md`).
+## Configuration
 
-### 2. Configure this server
+Copy `apps/server/.env.example` to `apps/server/.env`. Every variable the server reads is listed there
+with its default and meaning; the file holds placeholders only. Real values for a deployment (the
+LiveKit secret, host and moderator keys, viewing keys, API tokens) come from the deployment's
+environment and are never committed. The main groups:
 
-Copy the devkey/secret `--dev` printed to the console into your `.env`:
+| Variables | Purpose |
+|---|---|
+| `NODE_ENV`, `PORT`, `HOST`, `STALE_TIMEOUT_MS`, `ALLOWED_ORIGINS`, `WEB_DIST` | Process, Origin allowlist (required in production; see `src/origin.ts`), serving the built client. |
+| `LIVEKIT_*`, `SKIP_LOCAL_LIVEKIT`, `LOCAL_LIVEKIT_PORT` | Voice. |
+| `GITHUB_TOKEN`, `YOUTUBE_API_KEY`, `WATCH_CATALOG_FILE` | Content gateway and Watch Hall catalogue (`src/content/watchCatalogTypes.ts` describes the file format). |
+| `WATCH_HALL_HOST_KEY`, `WATCH_HALL_MAX_TURN_MS` | Watch Hall host role and stage turn cap. |
+| `MODERATOR_KEYS`, `MAX_SESSIONS_PER_IP`, `TRUST_PROXY`, `LIVEKIT_API_URL` | Moderation, connection limits, reverse proxy. |
+| `ZCASHD_RPC_*`, `FAUCET_ZEC`, `NAME_REGISTRY*`, `NAME_FEE_ZEC`, `NAME_MIN_CONF` | Test-chain faucet and owned names. |
+| `ZCASH_NETWORK`, `LIGHTWALLETD_URL`, `PAYMENT_CAP_ZEC`, `PAYMENT_FEE_*`, `PAYMENT_MIN_CONF`, `*_FEE_USD`, `NU7_ACTIVATION_HEIGHT`, `BUILD_ID`, `CSP_MODE` | Network, payment cap, transfer fee, client build id, page security policy. |
 
-```bash
-LIVEKIT_API_KEY=devkey
-LIVEKIT_API_SECRET=secret
-LIVEKIT_URL=ws://localhost:7880
-LIVEKIT_ROOM_NAME=public-world
-```
+`ZCASH_NETWORK=main` means real ZEC. On mainnet the server refuses test-chain-only settings (the faucet,
+the `zcashd` and `dev` registries), and name fees and the transfer fee need the operator's explicit
+`NAME_REGISTRY_MAINNET_ACK=accepted` / `PAYMENT_FEE_MAINNET_ACK=accepted`. The fee and registry
+viewing key and address are generated by the operator with `scripts/tools/registry-keys.mjs` (the seed
+stays offline; the server only receives the viewing key).
 
-See `.env.example`'s own comments for the full explanation of each
-variable. If any of the three required variables (`LIVEKIT_API_KEY`,
-`LIVEKIT_API_SECRET`, `LIVEKIT_URL`) is left unset, `/voice/token`
-responds `503` and nothing else about the server is affected —
-`src/voice/config.ts`'s `loadVoiceConfig()` returns `null` rather than
-throwing.
+The server logs its effective configuration at start-up (never a secret, key or address).
 
-### 3. Configure the client
-
-`apps/web/.env.example`'s `VITE_VOICE_TOKEN_URL` already points at this
-server's default port/path — no change needed for local dev with both
-apps on `localhost`.
-
-### Security notes
-
-- `LIVEKIT_API_SECRET` signs voice tokens; it is read only by
-  `src/voice/tokenHandler.ts` and never sent to a browser in any form —
-  the browser only ever receives the already-signed, short-lived JWT.
-- Never put a real production LiveKit secret in `.env.example` or commit
-  a real `.env` file (already `.gitignore`d, same as the rest of this
-  repo's environment files).
-
-## Testing
+## Tests
 
 ```bash
-npm run test --workspace apps/server
+npm run test:server          # from the root; same as: npm run test --workspace apps/server
+npm run typecheck
 ```
 
-Runs `apps/server/src/WorldServer.test.ts` (the six CORE-002 tests plus
-CORE-003's nickname-conflict/rename integration tests),
-`apps/server/src/origin.test.ts` (Origin allowlist behavior),
-`apps/server/src/nickname.test.ts` (pure-function nickname
-validation/conflict-resolution coverage), and
-`apps/server/src/voice/tokenHandler.test.ts` (CORE-004: token
-request validation, JWT grant structure — no recording grant, short TTL
-— and the same Origin/method/body-size handling as the rest of this
-server, via a real `http.Server` + `fetch()`) — the integration tests
-run against a real server instance on an ephemeral port, no running
-`livekit-server` required (token minting is tested in isolation from the
-actual SFU connection).
+The suite uses Node's built-in test runner. Most tests start a real `WorldServer` or HTTP handler on an
+ephemeral port and drive it with real WebSocket and `fetch` clients; the rest are pure unit tests with
+injected clocks. No LiveKit, zcashd or lightwalletd is needed: those are faked, and the fee and name
+checks decrypt recorded regtest transactions with the vendored `vendor/zcash-tx-decrypt` helper.
+Browser end-to-end tests live in `tests/e2e/` (`npm run test:e2e` from the root).
 
 ## Production build
 
 ```bash
 npm run build --workspace apps/server   # tsc -> dist/
-npm run start --workspace apps/server    # node dist/index.js
+npm run start --workspace apps/server   # tsx src/index.ts
 ```
 
-## Future architecture changes
-
-Architecture-affecting changes (switching transport, adding a
-persistence layer, changing movement authority) require an ADR documented
-in `docs/decisions/` before implementation.
+Architecture-affecting changes (transport, persistence, movement authority, anything touching what
+the server learns about players) need an ADR in `docs/decisions/`.

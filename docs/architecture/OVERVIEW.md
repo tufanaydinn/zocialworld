@@ -1,14 +1,9 @@
-# Core Architecture
+# Architecture overview
 
-Originally written for CORE-001 (client foundation); extended in
-CORE-002 (multiplayer presence) without changing the systems it
-already described. Each major addition is marked with its task ID
-below so you can tell what's been there from the start vs. added later.
-
-Audience: any agent extending this codebase (multiplayer, social,
-character art, Zcash, UI). This document explains how the systems fit
-together and, specifically, where to plug in future work without
-reshaping what already exists.
+This document explains how the web client's systems fit together and where new work plugs in without
+reshaping what already exists. It is the starting point for contributors to `apps/web`. The game server
+is described in `apps/server/README.md`, the wire protocol in `docs/protocols/multiplayer-protocol.md`,
+and the reasons behind the main choices in the ADRs (`docs/decisions/README.md`).
 
 ## Guiding rule
 
@@ -24,6 +19,10 @@ camera  ≠  player  ≠  world  ≠  UI  ≠  networking
 it is the composition root. If you're adding a new system, wire it there
 and nowhere else.
 
+Systems never import world content either. `App.ts` resolves one content provider (the sample content
+in a plain checkout) and hands its locations, destinations, Watch Hall layout and lessons to the systems
+that need them — see `apps/web/src/content/README.md`.
+
 ## Render/update loop
 
 ```text
@@ -37,19 +36,22 @@ GameLoop (requestAnimationFrame)
   │                                              updates PlayerAnimation state)
   │     3. interactions.update(...)            (finds nearest Interactable in range,
   │                                              fires `interact()` on E)
-  │     4. remotePlayers.update(...)            (CORE-002: advances each RemotePlayer's
-  │                                              interpolation buffer — render FPS, not network rate)
-  │     5. publishLocalTransform(...)           (CORE-002: ~10Hz-throttled, sends LocalPlayer's
+  │     4. world.update(...)                   (shows and updates only the location the camera
+  │                                              is in; runs the point-light pool)
+  │     5. remotePlayers.update(...)           (advances each RemotePlayer's interpolation
+  │                                              buffer — render FPS, not network rate)
+  │     6. publishLocalTransform(...)          (~10Hz-throttled, sends LocalPlayer's
   │                                              transform over NetworkClient — see
   │                                              docs/protocols/multiplayer-protocol.md § Network rate)
-  │     6. updateVoice(...)                     (CORE-004: push-to-talk edge detection,
-  │                                              VoiceSession.update() recomputes every subscribed
+  │     7. updateVoice(...)                    (push-to-talk edge detection; the stage and
+  │                                              VoiceSession.update() recompute every subscribed
   │                                              remote participant's gain from distance each frame)
-  │     7. input.endFrame()                    (clears this-frame-only key presses)
+  │     8. updateHallUi(...)                   (Watch Hall boards and stage widget)
+  │     9. input.endFrame()                    (clears this-frame-only key presses)
   │
   └─ render()                                  ──▶ App.render()
         renderer.render(world.scene, camera.camera)
-        remotePlayers.updateNameplates(...)     (CORE-002: projects each RemotePlayer's head
+        remotePlayers.updateNameplates(...)     (projects each RemotePlayer's head
                                                   position to screen space for the DOM nameplate)
 ```
 
@@ -108,14 +110,13 @@ apps/web/src/player/
 
 apps/web/src/collision/
   CollisionSystem.ts Lightweight 2.5D (XZ-plane) collision: box and cylinder
-                     colliders, push-out resolution against a circular agent
-                     radius. No physics engine — see CORE-001 section 13.
+                     colliders, push-out resolution against a circular body
+                     radius. No physics engine — see ADR-004.
 
 apps/web/src/interaction/
   Interactable.ts    Generic `{ id, label, position, interactionRadius, interact() }`
                      contract. Anything interactable implements this — a project
-                     board today, a booth/bench/door/support terminal later
-                     (master spec section 66).
+                     board, a booth, a seat, a door or a lesson station.
   InteractionSystem.ts
                      Finds the nearest in-range Interactable each frame, notifies
                      UI of changes (for the "[E] <label>" prompt), fires
@@ -126,18 +127,23 @@ apps/web/src/assets/
   AssetManager.ts    Centralized GLTFLoader wrapper: caching, SkeletonUtils-based
                      cloning (safe to instantiate the same GLB many times),
                      progress/error callbacks. No scene file should construct its
-                     own GLTFLoader. Currently unused by the default scene (no
-                     external assets ship yet) but fully wired — see
-                     `window.__assetManager` in dev builds for a console-testable
-                     hook.
+                     own GLTFLoader. The third-party model packs are optional
+                     (`npm run assets:fetch`); assetPacks.ts tells the manager
+                     which packs the build has, so a checkout without them shows
+                     procedural placeholders. `window.__assetManager` is exposed
+                     in dev builds for console testing.
 
 apps/web/src/world/
-  World.ts           Owns THREE.Scene, lighting (one directional "sun" + hemisphere
-                     + ambient fill — see master spec section 27), sky, fog.
-                     Composes the active location (currently only PrototypePlaza).
-  PrototypePlaza.ts  The ~50×50 m greybox-with-paint test space: ground, fountain,
-                     two placeholder buildings, trees, a bench, lanterns, and the
-                     one working Interactable (project board). Registers its own
+  World.ts           Owns THREE.Scene and the location registry: builds the content
+                     provider's atmosphere and location modules, shows and updates
+                     only the location the camera is in, and runs the point-light
+                     pool. See apps/web/src/content/README.md.
+  LocationModule.ts  The contract a location implements: its build context, the
+                     built location (group, colliders, ground height, spawn,
+                     minimap, optional capabilities) and the atmosphere rig.
+  PrototypePlaza.ts  The ~50×50 m greybox-with-paint space of the sample content:
+                     ground, fountain, two placeholder buildings, trees, a bench,
+                     lanterns, the project board and booths. Registers its own
                      colliders with CollisionSystem and its own obstacle meshes
                      with the camera.
   Sky.ts             Cheap vertical-gradient sky dome (custom ShaderMaterial on a
@@ -145,80 +151,68 @@ apps/web/src/world/
 
 apps/web/src/ui/
   styles.ts          One injected <style> tag shared by every UI widget (dark
-                     translucent panel + amber accent, per master spec section 67).
+                     translucent panel + amber accent).
   InteractionPrompt.ts  The floating "[E] <label>" prompt.
   HUD.ts             Always-on chrome: top-left info corner, bottom-left location label.
   DebugStats.ts      Dev-only (import.meta.env.DEV-gated) FPS/triangle/draw-call panel.
-  ConnectionStatus.ts (CORE-002) Dev-only multiplayer connection indicator.
-  Nameplates.ts      (CORE-002) Projects each RemotePlayer's head position to a
+  ConnectionStatus.ts Dev-only multiplayer connection indicator.
+  Nameplates.ts      Projects each RemotePlayer's head position to a
                      screen-space DOM label — no CSS2DRenderer/sprite-text dependency.
 
-apps/web/src/networking/   (CORE-002) Multiplayer client: NetworkClient (owns the
-                     WebSocket connection only), protocol.ts (message types +
-                     validation, mirrors apps/server/src/protocol.ts), interpolation.ts
-                     (pure, engine-agnostic entity interpolation buffer),
-                     RemotePlayer.ts (LocalPlayer's networked counterpart —
-                     same model/animation composition, driven by the
-                     interpolation buffer instead of PlayerController),
-                     RemotePlayerManager.ts (Map<playerId, RemotePlayer>
-                     bookkeeping; as of CORE-003 also owns each remote
-                     player's InteractionSystem registration and
-                     block-driven nameplate visibility). See
+  ChatPanel.ts       Chat tabs (General / Nearby / Whispers) and speech bubbles.
+  WorldHud.ts, MinimapRenderer.ts, PortalPanel.ts, LoadingOverlay.ts
+                     Location HUD, the minimap a location supplies, the portal
+                     destination list and the loading screen.
+
+apps/web/src/networking/
+                     Multiplayer client: NetworkClient (owns the WebSocket
+                     connection only), protocol.ts (message types + validation,
+                     built on packages/shared), interpolation.ts (pure,
+                     engine-agnostic entity interpolation buffer), RemotePlayer.ts
+                     (LocalPlayer's networked counterpart — same model/animation
+                     composition, driven by the interpolation buffer instead of
+                     PlayerController), RemotePlayerManager.ts (Map<playerId,
+                     RemotePlayer> bookkeeping, each remote player's
+                     InteractionSystem registration and block-driven nameplate
+                     visibility), remoteAvatars.ts and animationLod.ts (rigged
+                     avatars and their animation level of detail). See
                      docs/protocols/multiplayer-protocol.md and
                      apps/web/src/networking/README.md.
 
-apps/web/src/social/      (CORE-003) Social identity / nearby interaction —
-                     application code, same pattern CORE-002 used for
-                     apps/server + apps/web/src/networking/ before any
-                     shared-package extraction (packages/social remains
-                     documentation-only; see its README):
-                       nearby.ts                pure, engine-agnostic
-                                                 getNearbyPlayers() +
-                                                 SOCIAL_INTERACTION_RADIUS_METERS
-                                                 — the one reusable source
-                                                 of truth for "how close
-                                                 counts as nearby", unit
-                                                 tested independent of
-                                                 Three.js (same pattern as
-                                                 networking/interpolation.ts).
-                       SocialStore.ts            client-side-only, session-
-                                                 scoped relationship state
-                                                 (blockedPlayerIds,
-                                                 mutedPlayerIds reserved,
-                                                 selectedPlayerId) — no
-                                                 networking import, by
-                                                 design (see
+apps/web/src/social/      Social identity and nearby interaction:
+                       nearby.ts                pure getNearbyPlayers() +
+                                                 SOCIAL_INTERACTION_RADIUS_METERS,
+                                                 the one source of truth for
+                                                 "how close counts as nearby",
+                                                 unit-tested without Three.js.
+                       SocialStore.ts            client-side-only, session-scoped
+                                                 relationship state (blocked and
+                                                 muted players, the selected
+                                                 player) — no networking import,
+                                                 by design (see
                                                  docs/privacy/SOCIAL_IDENTITY_THREAT_MODEL.md).
                        RemotePlayerInteractable.ts
-                                                 adapts a RemotePlayer into
-                                                 the existing Interactable
-                                                 contract so player
+                                                 adapts a RemotePlayer into the
+                                                 Interactable contract, so player
                                                  selection reuses
-                                                 InteractionSystem verbatim
-                                                 — see § Player selection
-                                                 below.
-                       PlayerContextCard.ts      the prototype-level
-                                                 selected-player modal
-                                                 (nickname/presence/accent
-                                                 + Block/Mute/Report/
-                                                 Whisper actions — only
-                                                 Block has real behavior).
-                       NicknameControls.ts       always-on (not dev-gated)
-                                                 nickname entry/edit widget
-                                                 — every nickname choice
-                                                 goes through set_nickname,
-                                                 including the first one,
-                                                 to keep exactly one
-                                                 validation/conflict code
-                                                 path.
+                                                 InteractionSystem verbatim.
+                       PlayerContextCard.ts      the player menu (Whisper, View
+                                                 Profile, Send ZEC, volume, Mute,
+                                                 Block, Report).
+                       NicknameControls.ts       nickname entry/edit — every
+                                                 nickname choice goes through
+                                                 set_nickname, including the
+                                                 first one, so there is one
+                                                 validation/conflict code path.
+                       Emotes.ts, EmoteWheel.ts, FloatingReactions.ts
+                                                 the emote wheel (hold G) and
+                                                 reactions.
                      See docs/protocols/multiplayer-protocol.md §§
                      Nickname validation and conflict resolution / Nearby
-                     interaction range / Player selection, and
-                     docs/privacy/SOCIAL_IDENTITY_THREAT_MODEL.md.
+                     interaction range / Player selection.
 
-apps/web/src/voice/       (CORE-004) Proximity voice client — structurally
-                     separate from apps/web/src/networking/ per
-                     packages/voice/README.md's pre-existing requirement:
+apps/web/src/voice/       Proximity voice client — structurally separate from
+                     apps/web/src/networking/:
                        VoiceClient.ts      owns the LiveKit `Room` connection
                                            only (mic capture/publish, push-to-
                                            talk mute/unmute, active-speaker
@@ -231,10 +225,8 @@ apps/web/src/voice/       (CORE-004) Proximity voice client — structurally
                                            rolloff is disabled so 100% of gain
                                            comes from VoiceProximity below.
                        VoiceProximity.ts   pure, engine-agnostic getVoiceGain()
-                                           distance→gain curve +
-                                           VOICE_FULL_VOLUME_RADIUS_METERS /
-                                           VOICE_MAX_AUDIBLE_RADIUS_METERS —
-                                           deliberately distinct from
+                                           distance→gain curve and the voice
+                                           ranges — deliberately distinct from
                                            SOCIAL_INTERACTION_RADIUS_METERS
                                            (apps/web/src/social/nearby.ts).
                        VoiceSession.ts     orchestration layer tying the three
@@ -242,95 +234,98 @@ apps/web/src/voice/       (CORE-004) Proximity voice client — structurally
                                            isMuted()/isBlocked() (read fresh
                                            every frame, see App.ts's
                                            updateVoice()).
-                       VoiceControls.ts    prototype-level status/control
-                                           widget (Enable Voice button, OFF/
-                                           READY/CONNECTED/ERROR, mic mode).
+                       VoiceControls.ts    status/control widget (Enable Voice,
+                                           mic mode, volume, microphone).
+                       hallAudio.ts, stageShareQuality.ts
+                                           the Watch Hall's audio rules and the
+                                           stage screen share's encoding.
                      Server-side counterpart: apps/server/src/voice/ (token
-                     minting only — see apps/server/README.md § Voice
-                     (CORE-004)). See docs/decisions/ADR-003-proximity-voice-transport.md
+                     minting only — see apps/server/README.md). See
+                     docs/decisions/ADR-007-proximity-voice-transport.md
                      and docs/privacy/VOICE_THREAT_MODEL.md.
 
-apps/web/src/projects/   (CORE-005) Project discovery — static,
-                     repository-curated registry + discovery/detail UI +
-                     world booths, no backend:
+apps/web/src/hall/, apps/web/src/watch/
+                     The Watch Hall's client logic (seats, stage queue and
+                     widget, boards, presence, the speaker card, the
+                     Discussion Corner) and the Watch panel (schedule, live
+                     streams, replays, the opt-in personal YouTube player).
+                     The hall's geometry comes from the content's HallLayout;
+                     see docs/architecture/WATCH_HALL.md and
+                     docs/decisions/ADR-014-watch-hall.md.
+
+apps/web/src/learning/   The Learning Valley framework: the lesson catalogue
+                     and its validation (catalog.ts), the LEARN → SEE → TRY →
+                     PROVE panel, question pools, local-only progress
+                     (progress.ts) and the visualizer framework
+                     (visualizers/). Lessons come from the content provider.
+
+apps/web/src/community/  The community hub client: forum, ZecHub wiki and
+                     project pages read through the game server's read-only
+                     gateway, with sanitised HTML (safeHtml.ts). See
+                     docs/decisions/ADR-009-community-content-gateway.md.
+
+apps/web/src/projects/   Project discovery — a static, repository-curated
+                     registry + discovery/detail UI + world booths, no backend:
                        ProjectTypes.ts          Project interface + bounded
                                                  ProjectStatus/ProjectCategory
-                                                 enums and their human-
-                                                 readable label maps. No
-                                                 wallet/payment field exists
-                                                 on Project.
+                                                 enums. No wallet/payment field
+                                                 exists on Project.
                        projectData.ts           the static fixture dataset
-                                                 (7 clearly-fictional
-                                                 prototype projects).
+                                                 (clearly fictional sample
+                                                 projects).
                        ProjectRegistry.ts       validateProjects() (runs at
-                                                 module load — an invalid
-                                                 fixture throws immediately,
-                                                 never silently breaks a
-                                                 booth) + getProjectById/
-                                                 BySlug/getFeaturedProjects/
-                                                 getProjectsByCategory/
-                                                 searchProjects. The one
-                                                 place project metadata
-                                                 lives — booths and UI only
-                                                 ever hold a projectId, never
-                                                 a copy of the data (see
-                                                 ProjectBoothInteractable
-                                                 below).
-                       urlSafety.ts             isSafeExternalUrl() (pure,
-                                                 unit-tested) +
-                                                 createSafeExternalLink()
-                                                 (DOM-touching, e2e-tested) —
-                                                 http/https only, every
-                                                 rendered <a> gets
-                                                 rel="noopener noreferrer".
-                       ProjectDiscoveryPanel.ts the discovery list/search/
-                                                 filter UI. Reuses the
-                                                 existing `[E] View Projects`
-                                                 board interaction (replaces
-                                                 CORE-001's PrototypePanel —
-                                                 same Interactable/
-                                                 InteractionSystem wiring,
-                                                 only what onOpenProjectBoard
-                                                 does changed) and swaps a
-                                                 detail view in/out of the
-                                                 same .zw-modal-backdrop
-                                                 rather than stacking a
-                                                 second modal.
-                       ProjectDetailPanel.ts    renders one project's full
-                                                 detail — textContent/DOM-
-                                                 element construction only,
-                                                 never innerHTML; links only
-                                                 render when both present and
-                                                 isSafeExternalUrl()-checked.
+                                                 module load — an invalid fixture
+                                                 throws immediately, never
+                                                 silently breaks a booth) and the
+                                                 lookup/search functions. The one
+                                                 place project metadata lives —
+                                                 booths and UI only ever hold a
+                                                 projectId.
+                       urlSafety.ts             isSafeExternalUrl() +
+                                                 createSafeExternalLink() —
+                                                 http/https only, every rendered
+                                                 <a> gets rel="noopener noreferrer".
+                       ProjectDiscoveryPanel.ts the discovery list/search/filter
+                                                 UI, opened from the
+                                                 `[E] View Projects` board.
+                       ProjectDetailPanel.ts    one project's detail —
+                                                 textContent/DOM construction
+                                                 only, never innerHTML.
                        ProjectBoothInteractable.ts
-                                                 a world Interactable that
-                                                 holds only a projectId
-                                                 (throws at construction if
-                                                 unknown — fails loudly, not
-                                                 silently) and opens that
-                                                 project's detail view
-                                                 directly via
-                                                 ProjectDiscoveryPanel.openProject().
-                     Placeholder world booths (primitive pedestal + sign)
-                     live in apps/web/src/world/PrototypePlaza.ts's
-                     projectBoothPlacements()/buildProjectBooth() — world
-                     code passes only a projectId, never name/description/
-                     tags (see docs/privacy/PROJECT_DISCOVERY_THREAT_MODEL.md).
-                     No wallet/payment code anywhere in this module — that
-                     is CORE-006's scope.
+                                                 a world Interactable that holds
+                                                 only a projectId (throws at
+                                                 construction if unknown) and
+                                                 opens that project's detail view.
+                     See docs/privacy/PROJECT_DISCOVERY_THREAT_MODEL.md.
 
-apps/web/src/audio/, apps/web/src/zcash/
-                     Each contains only a README.md documenting the future
-                     integration point (ambient/SFX audio for the former —
-                     voice itself now lives in apps/web/src/voice/, not
-                     here, see above). No code, no stubs, for either — see
-                     CORE-001 sections 21-23 and each README for the
-                     expected shape.
+apps/web/src/onboarding/ Welcome → wallet → character → nickname → Enter, the
+                     character preview, the profile store and the name
+                     confirmation interface (ADR-015, ADR-016).
+
+apps/web/src/moderation/ Report dialog, the moderator panel and action
+                     dialogs, and the overlay a removed player sees
+                     (ADR-019).
+
+apps/web/src/zcash/      The in-game wallet: the WebZjs engine boundary and the
+                     encrypted keystore (core/), the adapter every UI uses
+                     (ZcashWalletAdapter.ts), the wallet panel, private
+                     player payments (PaymentFlow.ts, paymentCrypto.ts), the
+                     mainnet cap and consent, and the name key. See
+                     apps/web/src/zcash/README.md,
+                     docs/privacy/ZCASH_WALLET_THREAT_MODEL.md and
+                     docs/privacy/PLAYER_PAYMENTS_THREAT_MODEL.md.
+
+apps/web/src/content/    The content seam (types.ts) and the sample content
+                     (sample/): the prototype plaza, a small Watch Hall and
+                     three lessons. See apps/web/src/content/README.md.
+
+apps/web/src/audio/      Only a README: the planned ambient/SFX layer. Voice
+                     lives in apps/web/src/voice/.
 ```
 
-## Extension points for future agents
+## Extension points
 
-### Character Agent — replacing the placeholder character
+### Replacing the placeholder character
 
 ```ts
 const { scene, animations } = await assetManager.instantiate("/assets/characters/builder.glb");
@@ -342,99 +337,81 @@ If `animations` contains clips named `Idle`, `Walk`, `Jog`, `Sit`,
 procedural backend to `THREE.AnimationMixer` crossfades. No changes
 needed in `PlayerController`, `CollisionSystem`, or the camera.
 
-### Multiplayer (implemented in CORE-002)
+### Adding a location
 
-See `apps/web/src/networking/README.md`,
-`docs/protocols/multiplayer-protocol.md`, and
-`packages/multiplayer/README.md`. `RemotePlayer` mirrors `LocalPlayer`'s
-composition (a model + `PlayerAnimation`) but is driven by the
-interpolation buffer instead of `PlayerController` — see
-`docs/decisions/ADR-001-client-authoritative-movement.md`. Remote
-players are **not** added to `CollisionSystem` or
-`ThirdPersonCamera.setObstacles()` in CORE-002 (both already accept
-arbitrary object lists, so this is straightforward future work, not an
-architectural blocker) — walking through another player's placeholder
-character is an accepted gap at this stage, not a bug.
+A location is a `LocationModule` (`apps/web/src/world/LocationModule.ts`) in one slot of the shared
+coordinate space (`apps/web/src/world/locations.ts`). It builds its scene group, registers its colliders
+and interactables, and reports its ground height, spawn point, minimap and optional capabilities (a
+project board anchor, live community boards, a Watch Hall). `World` owns the scene, lighting, sky and fog
+and drops a new module in without changing its own setup. To try one, add it to
+`apps/web/src/content/sample/index.ts`. See
+`docs/decisions/ADR-010-additional-locations-shared-coordinates.md` and
+`docs/decisions/ADR-008-district-ground-height-and-render-tiers.md`.
 
-### Social (implemented in CORE-003)
+### Multiplayer
 
-See `docs/protocols/multiplayer-protocol.md` §§ Nickname validation and
-conflict resolution / Nearby interaction range / Player selection, and
-`apps/web/src/social/`. Player selection reuses `InteractionSystem`
-unchanged via `RemotePlayerInteractable` — a remote player and a world
-object (e.g. the project board) compete for "nearest interactable" under
-the exact same rule `InteractionSystem` already applies to multiple world
-objects; whichever is physically closer wins and is what "[E] …" acts on.
-No raycasting/click-to-select was added, to avoid touching the camera or
-introducing combat-style lock-on.
+See `apps/web/src/networking/README.md` and `docs/protocols/multiplayer-protocol.md`. `RemotePlayer`
+mirrors `LocalPlayer`'s composition (a model + `PlayerAnimation`) but is driven by the interpolation
+buffer instead of `PlayerController` — see
+`docs/decisions/ADR-005-client-authoritative-movement.md`. Remote players are **not** added to
+`CollisionSystem` or `ThirdPersonCamera.setObstacles()` (both accept arbitrary object lists, so this is
+straightforward future work) — walking through another player is an accepted gap, not a bug.
 
-### Voice (implemented in CORE-004)
+### Social
 
-See `docs/decisions/ADR-003-proximity-voice-transport.md`,
-`docs/privacy/VOICE_THREAT_MODEL.md`, and `apps/web/src/voice/`. Voice
-attaches to the exact object `apps/web/src/audio/README.md` anticipated
-before any audio code existed (`RemotePlayer.object`), reuses
-`InputManager`'s existing text-input guard for push-to-talk (`KeyV`
-added to `KEY_TO_ACTION`, no new guard code), and reuses `SocialStore`'s
-existing block state as-is (read by `VoiceSession`, no change to
-CORE-003's block privacy contract) — `SocialStore.mute()`/`unmute()` are
-the one new piece of relationship state, local-only like block. The SFU
-connection (LiveKit) and the gameplay WebSocket connection are
-deliberately two separate systems; only token minting shares the
-underlying `http.Server` process, for local-dev convenience.
+See `docs/protocols/multiplayer-protocol.md` §§ Nickname validation and conflict resolution / Nearby
+interaction range / Player selection, and `apps/web/src/social/`. Player selection reuses
+`InteractionSystem` unchanged via `RemotePlayerInteractable` — a remote player and a world object (e.g.
+the project board) compete for "nearest interactable" under the same rule. An optional
+`Interactable.priority` comes first (the Watch Hall's seats 2, its boards and doors 1, players and
+everything else 0; ADR-014 § 9), and distance breaks ties. No raycasting/click-to-select was added, to
+avoid touching the camera or introducing combat-style lock-on.
 
-### World/Level Design agent — the real Founders' District
+### Identity and onboarding
 
-Swap `World`'s composed location from `PrototypePlaza` to a real
-district build. `World` already separates "scene/lighting owner" from
-"what's in the scene" — a new `FoundersDistrict.ts` exporting the same
-shape PrototypePlaza does (`{ group, cameraObstacles, spawnPoint }`,
-registering colliders/interactables the same way) drops in without
-touching `World.ts`'s lighting/sky/fog setup.
+See `docs/decisions/ADR-015-wallet-holder-identity.md`, the protocol doc's § Identity: wallet holders and
+guests, and `apps/web/src/onboarding/`. `App` opens the WebSocket at startup but `NetworkClient.join()`
+is called only when `OnboardingFlow` completes (Welcome → wallet → character → nickname → Enter; guests
+skip to Enter), so a player in onboarding is invisible to others. The wallet step reuses `WalletPanel`;
+the character step's turntable (`CharacterPreview`) has its own small renderer, disposed with
+`forceContextLoss`, and shares the avatar templates of `RemoteAvatarLibrary` with the local player and
+the remote avatars. `participation.ts` adds the sticky `walletHolder` boolean, which App maps to
+`join.wallet` / `set_wallet`; the server's `canReceive` comes back in presence and gates Send ZEC
+(`PlayerContextCard`), renaming (`NicknameControls`, the Profile panel) and full voice. A holder's name
+is applied through the `NameConfirmation` interface (`onboarding/nameConfirmation.ts`: a plain
+`set_nickname`, or the fee-confirmed registration of ADR-016 in `feeNameConfirmation.ts`).
+`profileStore.ts` remembers the character (and a holder's name) under `player-profile-v1`; the e2e suite
+seeds `{ autoEnter: "guest" }`, which App honours only in DEV / `VITE_TEST_HOOKS` builds.
 
-### Project discovery (implemented in CORE-005)
+### Voice
 
-See `docs/privacy/PROJECT_DISCOVERY_THREAT_MODEL.md` and
-`apps/web/src/projects/`. CORE-001's `PrototypePanel` (three hardcoded
-placeholder cards) is gone — the `[E] View Projects` board interaction
-now opens `ProjectDiscoveryPanel`, and the `Interactable`/
-`InteractionSystem` wiring around it did not need to change, only what
-`onOpenProjectBoard` does (exactly as the CORE-001 architecture note this
-replaces anticipated). A project booth is the same pattern applied to a
-single project: `ProjectBoothInteractable` holds only a `projectId` and
-calls `ProjectDiscoveryPanel.openProject()` directly. Next real step for
-a future Project Platform agent: CORE-006's wallet/Zcash work wiring a
-real "Support with ZEC" action into `ProjectDetailPanel`'s links row,
-and/or CORE-008 replacing the primitive pedestal/sign booths with real
-art — neither is in scope yet (see `ROADMAP.md`).
+See `docs/decisions/ADR-007-proximity-voice-transport.md`, `docs/privacy/VOICE_THREAT_MODEL.md`, and
+`apps/web/src/voice/`. Voice attaches to `RemotePlayer.object`, reuses `InputManager`'s text-input guard
+for push-to-talk (`KeyV` in `KEY_TO_ACTION`), and reads `SocialStore`'s block and mute state, which stay
+local-only. The SFU connection (LiveKit) and the gameplay WebSocket connection are deliberately two
+separate systems; only token minting shares the game server's `http.Server` process.
 
-### Audio/Zcash agents
+### The Watch Hall
 
-Start from the respective README in `apps/web/src/audio/` / `apps/web/src/zcash/`. Neither
-module exists yet; both are intentionally undocumented-in-code beyond
-their README per the CORE-001 task brief.
+A content with a Watch Hall supplies a `HallLayout`; the hall systems read seats, stage, screen, podium,
+boards and floor heights from it and never hard-code positions. `docs/architecture/WATCH_HALL.md`
+describes the systems and the hall contract.
 
-## Known architectural deviations from the CORE-001 file list
+### Lessons
 
-The task brief's suggested `apps/web/src/` tree names only
-`ui/InteractionPrompt.ts` and `ui/PrototypePanel.ts` under `ui/`. This
-build also adds:
+A lesson catalogue (`apps/web/src/learning/catalog.ts`: `LessonCatalog`) comes from the content provider.
+`validateCatalog` checks the rules every catalogue keeps (unique ids, known and acyclic prerequisites,
+answerable quizzes, a TRY step behind every simulation proof). A visualizer is registered by id; a
+content can add its own next to `BASIC_VISUALIZERS`.
 
-- `ui/styles.ts` — a single shared stylesheet so every widget doesn't
-  reimplement "dark panel, amber border, rounded corners".
-- `ui/HUD.ts` — the always-on info corner + location label (task brief
-  section 24 asks for this content but didn't name a file for it).
-- `ui/DebugStats.ts` — the dev-only FPS/triangle/draw-call panel (task
-  brief section 17 asks for this; same reasoning).
-- `world/Sky.ts` — split out of `World.ts` for readability.
-- `player/PlaceholderCharacter.ts` — split out of `LocalPlayer.ts` so the
-  "how the primitive character is built" code doesn't bloat the class
-  that owns the player's runtime state.
+### Project discovery
 
-No behavior-affecting deviations (engine, world scale, identity model,
-multiplayer framework) were made — those remain explicitly out of scope
-per CORE-001 section 32 ("Critical Collaboration Rule") and section 33.
+See `docs/privacy/PROJECT_DISCOVERY_THREAT_MODEL.md` and `apps/web/src/projects/`. The `[E] View
+Projects` board interaction opens `ProjectDiscoveryPanel`; a project booth is the same pattern applied to
+one project: `ProjectBoothInteractable` holds only a `projectId` and calls
+`ProjectDiscoveryPanel.openProject()` directly. `ProjectDetailPanel`'s links row has a "Support with ZEC"
+action (`apps/web/src/zcash/SupportFlow.ts`): a shielded payment to the project, with no memo by default.
 
-## DECISION REQUIRED (pending architectural review)
+### Audio
 
-None at this time. No scope outside CORE-001 was touched.
+Start from `apps/web/src/audio/README.md`. The ambient/SFX layer is not built yet.

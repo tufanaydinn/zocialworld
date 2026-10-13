@@ -1,7 +1,8 @@
 import { test, expect, type ConsoleMessage, type Page } from "@playwright/test";
+import { ANCHOR, standAtAnchor } from "./support/anchors.ts";
 
 /**
- * CORE-001 acceptance tests, automated per the revision instructions.
+ * Core acceptance tests: movement, the camera and the project board.
  *
  * These read application state through the dev-only debug hooks exposed
  * by `apps/web/src/core/App.ts` (`window.__localPlayer`) rather than
@@ -42,15 +43,20 @@ function collectConsoleErrors(page: Page): string[] {
   return errors;
 }
 
-test.describe("CORE-001 acceptance", () => {
+test.describe("core acceptance", () => {
   test("A — application loads without fatal console/page errors", async ({ page }) => {
+    // The render canvas appears only once the Vite dev server has transformed the whole module graph for a cold
+    // page and the world has started building. On a loaded 4-vCPU CI machine with SwiftShader that takes well
+    // over the default 5 s expect timeout, so this waits as long as the other world specs wait for their world
+    // (60 s, inside a 90 s test).
+    test.setTimeout(90_000);
     const errors = collectConsoleErrors(page);
 
     await page.goto("/");
     // `canvas[data-engine]` targets the Three.js render canvas specifically —
     // the dev-only stats.js panel (apps/web/src/ui/DebugStats.ts) also
     // contains several plain <canvas> elements for its FPS/MS/MB panels.
-    await expect(page.locator("canvas[data-engine]")).toBeVisible();
+    await expect(page.locator("canvas[data-engine]")).toBeVisible({ timeout: 60_000 });
     // Give the first few frames (asset-free, so this is fast) a moment to settle.
     await page.waitForTimeout(500);
 
@@ -64,8 +70,9 @@ test.describe("CORE-001 acceptance", () => {
     const before = await readPlayerState(page);
 
     // Default camera yaw faces -Z, so holding W should decrease player.z.
+    // 1.2 s: with walk acceleration, 0.8 s covered ≈0.49 m — right on the 0.5 m threshold below.
     await page.keyboard.down("KeyW");
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1200);
     await page.keyboard.up("KeyW");
     // Let the velocity smoothing settle to zero so the position reading below is stable.
     await page.waitForTimeout(200);
@@ -82,13 +89,10 @@ test.describe("CORE-001 acceptance", () => {
     const prompt = page.locator(".zw-interaction-prompt");
     await expect(prompt).not.toHaveClass(/visible/);
 
-    // Teleport next to the project board (apps/web/src/world/PrototypePlaza.ts
-    // registers it at world position (7, 0, -3.5) with a 2.5m interaction
-    // radius) instead of walking there — deterministic and fast.
-    await page.evaluate(() => {
-      window.__localPlayer!.position.x = 7;
-      window.__localPlayer!.position.z = -3.5;
-    });
+    // Teleport next to the project board (the world's "projects.board" anchor,
+    // inside its 2.5 m interaction radius) instead of walking there —
+    // deterministic and fast.
+    await standAtAnchor(page, ANCHOR.projectBoard);
 
     await expect(prompt).toHaveClass(/visible/);
     await expect(prompt).toContainText("View Projects");
@@ -98,10 +102,7 @@ test.describe("CORE-001 acceptance", () => {
     await page.goto("/");
     await page.waitForFunction(() => Boolean(window.__localPlayer));
 
-    await page.evaluate(() => {
-      window.__localPlayer!.position.x = 7;
-      window.__localPlayer!.position.z = -3.5;
-    });
+    await standAtAnchor(page, ANCHOR.projectBoard);
     await expect(page.locator(".zw-interaction-prompt")).toHaveClass(/visible/);
 
     const panel = page.locator(".zw-modal-backdrop");
@@ -117,10 +118,7 @@ test.describe("CORE-001 acceptance", () => {
     await page.goto("/");
     await page.waitForFunction(() => Boolean(window.__localPlayer));
 
-    await page.evaluate(() => {
-      window.__localPlayer!.position.x = 7;
-      window.__localPlayer!.position.z = -3.5;
-    });
+    await standAtAnchor(page, ANCHOR.projectBoard);
     await page.keyboard.press("KeyE");
 
     const panel = page.locator(".zw-modal-backdrop");

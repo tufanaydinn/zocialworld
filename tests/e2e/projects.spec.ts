@@ -1,7 +1,8 @@
 import { test, expect, type ConsoleMessage, type Page } from "@playwright/test";
+import { ANCHOR, standAtAnchor } from "./support/anchors.ts";
 
 /**
- * CORE-005 §§ 31 (Tests 13, 14) and 32 (E2E A-I).
+ * Project discovery: the board, the booths, filters, search and the detail view, and hostile project text.
  *
  * Same dev-hook pattern as app.spec.ts/social.spec.ts: drive real
  * application state through `window.__localPlayer` (teleport instead of
@@ -51,18 +52,15 @@ function collectConsoleErrors(page: Page): string[] {
   return errors;
 }
 
-/** Teleports next to the project board (PrototypePlaza.ts: (7, 0, -3.5), 2.5m radius) and opens it with E. */
+/** Teleports next to the project board (the "projects.board" anchor, inside its 2.5 m radius) and opens it with E. */
 async function openDiscoveryViaBoard(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    window.__localPlayer!.position.x = 7;
-    window.__localPlayer!.position.z = -3.5;
-  });
+  await standAtAnchor(page, ANCHOR.projectBoard);
   await expect(page.locator(".zw-interaction-prompt")).toHaveClass(/visible/);
   await page.keyboard.press("KeyE");
   await expect(page.locator(".zw-modal-backdrop")).toHaveClass(/visible/);
 }
 
-test.describe("CORE-005 — project discovery", () => {
+test.describe("project discovery", () => {
   test("A — open discovery panel through world/project interaction", async ({ page }) => {
     const errors = collectConsoleErrors(page);
     await page.goto("/");
@@ -80,7 +78,7 @@ test.describe("CORE-005 — project discovery", () => {
     await openDiscoveryViaBoard(page);
 
     const cards = page.locator(".zw-project-card-button");
-    await expect(cards).toHaveCount(7); // fixture dataset: projectData.ts (CORE-005 § 8)
+    await expect(cards).toHaveCount(7); // fixture dataset: projectData.ts
     await expect(cards.first()).toBeVisible();
   });
 
@@ -108,7 +106,7 @@ test.describe("CORE-005 — project discovery", () => {
     expect(featuredCount).toBeGreaterThan(0);
     expect(featuredCount).toBeLessThan(7);
 
-    // Search composes with the active filter (task brief § 18).
+    // Search composes with the active filter.
     const search = page.locator(".zw-project-discovery-list-view .zw-input");
     await search.fill("this-will-match-nothing-xyz");
     await expect(page.locator(".zw-project-discovery-cards")).toContainText("No projects match");
@@ -151,11 +149,8 @@ test.describe("CORE-005 — project discovery", () => {
     await page.goto("/");
     await page.waitForFunction(() => Boolean(window.__localPlayer));
 
-    // PrototypePlaza.ts projectBoothPlacements(): "zk-forge" booth at (16, 0, -6), default 2.2m radius.
-    await page.evaluate(() => {
-      window.__localPlayer!.position.x = 16;
-      window.__localPlayer!.position.z = -6;
-    });
+    // The "projects.booth" anchor: in range of the "zk-forge" booth (default 2.2 m radius).
+    await standAtAnchor(page, ANCHOR.projectBooth);
     await expect(page.locator(".zw-interaction-prompt")).toHaveClass(/visible/);
     await expect(page.locator(".zw-interaction-prompt")).toContainText("ZK Forge");
 
@@ -172,10 +167,7 @@ test.describe("CORE-005 — project discovery", () => {
     await page.goto("/");
     await page.waitForFunction(() => Boolean(window.__localPlayer));
 
-    await page.evaluate(() => {
-      window.__localPlayer!.position.x = 7;
-      window.__localPlayer!.position.z = -3.5;
-    });
+    await standAtAnchor(page, ANCHOR.projectBoard);
     await expect(page.locator(".zw-interaction-prompt")).toHaveClass(/visible/);
     await expect(page.locator(".zw-interaction-prompt")).toContainText("View Projects");
   });

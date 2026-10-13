@@ -3,19 +3,18 @@ import { PROJECT_CATEGORIES, PROJECT_STATUSES, type Project, type ProjectCategor
 import { isSafeExternalUrl } from "./urlSafety.ts";
 
 /**
- * CORE-005 § 9: the one reusable source of truth for project data.
+ * The one reusable source of truth for project data.
  * Booth interactions, the discovery list, and the detail panel all
  * query through here — none of them hold a second copy of project
- * metadata (task brief's explicit "avoid duplicating project metadata"
- * requirement).
+ * metadata.
  *
  * `PROJECTS` is validated once, at module load (see `validateProjects()`
  * below) — an invalid static registry fails loudly at import time
- * rather than silently breaking interactions later (task brief § 30).
+ * rather than silently breaking interactions later.
  */
 validateProjects(PROJECTS);
 
-/** CORE-005 § 30: throws with a specific, actionable message for the first problem found. Exported for its own direct unit test coverage. */
+/** Throws with a specific, actionable message for the first problem found. Exported for its own direct unit test coverage. */
 export function validateProjects(projects: readonly Project[]): void {
   const seenIds = new Set<string>();
   const seenSlugs = new Set<string>();
@@ -81,7 +80,7 @@ export function getUsedCategories(): readonly ProjectCategory[] {
 
 /**
  * Case-insensitive substring match against name, short description, and
- * tags (task brief § 10) — deterministic, no fuzzy-search dependency.
+ * tags — deterministic, no fuzzy-search dependency.
  * An empty/whitespace-only query returns every project, so callers can
  * always route through this function rather than branching on "is there
  * a query" themselves.

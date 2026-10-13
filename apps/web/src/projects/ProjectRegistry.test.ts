@@ -13,12 +13,12 @@ import {
 import { PROJECTS } from "./projectData.ts";
 import type { Project } from "./ProjectTypes.ts";
 
-// CORE-005 § 31. The fixture dataset itself is already validated at
+// The fixture dataset itself is already validated at
 // module load (ProjectRegistry.ts's top-level `validateProjects(PROJECTS)`
 // call) — if that throws, every test in this file fails immediately,
 // which is itself a form of coverage for the real registry's integrity.
 
-test("fixture dataset has at least 5 projects (task brief § 8)", () => {
+test("fixture dataset has at least 5 projects", () => {
   assert.ok(PROJECTS.length >= 5);
 });
 
@@ -108,7 +108,7 @@ test("getUsedCategories only returns categories actually present in the registry
   }
 });
 
-// --- validateProjects() — data integrity, task brief § 30 -----------------
+// --- validateProjects() — data integrity ---------------------------------
 
 function baseProject(overrides: Partial<Project> = {}): Project {
   return {

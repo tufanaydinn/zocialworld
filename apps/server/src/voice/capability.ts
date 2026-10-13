@@ -1,23 +1,21 @@
 import { randomBytes } from "node:crypto";
 
 /**
- * Ephemeral per-session voice capability registry (CORE-004 security
- * revision — ).
+ * Ephemeral per-session voice capability registry.
  *
- * Problem this fixes: the original `/voice/token` endpoint trusted a
- * client-supplied `{ playerId, nickname }` directly. Every connected
- * client already learns every other player's `playerId` through the
- * ordinary multiplayer protocol (`player_snapshot`/`player_joined`), so
- * a malicious client could request a LiveKit token *as* another visible
- * player — LiveKit participant identity is a routing/security identity,
- * so this was a real voice-identity-impersonation vulnerability, not a
- * cosmetic one.
+ * Why: `/voice/token` must never trust a client-supplied
+ * `{ playerId, nickname }`. Every connected client learns every other
+ * player's `playerId` through the ordinary multiplayer protocol
+ * (`player_snapshot`/`player_joined`), so a malicious client could
+ * otherwise request a LiveKit token *as* another visible player —
+ * LiveKit participant identity is a routing/security identity, so that
+ * would be real voice-identity impersonation, not a cosmetic issue.
  *
- * Fix: `WorldServer` issues one cryptographically random, single-use-
+ * How: `WorldServer` issues one cryptographically random, single-use-
  * per-session capability per joined connection (see `issue()`), sends
  * it ONLY to that connection via the owner-only `welcome` message (never
  * broadcast — see `WelcomeMessage.voiceCapability`'s own docstring), and
- * the voice-token HTTP handler now requires that capability and
+ * the voice-token HTTP handler requires that capability and
  * resolves the authoritative identity server-side (see
  * `apps/server/src/voice/tokenHandler.ts`) instead of trusting anything
  * the browser claims about its own identity.
@@ -29,7 +27,7 @@ import { randomBytes } from "node:crypto";
  * capability.
  *
  * No persistence of any kind: entirely in-memory, process-lifetime only,
- * exactly like the rest of `WorldServer`'s session state (CORE-002 §6).
+ * exactly like the rest of `WorldServer`'s session state.
  */
 export class VoiceCapabilityRegistry {
   private readonly playerIdByCapability = new Map<string, string>();
@@ -74,7 +72,7 @@ export class VoiceCapabilityRegistry {
    * Invalidates `playerId`'s current capability, if any. Called on
    * disconnect (`WorldServer.handleClose`) and stale-connection cleanup
    * (`WorldServer.sweepStaleConnections`) — a reconnect is always a
-   * fresh `playerId` (CORE-002's existing identity model), so this
+   * fresh `playerId` (the identity model has no session resumption), so this
    * alone is sufficient to guarantee a capability never survives past
    * the session it was issued to, and a reconnect always gets a new one
    * via a fresh `issue()` call, never the old value.

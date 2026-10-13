@@ -1,0 +1,4 @@
+# Third-party model packs (public/assets/<category>/<pack>/) are not committed here: `npm run assets:fetch`
+# downloads them from their pinned sources and checks every file against assets/asset-registry.json.
+# Ignore rules only apply to untracked files.
+/public/assets/*/*/

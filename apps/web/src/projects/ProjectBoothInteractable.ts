@@ -14,16 +14,16 @@ const DEFAULT_INTERACTION_RADIUS = 2.2;
 
 /**
  * Adapts a world project booth into the existing `Interactable` contract
- * (CORE-005 § 11) — the same "nearest in-range wins, press E" model
- * `RemotePlayerInteractable` (CORE-003) already reuses for player
+ * — the same "nearest in-range wins, press E" model
+ * `RemotePlayerInteractable` already reuses for player
  * selection. No second interaction framework.
  *
- * References a `projectId` only (task brief § 38) — name/description/
+ * References a `projectId` only — name/description/
  * category/etc. are never duplicated here; they come from
  * `ProjectRegistry` exactly once, at construction, purely to build the
  * `[E] <label>` prompt text.
  *
- * CORE-005 § 30 Test 12: an unknown `projectId` throws immediately,
+ * An unknown `projectId` throws immediately,
  * loudly, at construction — a booth with a broken reference is a data
  * bug, never a silently-dead interaction.
  */

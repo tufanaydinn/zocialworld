@@ -14,7 +14,24 @@
  * push-to-talk all addable later without touching gameplay code.
  */
 
-export type GameAction = "moveForward" | "moveBackward" | "moveLeft" | "moveRight" | "jog" | "interact" | "menu" | "pushToTalk";
+/** Keys 1–8 send the eight hall reactions (HALL_REACTIONS order). */
+export const REACTION_ACTIONS = ["reaction1", "reaction2", "reaction3", "reaction4", "reaction5", "reaction6", "reaction7", "reaction8"] as const;
+export type ReactionAction = (typeof REACTION_ACTIONS)[number];
+
+export type GameAction =
+  | "moveForward"
+  | "moveBackward"
+  | "moveLeft"
+  | "moveRight"
+  | "jog"
+  | "interact"
+  | "menu"
+  | "pushToTalk"
+  /** Hold G for the emote wheel, tap G to wave. */
+  | "emoteWheel"
+  /** H raises / lowers your hand (hall only). */
+  | "raiseHand"
+  | ReactionAction;
 
 const KEY_TO_ACTION: Record<string, GameAction> = {
   KeyW: "moveForward",
@@ -29,10 +46,15 @@ const KEY_TO_ACTION: Record<string, GameAction> = {
   ShiftRight: "jog",
   KeyE: "interact",
   Escape: "menu",
-  // CORE-004 §16: push-to-talk. Gated by the same isTextInputTarget()
+  // Push-to-talk. Gated by the same isTextInputTarget()
   // guard every other key already goes through below — typing "v" into
   // NicknameControls must never transmit voice.
   KeyV: "pushToTalk",
+  // The emote wheel, raise hand and the eight reactions. The same keydown guard
+  // keeps them silent while typing in chat or the nickname box.
+  KeyG: "emoteWheel",
+  KeyH: "raiseHand",
+  ...Object.fromEntries(REACTION_ACTIONS.flatMap((action, index): [string, GameAction][] => [[`Digit${index + 1}`, action], [`Numpad${index + 1}`, action]])),
 };
 
 export class InputManager {
@@ -120,7 +142,7 @@ export class InputManager {
   };
 
   private onKeyDown = (event: KeyboardEvent): void => {
-    // CORE-003: typing a nickname must never also move the player /
+    // Typing a nickname must never also move the player /
     // trigger E / start push-to-talk. This guard blocks only NEW
     // activation — see onKeyUp below for why release is never gated
     // the same way.
@@ -139,18 +161,17 @@ export class InputManager {
   };
 
   private onKeyUp = (event: KeyboardEvent): void => {
-    // Deliberately NOT gated by isTextInputTarget (CORE-004 security
-    // revision — ): the guard
+    // Deliberately NOT gated by isTextInputTarget: the guard
     // on onKeyDown already stops a NEW activation from starting while a
     // text input has focus, but a key held BEFORE focus moved into a
     // text field must still be releasable — e.g. hold V outside the
     // nickname box (push-to-talk starts), then click into the nickname
     // box while still holding V, then release V: the keyup's target is
-    // now the text input, so the old guard here would silently drop the
+    // now the text input, so a guard here would silently drop the
     // release and leave push-to-talk (or, less dangerously but just as
     // wrongly, movement) stuck "pressed" forever. Clearing an action
     // that was never pressed is a harmless no-op (Set.delete on a
-    // missing key), so removing this guard entirely is safe for every
+    // missing key), so leaving this unguarded is safe for every
     // action, not just pushToTalk.
     const action = KEY_TO_ACTION[event.code];
     if (!action) return;
@@ -172,7 +193,7 @@ export class InputManager {
   };
 }
 
-/** CORE-003: true while the user is typing into a text field (e.g. NicknameControls) — see the keydown/keyup guards above. */
+/** True while the user is typing into a text field (e.g. NicknameControls) — see the keydown/keyup guards above. */
 function isTextInputTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { GUEST_NICKNAME_PATTERN, defaultPlayerAvatar, type PlayerAvatar } from "@project/shared";
 
 /**
  * Temporary session identity only — see docs/privacy/MULTIPLAYER_THREAT_MODEL.md.
@@ -13,10 +14,24 @@ export function generatePlayerId(): string {
   return randomUUID();
 }
 
-/** `Guest-####` — used when a client doesn't supply a nickname on `join`. */
+/** `Guest-####` — every guest's name (ADR-015), and a holder's until they choose one. Callers pick a free one (WorldServer). */
 export function generateGuestNickname(): string {
   const digits = Math.floor(1000 + Math.random() * 9000);
   return `Guest-${digits}`;
+}
+
+/** ADR-015: whether `nickname` has the exact shape of a server-generated guest name. */
+export function isGuestNickname(nickname: string): boolean {
+  return GUEST_NICKNAME_PATTERN.test(nickname);
+}
+
+/**
+ * ADR-015: the avatar of a session that has not chosen one — every guest's. Derived from
+ * colorSeed exactly as the web client's remote avatars were before ADR-015 (model index
+ * `colorSeed % 5`, in AVATAR_MODELS order), so nobody's default look changes.
+ */
+export function defaultAvatar(colorSeed: number): PlayerAvatar {
+  return defaultPlayerAvatar(colorSeed);
 }
 
 /**

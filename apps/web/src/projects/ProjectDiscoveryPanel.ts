@@ -6,19 +6,17 @@ import { PROJECT_CATEGORY_LABELS, PROJECT_STATUS_LABELS, type Project, type Proj
 type DiscoveryFilter = "all" | "featured" | ProjectCategory;
 
 /**
- * Prototype project discovery UI (CORE-005 §§ 16-19) — opened via the
- * existing "View Projects" board interaction (CORE-001's
- * `buildProjectBoard`, unchanged) or directly to a specific project via
+ * Prototype project discovery UI — opened via the
+ * existing "View Projects" board interaction (`buildProjectBoard`) or directly to a specific project via
  * `openProject()` (used by `ProjectBoothInteractable`). Reuses the same
  * `.zw-modal-backdrop`/`.zw-panel.zw-modal` structure and `open`/`close`/
- * `isOpen`/`dispose` API the CORE-001 placeholder panel it replaces
- * already had, so `App.ts`'s wiring (Esc-to-close, dispose on teardown)
+ * `isOpen`/`dispose` API as the app's other panels, so `App.ts`'s wiring (Esc-to-close, dispose on teardown)
  * needs no new code path — see that file's own comments.
  *
  * One backdrop, two views (list and detail), toggled in place — not two
  * stacked modals. Keeps `.zw-modal-backdrop` unique in the DOM, which
- * `tests/e2e/README.md` already documents as something the existing
- * CORE-001 suite assumes.
+ * `tests/e2e/README.md` already documents as something the e2e suite
+ * assumes.
  */
 export class ProjectDiscoveryPanel {
   private readonly backdrop: HTMLDivElement;
@@ -57,7 +55,7 @@ export class ProjectDiscoveryPanel {
     this.searchInput.className = "zw-input";
     this.searchInput.placeholder = "Search projects…";
     this.searchInput.addEventListener("input", () => this.renderCards());
-    this.searchInput.addEventListener("keydown", (event) => event.stopPropagation()); // CORE-003/004 pattern: never let a typed key reach InputManager
+    this.searchInput.addEventListener("keydown", (event) => event.stopPropagation()); // never let a typed key reach InputManager (same as the chat and voice inputs)
     this.listView.appendChild(this.searchInput);
 
     this.filterRow = document.createElement("div");
@@ -200,7 +198,7 @@ export class ProjectDiscoveryPanel {
     this.backdrop.classList.add("visible");
   }
 
-  /** Opens straight to one project's detail view — the project-booth path (CORE-005 § 11). */
+  /** Opens straight to one project's detail view — the project-booth path. */
   openProject(projectId: string): void {
     this.showDetail(projectId);
     this.backdrop.classList.add("visible");
@@ -212,7 +210,7 @@ export class ProjectDiscoveryPanel {
    * bypassing the registry lookup. Exists specifically so
    * `tests/e2e/projects.spec.ts` can exercise the REAL `detailPanel.render()`
    * code path against hostile content the static fixture dataset would
-   * never contain (CORE-005 § 31 Test 13) — same reasoning CORE-003's
+   * never contain — same reasoning the
    * `window.__remotePlayers.spawn()` e2e XSS tests already established
    * for nickname rendering. Never called from normal app code.
    */
@@ -230,6 +228,7 @@ export class ProjectDiscoveryPanel {
   }
 
   dispose(): void {
+    this.detailPanel.dispose();
     this.backdrop.remove();
   }
 }

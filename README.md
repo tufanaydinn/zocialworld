@@ -1,97 +1,124 @@
-# ZocialWorld
+# Zocial World
 
-**Status: Early Prototype — Active Development**
+Zocial World is an open-source, browser-based 3D social world for the Zcash community. The official
+experience is operated as a hosted service at **[zocialworld.com](https://zocialworld.com)**. This
+repository contains the open-source application systems, protocols and contributor-facing components.
+Production world content, original artwork and selected operational infrastructure are maintained
+separately.
 
-Open-source browser-based social world for the Zcash ecosystem. Meet builders, discover projects, and participate in privacy-conscious community experiences in a shared 3D space.
+## What Zocial World is
 
-This is an early prototype. The current implementation covers CORE-001 through CORE-005:
-3D foundation, multiplayer presence, social identity, proximity voice, and project discovery.
+Players meet in a shared 3D space under a chosen name and avatar, without exposing a public wallet
+identity.
 
-The visual layer is currently basic (procedural placeholder geometry). Licensed production assets are being integrated for a more visually representative version.
+- **Districts.** Several locations share one world coordinate space and are reached through portals and
+  doors.
+- **Watch Hall.** Talks and community calls: a player on stage shares a tab, a window or a whole screen
+  onto the big screen. The hall also has proximity voice, a schedule with live streams and replays,
+  numbered seats, reactions, raise hand and a speaker card. Watching needs no wallet.
+- **Learning Valley.** Zcash lessons built on a LEARN → SEE → TRY → PROVE framework, with quizzes,
+  interactive visualizers, prerequisites and gates. Progress stays in the player's browser.
+- **Community hub.** Read the Zcash Community Forum, the ZecHub wiki and project pages without leaving the
+  game, through a read-only content gateway.
+- **Shielded wallet.** An in-game Zcash wallet (WebAssembly, keys stay in the browser) with private
+  player-to-player payments. Payment addresses are sealed end to end and never shown to other players.
+- **Social layer.** Chat (general, nearby and whispers), proximity voice, emotes, a player menu, local mute
+  and block, reporting and moderation tools.
 
-## Current Implementation Status
+The wallet on the hosted site is an experimental, unaudited beta, with a cap of
+0.01 ZEC per transaction ([ADR-018](docs/decisions/ADR-018-mainnet-in-game-wallet.md)).
 
-**Completed Foundations:**
-- ✅ **CORE-001** — 3D client prototype: movement, collision, interaction system
-- ✅ **CORE-002** — Multiplayer presence: players joining/leaving, position broadcasting
-- ✅ **CORE-003** — Social identity: nicknames, player context cards, block lists
-- ✅ **CORE-004** — Proximity voice: LiveKit SFU integration, distance-gated audio
-- ✅ **CORE-005** — Project discovery: static registry, discovery UI, placeholder booths
+## What is in this repository
 
-**In Development:**
-- 🔄 **CORE-006** — Zcash wallet integration
-- 🔄 **CORE-007** — End-to-end system test
+| In this repository | Added by the hosted deployment |
+|---|---|
+| The web client: rendering, camera, movement, collision, interaction, HUD, minimap, chat, voice, Watch Hall, Learning Valley framework, community hub, project discovery, onboarding, moderation client, wallet client | The production world content: district, hall and valley layouts, lesson curriculum, event catalogue |
+| The game server: presence relay, chat, voice tokens, Watch Hall stage arbitration, content gateway, owned names, wallet bridge, payment and fee verification, moderation | Original Zocial World artwork, logos and branding |
+| A placeholder world: the prototype plaza, a small sample Watch Hall and three sample lessons | The production build of the wallet engine |
+| The multiplayer protocol, threat models, architecture notes and ADRs | Deployment configuration, keys and operations |
+| Asset licence metadata and a fetch-and-verify script for the third-party model packs | |
 
-**Not Yet Started:**
-- ⬜ Visual production (real character/environment assets)
-- ⬜ Advanced social features (chat, reputation)
-- ⬜ Payment flows
+The client separates **systems** from **content**: systems never import content, and one content provider
+supplies the locations, the hall layout and the lessons. A plain checkout uses the sample content in
+`apps/web/src/content/sample/`; the hosted deployment adds its own content module. See
+[apps/web/src/content/README.md](apps/web/src/content/README.md).
+
+The wallet engine is not in this repository yet: its build scripts will be published separately later.
+Without it, the client builds against a stand-in engine on the `test` network. Everything except the
+wallet works, and the wallet panel reports that the engine is not installed.
 
 ## Quick start
 
+Requirements: Node.js 22 and npm.
+
 ```bash
 npm install
-npm run dev          # start the web client AND multiplayer server together
-npm run typecheck    # tsc --noEmit across the workspace
-npm run build        # production build (web + server)
-npm run test:e2e     # Playwright end-to-end tests
-npm test              # unit tests (client) + server tests
+npm run dev          # web client, game server and a local LiveKit voice server
+npm run typecheck    # TypeScript across every workspace
+npm test             # client unit tests, server tests and script tests
+npm run test:e2e     # Playwright end-to-end tests on the sample content
+VITE_ZCASH_NETWORK=test npm run build   # production build of the client and the server
 ```
 
-`npm run dev` runs both `dev:web` and `dev:server` via `concurrently`;
-use those individually if you only need one. These root scripts
-delegate to the relevant workspace — see `apps/web/README.md` and
-`apps/server/README.md` for app-specific detail, and
-`tests/e2e/README.md` for what the e2e suite covers.
+- `npm run dev` opens the client on <http://localhost:5174> with the game server on port 8787. The dev
+  server defaults to the `test` network and says so. Copy `apps/web/.env.example` to `apps/web/.env` to
+  set options.
+- A build fails closed unless `VITE_ZCASH_NETWORK` is exactly `test` or `main`. Public builds use `test`.
+- `npm run dev` downloads a pinned `livekit-server` for local voice (checked against its release
+  checksums). Set `SKIP_LOCAL_LIVEKIT=1` to run without voice.
+- `npm run assets:fetch` downloads the CC0 third-party model packs listed in
+  [assets/asset-registry.json](assets/asset-registry.json) and checks every file's SHA-256. The sample
+  world runs without them, on procedural placeholders.
+
+See [apps/web/README.md](apps/web/README.md) and [apps/server/README.md](apps/server/README.md) for
+app-specific detail, including local multi-user testing, and [tests/e2e/README.md](tests/e2e/README.md) for
+the end-to-end suite.
 
 ## Repository map
 
 ```text
 apps/
-  web/            the web client (see apps/web/README.md)
-  server/         the multiplayer presence relay (apps/server/README.md)
-
-packages/         ownership placeholders for future shared code
-                   (world-core, player, voice, social, projects, zcash,
-                   ui, shared) — each README says where the working
-                   code currently lives. `multiplayer` is implemented
-                   as apps/server + apps/web/src/networking instead of
-                   living here — see packages/multiplayer/README.md.
-
-assets/           asset authoring pipeline + license registry
-                   (LICENSES.md, asset-registry.json) — see
-                   assets/LICENSES.md for how this relates to
-                   apps/web/public/assets/
-
-worlds/
-  founders-district/   level-design data for the real district — NOT
-                        the current prototype plaza, see its README
-
+  web/              the browser client (Three.js, TypeScript, Vite)
+    src/content/    the content seam and the sample content
+  server/           the game server (Node.js, TypeScript, ws)
+packages/
+  shared/           the multiplayer wire protocol types shared by client and server
+assets/             third-party asset registry and licences
 docs/
-  architecture/   detailed system docs (start at OVERVIEW.md)
-  decisions/      ADRs — read before proposing an architecture change
-  privacy/        identity/wallet/network privacy baseline + threat
-                   models
-  protocols/      the multiplayer wire protocol (done — see
-                   multiplayer-protocol.md) and future chat protocols
-  art-direction/  style guide and visual-consistency references
-
-scripts/          reserved for future build/asset tooling (glTF
-                   optimization, texture pipeline, asset audit)
-
-tests/e2e/        Playwright end-to-end tests (repo-root level)
-
-.github/workflows/  CI
+  architecture/     system overview, Watch Hall systems, performance
+  decisions/        Architecture Decision Records
+  privacy/          privacy model and threat models
+  protocols/        the multiplayer protocol
+scripts/
+  dev/              local development helpers (LiveKit, env, load tests)
+  assets/           fetch and verify the third-party model packs
+  tools/            operator tools (registry keys)
+tests/e2e/          Playwright end-to-end tests
+vendor/
+  zcash-tx-decrypt/ the game server's prebuilt shielded transaction decryption helper
 ```
 
-## Documentation index
+## Documentation
 
-- **`ARCHITECTURE.md`** — overview of the system architecture.
-- **`ROADMAP.md`** — implementation status and planned features.
-- **`apps/web/README.md`** / **`apps/server/README.md`** — how to run/build/test
-  each app, controls, current limitations.
-- **`docs/architecture/OVERVIEW.md`** — the client's system map
-  and extension points.
-- **`docs/protocols/multiplayer-protocol.md`** — the client↔server wire protocol.
-- **`docs/privacy/`** — privacy baselines and threat models for each system.
-- **`docs/decisions/`** — Architecture Decision Records.
+- [ARCHITECTURE.md](ARCHITECTURE.md): where to start reading.
+- [docs/architecture/OVERVIEW.md](docs/architecture/OVERVIEW.md): the client's systems and how they fit
+  together.
+- [docs/decisions/README.md](docs/decisions/README.md): the published Architecture Decision Records.
+- [docs/privacy/PRIVACY_MODEL.md](docs/privacy/PRIVACY_MODEL.md): the privacy model and the index of
+  threat models.
+- [docs/protocols/multiplayer-protocol.md](docs/protocols/multiplayer-protocol.md): the client-server
+  wire protocol.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to contribute.
+- [SECURITY.md](SECURITY.md): how to report a vulnerability.
+- [ROADMAP.md](ROADMAP.md): what is done, in progress and planned.
+
+## Licence
+
+- **Code:** MIT, see [LICENSE](LICENSE).
+- **Original Zocial World artwork, logos and branding:** all rights reserved. They are not included in
+  this repository and are not covered by the MIT licence.
+- **Third-party assets:** each pack keeps its own licence (CC0 Kenney and KayKit packs), recorded in
+  [assets/LICENSES.md](assets/LICENSES.md).
+- **Sample lesson text** follows the ZecHub wiki and is under CC BY-SA 4.0.
+
+See [assets/ART_AND_ASSETS_LICENSE.md](assets/ART_AND_ASSETS_LICENSE.md) for the full split.

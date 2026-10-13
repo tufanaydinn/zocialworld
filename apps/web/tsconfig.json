@@ -13,6 +13,10 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+    /* The content provider: the deployment's content module when present, else the sample (src/content/README.md). */
+    "paths": {
+      "@zw/content": ["./src/content/production/index.ts", "./src/content/sample/index.ts"]
+    },
 
     /* Strictness */
     "strict": true,

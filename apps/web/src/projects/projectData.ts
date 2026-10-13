@@ -1,9 +1,9 @@
 import type { Project } from "./ProjectTypes.ts";
 
 /**
- * CORE-005 § 8: a small, clearly-fictional fixture dataset — not real
+ * A small, clearly-fictional fixture dataset — not real
  * Zcash ecosystem projects, not final branding, no implied partnership
- * or endorsement. Repository-curated static data only (§ 36); there is
+ * or endorsement. Repository-curated static data only; there is
  * no project submission/ownership/editing system yet.
  *
  * Deliberately contains no wallet address, donation address, payment
@@ -32,7 +32,7 @@ export const PROJECTS: readonly Project[] = [
     name: "PrivatePay",
     shortDescription: "A point-of-sale concept for private, everyday payments.",
     description:
-      "PrivatePay is a fictional point-of-sale prototype exploring what a private-by-default checkout experience could look like for small merchants. CORE-005 lists it as prototype/static data only — no real payment flow exists anywhere in this project yet.",
+      "PrivatePay is a fictional point-of-sale prototype exploring what a private-by-default checkout experience could look like for small merchants. Listed as prototype/static data only — PrivatePay has no real payment flow.",
     category: "payments",
     status: "beta",
     websiteUrl: "https://privatepay.example",
@@ -48,7 +48,7 @@ export const PROJECTS: readonly Project[] = [
     name: "ZK Forge",
     shortDescription: "Tooling to make zero-knowledge circuit development less painful.",
     description:
-      "ZK Forge is a fictional developer-tooling concept for zero-knowledge circuit authoring, testing, and debugging. Presented here purely as prototype fixture data for CORE-005's project discovery system.",
+      "ZK Forge is a fictional developer-tooling concept for zero-knowledge circuit authoring, testing, and debugging. Presented here purely as prototype fixture data for the project discovery system.",
     category: "developer-tools",
     status: "building",
     repositoryUrl: "https://github.com/example/zk-forge",
@@ -93,7 +93,7 @@ export const PROJECTS: readonly Project[] = [
     name: "Lantern Relay",
     shortDescription: "A lightweight relay concept for private builder-to-builder messaging.",
     description:
-      "Lantern Relay is a fictional lightweight-relay concept for private messaging between ecosystem builders. It is paused as a fixture entry to exercise CORE-005's non-active status rendering — there is no real relay service behind this name.",
+      "Lantern Relay is a fictional lightweight-relay concept for private messaging between ecosystem builders. It is paused as a fixture entry to exercise the non-active status rendering — there is no real relay service behind this name.",
     category: "social",
     status: "paused",
     tags: ["messaging", "relay", "social"],
@@ -106,7 +106,7 @@ export const PROJECTS: readonly Project[] = [
     name: "Quiet Realms",
     shortDescription: "An educational hub concept for Zcash-native privacy concepts.",
     description:
-      "Quiet Realms is a fictional educational-content concept intended to explain Zcash-native privacy concepts to newcomers. Marked archived here purely as fixture data to exercise CORE-005's full status range — not a real, currently-operating educational resource.",
+      "Quiet Realms is a fictional educational-content concept intended to explain Zcash-native privacy concepts to newcomers. Marked archived here purely as fixture data to exercise the full status range — not a real, currently-operating educational resource.",
     category: "education",
     status: "archived",
     socialUrl: "https://social.example/quietrealms",

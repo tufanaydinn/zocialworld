@@ -5,17 +5,14 @@ import type { Interactable } from "../interaction/Interactable.ts";
 import { ProjectBoothInteractable } from "../projects/ProjectBoothInteractable.ts";
 
 /**
- * Builds the CORE-001 prototype plaza: a ~50x50m greybox-with-some-paint
- * space just large enough to prove scale, movement, collision and the
- * interaction pipeline (master spec sections 6, 25 step 1, and the
- * CORE-001 brief section 6). This is NOT the Founders' District — no
- * Tavern interior, no Builders Hall interior, no Market stalls with real
- * listings. The World/Level Design agent owns that build.
+ * Builds the prototype plaza: a ~50x50m greybox-with-some-paint space just
+ * large enough to exercise scale, movement, collision and the interaction
+ * pipeline — a fountain, two placeholder buildings, trees, lanterns, the
+ * project board and a few project booths. It is the sample content's only
+ * location (`content/sample/`).
  *
- * Every placeholder mesh here is primitive geometry (boxes, cylinders,
- * cones) with hand-tuned warm colors — zero external assets, zero
- * license surface, per CORE-001 section 6 ("use primitive geometry if
- * necessary... do not spend significant time decorating").
+ * Every mesh here is primitive geometry (boxes, cylinders, cones) with
+ * hand-tuned warm colors — no external assets, no license surface.
  */
 
 export interface PrototypePlazaResult {
@@ -29,9 +26,16 @@ export interface PrototypePlazaOptions {
   readonly collisions: CollisionSystem;
   readonly interactions: InteractionSystem;
   readonly onOpenProjectBoard: () => void;
-  /** CORE-005: fired by a project booth's `[E]` interaction — opens the project discovery panel straight to that project's detail view. */
+  /** Fired by a project booth's `[E]` interaction — opens the project discovery panel straight to that project's detail view. */
   readonly onSelectProject: (projectId: string) => void;
+  /** When set, the door of the left-hand building leads into the Watch Hall. */
+  readonly onEnterWatchHall?: () => void;
 }
+
+/** Where the plaza's interactions stand (the sample content also publishes them as test anchors). */
+export const PLAZA_PROJECT_BOARD = { x: 7, z: -3.5 } as const;
+export const PLAZA_PROJECT_BOOTH = { x: 16, z: -6 } as const;
+export const PLAZA_HALL_DOOR = { x: -14, z: -6.9 } as const;
 
 const GROUND_SIZE = 56;
 
@@ -85,20 +89,32 @@ export function buildPrototypePlaza(options: PrototypePlazaOptions): PrototypePl
   }
 
   const { group: boardGroup, interactable } = buildProjectBoard(
-    new THREE.Vector3(7, 0, -3.5),
+    new THREE.Vector3(PLAZA_PROJECT_BOARD.x, 0, PLAZA_PROJECT_BOARD.z),
     options.onOpenProjectBoard,
   );
   group.add(boardGroup);
   options.interactions.register(interactable);
 
-  // CORE-005: a handful of placeholder project booths in front of the
+  // A handful of placeholder project booths in front of the
   // "Builders Hall (placeholder)" building (buildingB, at x=14, z=-11) —
-  // a coherent project-discovery area without redesigning the map (task
-  // brief § 13). Primitive pedestal + sign only — see buildProjectBooth().
+  // a coherent project-discovery area without redesigning the map.
+  // Primitive pedestal + sign only — see buildProjectBooth().
   for (const booth of projectBoothPlacements()) {
     const boothGroup = buildProjectBooth(booth.projectId, booth.position, options.onSelectProject);
     group.add(boothGroup.group);
     options.interactions.register(boothGroup.interactable);
+  }
+
+  const onEnterWatchHall = options.onEnterWatchHall;
+  if (onEnterWatchHall) {
+    // The door of the left-hand building (its front faces +z, half-depth 3.5 m).
+    options.interactions.register({
+      id: "plaza-watch-hall-door",
+      label: "Enter the Watch Hall",
+      position: new THREE.Vector3(PLAZA_HALL_DOOR.x, 0, PLAZA_HALL_DOOR.z),
+      interactionRadius: 2,
+      interact: () => onEnterWatchHall(),
+    });
   }
 
   return {
@@ -306,10 +322,9 @@ function buildProjectBoard(
 }
 
 /**
- * CORE-005: where each prototype booth stands, and which project it
+ * Where each prototype booth stands, and which project it
  * maps to. Only a `projectId` reference — never name/description/
- * category/etc., which stay owned by `ProjectRegistry` (task brief §
- * 38). Clustered in front of "Builders Hall (placeholder)"
+ * category/etc., which stay owned by `ProjectRegistry`. Clustered in front of "Builders Hall (placeholder)"
  * (`buildingB`, at x=14, z=-11) so the project-discovery area reads as
  * one coherent spot rather than scattered world dressing.
  */
@@ -317,15 +332,15 @@ function projectBoothPlacements(): Array<{ projectId: string; position: THREE.Ve
   return [
     { projectId: "shieldkit", position: new THREE.Vector3(9, 0, -6) },
     { projectId: "privatepay", position: new THREE.Vector3(12, 0, -6) },
-    { projectId: "zk-forge", position: new THREE.Vector3(16, 0, -6) },
+    { projectId: "zk-forge", position: new THREE.Vector3(PLAZA_PROJECT_BOOTH.x, 0, PLAZA_PROJECT_BOOTH.z) },
     { projectId: "orchard-tools", position: new THREE.Vector3(19, 0, -6) },
   ];
 }
 
 /**
  * A single placeholder project booth: a pedestal + a small sign, built
- * entirely from primitive geometry (no sourced/modeled assets, per
- * CORE-005 § 12/§ 27 — this is systems-first, not a visual pass).
+ * entirely from primitive geometry (no sourced/modeled assets — this
+ * is systems-first, not a visual pass).
  * Visually distinct from `buildProjectBoard`'s taller single board
  * (shorter pedestal shape) purely so the two interactables don't look
  * identical in testing/screenshots — not a meaningful design choice.

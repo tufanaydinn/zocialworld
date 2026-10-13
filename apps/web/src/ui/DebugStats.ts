@@ -7,8 +7,7 @@ import { injectUiStyles } from "./styles.ts";
  * count / draw calls read from `renderer.info`.
  *
  * Only ever constructed when `import.meta.env.DEV` is true (see
- * `App.ts`) so it never ships in a production build — per master spec
- * section 17 ("easy to disable in production").
+ * `App.ts`) so it never ships in a production build.
  */
 export class DebugStats {
   private readonly stats: Stats;
@@ -19,22 +18,28 @@ export class DebugStats {
 
     this.stats = new Stats();
     this.stats.showPanel(0);
+    // Top-left under the HUD corner — the top-right belongs to the world minimap.
     this.stats.dom.style.position = "absolute";
-    this.stats.dom.style.top = "12px";
-    this.stats.dom.style.right = "12px";
-    this.stats.dom.style.left = "auto";
+    this.stats.dom.style.top = "72px";
+    this.stats.dom.style.left = "12px";
     container.appendChild(this.stats.dom);
 
     this.infoElement = document.createElement("div");
     this.infoElement.className = "zw-ui zw-panel";
     this.infoElement.style.position = "absolute";
-    this.infoElement.style.top = "64px";
-    this.infoElement.style.right = "12px";
+    this.infoElement.style.top = "124px";
+    this.infoElement.style.left = "12px";
     this.infoElement.style.padding = "8px 12px";
     this.infoElement.style.fontSize = "11px";
     this.infoElement.style.lineHeight = "1.6";
     this.infoElement.style.whiteSpace = "pre";
     container.appendChild(this.infoElement);
+
+    // `?stats=0` hides the overlay (clean screenshots) while keeping the measurement running.
+    if (new URLSearchParams(window.location.search).get("stats") === "0") {
+      this.stats.dom.style.display = "none";
+      this.infoElement.style.display = "none";
+    }
   }
 
   beginFrame(): void {

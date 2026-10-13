@@ -1,10 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /**
- * CORE-003 §23 Test 10.
+ * Nickname rendering safety.
  *
  * This drives the client's rendering path directly via the dev-only
- * `window.__remotePlayers` hook (same pattern as CORE-001's e2e suite)
+ * `window.__remotePlayers` hook (same pattern as app.spec.ts)
  * rather than going through the real server, because the server already
  * rejects a nickname shaped like this outright (see
  * `apps/server/src/nickname.test.ts` and `WorldServer.test.ts`'s
@@ -28,6 +28,9 @@ interface SpawnablePlayerSummary {
   playerId: string;
   nickname: string;
   colorSeed: number;
+  /** ADR-015: presence carries the avatar and the canReceive bit. */
+  avatar: { model: "rogue_hooded" | "rogue" | "knight" | "mage" | "barbarian"; color: number };
+  canReceive: boolean;
   x: number;
   y: number;
   z: number;
@@ -48,6 +51,8 @@ async function spawnWithNickname(page: Page, playerId: string, nickname: string)
         playerId,
         nickname,
         colorSeed: 120,
+        avatar: { model: "rogue_hooded", color: 0 },
+        canReceive: false,
         x: 0,
         y: 0,
         z: 0,
@@ -60,7 +65,7 @@ async function spawnWithNickname(page: Page, playerId: string, nickname: string)
   );
 }
 
-test.describe("CORE-003 — nickname rendering safety", () => {
+test.describe("nickname rendering safety", () => {
   test("a <script> nickname renders as inert text, never as a real <script> element", async ({ page }) => {
     await page.goto("/");
     await page.waitForFunction(() => Boolean(window.__remotePlayers));

@@ -2,8 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { getNearbyPlayers, SOCIAL_INTERACTION_RADIUS_METERS } from "./nearby.ts";
 
-// CORE-003 §23 Test 7.
-
 test("a player exactly inside the radius is classified as nearby", () => {
   const local = { x: 0, y: 0, z: 0 };
   const players = [{ playerId: "a", x: 3, y: 0, z: 0 }]; // 3m away, radius 5m

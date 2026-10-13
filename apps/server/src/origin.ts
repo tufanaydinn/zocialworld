@@ -12,7 +12,12 @@
  * see `isOriginAllowed`'s handling of a missing header below.
  */
 
-export const DEFAULT_DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"];
+export const DEFAULT_DEV_ORIGINS = [
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
 
 /** Parses the comma-separated `ALLOWED_ORIGINS` env var into a list, trimming whitespace and dropping empty entries. */
 export function parseAllowedOrigins(raw: string | undefined): string[] {

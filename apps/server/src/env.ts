@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 
 /**
- * Minimal `.env` loader — no dependency pulled in for this (CORE-002 §5:
- * "keep dependencies minimal"). Only sets a variable if it isn't already
+ * Minimal `.env` loader — no dependency pulled in for this (dependencies
+ * are kept minimal). Only sets a variable if it isn't already
  * present in `process.env`, so real environment variables (e.g. set by
  * a process manager) always win over the file. Missing file is fine —
  * `.env` is a local-dev convenience; `.env.example` documents the shape.

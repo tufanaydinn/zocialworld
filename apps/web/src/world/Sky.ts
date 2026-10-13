@@ -4,7 +4,7 @@ import * as THREE from "three";
  * Cheap vertical-gradient sky dome: a big inverted sphere with a vertex
  * shader that lerps between a horizon color and a zenith color. Far
  * lighter than an HDRI or a physical sky model, and enough to sell the
- * "warm dusk" mood from master spec section 52/127 without any texture
+ * "warm dusk" mood without any texture
  * download.
  */
 export function createSky(): THREE.Mesh {

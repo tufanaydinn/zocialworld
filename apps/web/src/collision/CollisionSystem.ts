@@ -46,13 +46,19 @@ export class CollisionSystem {
     return collider;
   }
 
+  /** Removes a collider returned by addBox/addCylinder (e.g. a gate that opens). */
+  remove(collider: Collider): void {
+    const index = this.colliders.indexOf(collider);
+    if (index >= 0) this.colliders.splice(index, 1);
+  }
+
   clear(): void {
     this.colliders.length = 0;
   }
 
   /**
    * Resolves a desired (x, z) position against all registered colliders
-   * for a circular agent of the given radius, and returns the corrected
+   * for a circular body of the given radius, and returns the corrected
    * position. Uses simple push-out resolution rather than swept/CCD
    * collision — adequate for walking speeds in a small social space.
    */

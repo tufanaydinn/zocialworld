@@ -1,11 +1,11 @@
 /**
- * CORE-005 project data model — see docs/agents/CORE-005-delivery.md and
+ * Project data model — see
  * `docs/privacy/PROJECT_DISCOVERY_THREAT_MODEL.md`.
  *
  * Deliberately excludes anything wallet/payment-shaped (no wallet
  * address, no donation address, no payment info) — project discovery
- * must work with zero wallet connection, per the task brief and
- * `docs/privacy/README.md` § 1's wallet/social-identity separation rule.
+ * must work with zero wallet connection, per the wallet/social-identity
+ * separation rule in `docs/privacy/PRIVACY_MODEL.md`.
  */
 
 /** Bounded status model — never arbitrary free text. UI renders a human-friendly label via `PROJECT_STATUS_LABELS`. */
@@ -20,7 +20,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   archived: "Archived",
 };
 
-/** Bounded category model — prototype taxonomy, not a permanent ontology (task brief § 6). */
+/** Bounded category model — prototype taxonomy, not a permanent ontology. */
 export const PROJECT_CATEGORIES = [
   "wallet",
   "privacy",
@@ -47,7 +47,7 @@ export const PROJECT_CATEGORY_LABELS: Record<ProjectCategory, string> = {
 };
 
 /**
- * Repository-curated static project data (CORE-005 §36) — no project
+ * Repository-curated static project data — no project
  * submission/ownership/editing exists yet. Every field here is public,
  * non-financial metadata; see `urlSafety.ts` for how the three optional
  * URL fields are validated before ever being rendered as a link.
@@ -65,9 +65,9 @@ export interface Project {
   readonly socialUrl?: string;
   readonly tags: readonly string[];
   readonly featured: boolean;
-  /** Informational — which world booth (if any) currently represents this project. The authoritative direction is the reverse: a booth references a `projectId` (task brief § 38), not this field. */
+  /** Informational — which world booth (if any) currently represents this project. The authoritative direction is the reverse: a booth references a `projectId`, not this field. */
   readonly boothId?: string;
-  /** Optional, deliberately never rendered as an <img> in CORE-005 (task brief §§ 34/42: no image-heavy cards) — captured for a future visual pass only. */
+  /** Optional, deliberately never rendered as an <img> (no image-heavy cards) — captured for a future visual pass only. */
   readonly previewImagePath?: string;
   readonly teamDisplayNames?: readonly string[];
   /** ISO 8601 date string, e.g. "2026-09-01". */

@@ -2,9 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { VoiceCapabilityRegistry } from "./capability.ts";
 
-// CORE-004 security revision ().
 // Pure unit tests for the registry itself — see WorldServer.test.ts for
-// the integration-level tests (A, B, C, F, G, H, I) that exercise it
+// the integration-level tests that exercise it
 // through real join/set_nickname/disconnect/stale-cleanup/reconnect flows.
 
 test("issue() returns a non-empty string, distinct across different playerIds", () => {

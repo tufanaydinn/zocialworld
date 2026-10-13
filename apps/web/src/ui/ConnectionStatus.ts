@@ -2,7 +2,7 @@ import { injectUiStyles } from "./styles.ts";
 import type { ConnectionState } from "../networking/NetworkClient.ts";
 
 /**
- * Minimal dev-oriented multiplayer connection indicator (CORE-002 §21).
+ * Minimal dev-oriented multiplayer connection indicator.
  * Not the final HUD — just enough to see at a glance during testing
  * whether the socket is up and how many players the server currently
  * reports. Dev-only (gated by `import.meta.env.DEV` at the call site in
