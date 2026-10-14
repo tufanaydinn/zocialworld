@@ -8,8 +8,7 @@ Repository-wide tooling. None of it is application code: nothing here is importe
 | `dev/` | Local development helpers. `livekit.mjs` downloads (checksum-verified), caches and starts a local LiveKit server for `npm run dev`; `with-env.mjs` runs a command with environment variables set the same way on Linux, macOS and Windows (used by `npm run dev:main`); `hall-load.mts` is a Watch Hall load test with real networked clients, and `eventloop-probe.mjs` is the preload it uses to measure the game server's event-loop delay and CPU. |
 | `assets/` | `npm run assets:fetch`: downloads the third-party model packs listed in `assets/asset-registry.json`, checks every file against its recorded SHA-256 and writes it under `apps/web/public/assets/`. Includes the deterministic character rebuild and a minimal ZIP reader. |
 | `tools/` | `registry-keys.mjs`: the operator's one-time tool that derives the name-registry and transfer-fee account and prints the values the game server needs. The seed phrase stays with the operator, offline. |
-
-The wallet engine's build scripts are published separately.
+| `wallet-engine/` | The wallet engine's reproducible build (`build-engine.sh`, `build-sqlite.sh`, `verify-reproducible.sh`), the WebZjs patches, the server helper's source (`zw-tx-decrypt/`), the regtest verification harness and fixtures, `fetch-engine.mjs` (`npm run engine:fetch`: downloads the published mainnet engine module and checks it against `SHA256SUMS`) and `third-party-notices.mjs`. See [wallet-engine/README.md](wallet-engine/README.md). |
 
 ## Tests
 

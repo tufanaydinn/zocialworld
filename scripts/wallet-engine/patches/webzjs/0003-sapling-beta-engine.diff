@@ -1,0 +1,2812 @@
+diff --git a/.gitignore b/.gitignore
+index d5fed99..c3da0d1 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -28,3 +28,6 @@ packages/web-wallet/dist/*
+ 
+ # Local env overrides (dev proxy, etc.)
+ .env*.local
++
++# Zocial World: patched zcash_client_memory clone (build/build-engine.sh)
++/vendor/
+diff --git a/Cargo.lock b/Cargo.lock
+index a4e15ff..abc40e4 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3401,6 +3401,7 @@ dependencies = [
+  "secrecy",
+  "serde",
+  "serde-wasm-bindgen",
++ "serde_json",
+  "sha2 0.10.9",
+  "subtle",
+  "thiserror 1.0.69",
+@@ -3428,6 +3429,7 @@ dependencies = [
+  "zcash_primitives",
+  "zcash_proofs",
+  "zcash_protocol",
++ "zcash_transparent",
+  "zip32",
+  "zip321",
+ ]
+@@ -3696,7 +3698,6 @@ dependencies = [
+ [[package]]
+ name = "zcash_client_memory"
+ version = "0.0.0"
+-source = "git+https://github.com/red-dev-inc/zcash_client_memory?branch=feat%2Fsnap-nu63#1feb38d92d214ec65d410a01c0f9da42b787f76b"
+ dependencies = [
+  "async-trait",
+  "bip32",
+diff --git a/Cargo.toml b/Cargo.toml
+index d661552..1f5bd8d 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -7,6 +7,10 @@ members = [
+     "crates/webzjs-requests",
+     "crates/webzjs-wallet",
+ ]
++# Zocial World Sapling beta: the patched zcash_client_memory clone lives inside this directory (so
++# cargo hashes its path relative to the workspace root and the build is byte-reproducible in any
++# directory), but it is its own workspace, not a member.
++exclude = ["vendor/zcash_client_memory"]
+ 
+ [profile.release]
+ # Tell `rustc` to optimize for small code size.
+@@ -109,4 +113,11 @@ pczt                 = { git = "https://github.com/zcash/librustzcash", rev = "0
+ zcash_transparent    = { git = "https://github.com/zcash/librustzcash", rev = "0a2c6d1ae6274e6af2291e312f7b7459516882f2" }
+ 
+ [workspace.lints.rust]
+-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen)', 'cfg(wasm_bindgen_unstable_test_coverage)'] }
+\ No newline at end of file
++unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen)', 'cfg(wasm_bindgen_unstable_test_coverage)'] }
++# Zocial World Sapling beta: zcash_client_memory @ 1feb38d92d214ec65d410a01c0f9da42b787f76b (the rev
++# Cargo.lock pinned for branch feat/snap-nu63) with ONE patch (zw/patches/zcash_client_memory/
++# 0001-keep-enhanced-memo.diff): when a note found by compact scanning is later decrypted from the
++# full transaction, its memo is kept. build/build-engine.sh clones that rev into
++# vendor/zcash_client_memory (git-ignored) and applies the patch.
++[patch."https://github.com/red-dev-inc/zcash_client_memory"]
++zcash_client_memory = { path = "vendor/zcash_client_memory" }
+diff --git a/crates/webzjs-wallet/Cargo.toml b/crates/webzjs-wallet/Cargo.toml
+index 81dffa8..bcfda19 100644
+--- a/crates/webzjs-wallet/Cargo.toml
++++ b/crates/webzjs-wallet/Cargo.toml
+@@ -25,6 +25,8 @@ native = ["tonic/channel", "tonic/gzip", "tonic/tls-webpki-roots", "tokio/macros
+ sqlite-db = ["dep:zcash_client_sqlite"]
+ console_error_panic_hook = ["dep:console_error_panic_hook"]
+ no-bundler = ["wasm-bindgen-rayon?/no-bundler", "wasm_thread/no-bundler"]
++# TESTING ONLY (never shipped): "test" network = local regtest chain, all upgrades through NU6.3 at height 1.
++regtest = ["webzjs-common/regtest"]
+ 
+ [dependencies]
+ webzjs-common = { path = "../webzjs-common" }
+@@ -59,6 +61,7 @@ zcash_client_backend = { workspace = true, default-features = false, features =
+ zcash_client_memory = { workspace = true, features = ["orchard", "transparent-inputs"] }
+ zcash_primitives = { workspace = true }
+ zcash_address = { workspace = true }
++zcash_transparent = { workspace = true }
+ zcash_protocol = { workspace = true, default-features = false }
+ zcash_proofs = { workspace = true, default-features = false, features = ["bundled-prover", "multicore"] }
+ zip321 = { workspace = true }
+@@ -102,3 +105,7 @@ serde-wasm-bindgen.workspace = true
+ 
+ [lints]
+ workspace = true
++
++[dev-dependencies]
++# Sapling beta tests (fixture transactions).
++serde_json = "1"
+diff --git a/crates/webzjs-wallet/src/bindgen/transaction_history.rs b/crates/webzjs-wallet/src/bindgen/transaction_history.rs
+index 85efabb..1a72fb4 100644
+--- a/crates/webzjs-wallet/src/bindgen/transaction_history.rs
++++ b/crates/webzjs-wallet/src/bindgen/transaction_history.rs
+@@ -340,7 +340,9 @@ pub fn extract_transaction_history(
+                 .map(|t| t as u64);
+ 
+             TransactionHistoryEntry {
+-                txid: hex::encode(txid.as_ref()),
++                // Sapling beta: the byte-reversed form explorers, node RPC and `send`/`shield`
++                // results use (upstream printed the internal byte order, which matches nothing).
++                txid: txid.to_string(),
+                 tx_type,
+                 value: match tx_type {
+                     TransactionType::Shielded => acc.received_value as i64,
+diff --git a/crates/webzjs-wallet/src/bindgen/wallet.rs b/crates/webzjs-wallet/src/bindgen/wallet.rs
+index 7e6a634..ec4362b 100644
+--- a/crates/webzjs-wallet/src/bindgen/wallet.rs
++++ b/crates/webzjs-wallet/src/bindgen/wallet.rs
+@@ -21,8 +21,11 @@ use zcash_client_backend::proto::service::{
+     TransparentAddressBlockFilter,
+ };
+ use zcash_client_memory::MemoryWalletDb;
++use zcash_address::ToAddress;
++use zcash_keys::address::UnifiedAddress;
+ use zcash_keys::encoding::AddressCodec;
+ use zcash_keys::keys::{UnifiedAddressRequest, UnifiedFullViewingKey};
++use zcash_protocol::consensus::Parameters;
+ use zcash_primitives::transaction::TxId;
+ 
+ pub type MemoryWallet<T> = Wallet<MemoryWalletDb<Network>, T>;
+@@ -287,7 +290,17 @@ impl WebWallet {
+ 
+                 let db = db;
+                 // Convert error to String since Error isn't Send (contains JsValue)
+-                db.sync().await.map_err(|e| e.to_string())
++                db.sync().await.map_err(|e| e.to_string())?;
++                // Sapling beta: fetch full transactions so received notes get their memos.
++                if let Err(e) = db.enhance_received_memos().await {
++                    tracing::warn!("enhancement failed (sync itself succeeded): {}", e);
++                }
++                // Sapling beta: drop transparent UTXOs another wallet with the same
++                // seed spent, so they do not wait "to be shielded" forever.
++                if let Err(e) = db.reconcile_transparent_utxos().await {
++                    tracing::warn!("utxo reconcile failed (sync itself succeeded): {}", e);
++                }
++                Ok(())
+             })
+             .unwrap_throw()
+             .join_async();
+@@ -389,17 +402,15 @@ impl WebWallet {
+                 );
+ 
+                 let db = db;
+-                let txids = db
+-                    .create_proposed_transactions(proposal.into(), &usk)
++                // Sapling beta: return errors (with their stable code prefix) instead of
++                // panicking the worker; Error is not Send (JsValue), so it travels as a String.
++                db.create_proposed_transactions(proposal.into(), &usk)
+                     .await
+-                    .unwrap_throw();
+-                return txids;
++                    .map_err(|e| e.to_string())
+             })
+             .unwrap_throw()
+             .join_async();
+-        let txids = sync_handler.await.map_err(|e| {
+-            Error::Generic(format!("Transaction creation thread panicked: {:?}", e))
+-        })?;
++        let txids = join_worker(sync_handler.await)?;
+ 
+         let flattened_txid_bytes = txids.iter().flat_map(|&x| x.as_ref().clone()).collect();
+         Ok(flattened_txid_bytes)
+@@ -446,22 +457,212 @@ impl WebWallet {
+         self.inner.send_authorized_transactions(&txids).await
+     }
+ 
+-    /// Get the current unified address for a given account. This is returned as a string in canonical encoding
++    /// Sapling beta (ADR-018 § 1): the wallet's main receive address — a ZIP-316 unified address
++    /// with ONLY a Sapling receiver and a transparent receiver (never Orchard), so a sending wallet
++    /// cannot route the payment into the Ironwood pool this build cannot see. `u1…` on mainnet,
++    /// `uregtest1…` on the regtest build. Same as `get_unified_address`.
+     ///
+     /// # Arguments
+     ///
+     /// * `account_id` - The ID of the account to get the address for
+     ///
+     pub async fn get_current_address(&self, account_id: u32) -> Result<String, Error> {
++        Ok(self.addresses(account_id).await?.unified)
++    }
++
++    /// Sapling beta: the unified address with only Sapling + transparent receivers (see
++    /// `get_current_address`).
++    pub async fn get_unified_address(&self, account_id: u32) -> Result<String, Error> {
++        Ok(self.addresses(account_id).await?.unified)
++    }
++
++    /// Sapling beta: the same Sapling receiver in the plain Sapling encoding (`zs1…` on
++    /// mainnet), for senders that do not accept unified addresses.
++    pub async fn get_sapling_address(&self, account_id: u32) -> Result<String, Error> {
++        Ok(self.addresses(account_id).await?.sapling)
++    }
++
++    /// Sapling beta: the plain transparent address (`t1…` on mainnet) of the same diversifier
++    /// index, for exchanges that only withdraw to transparent addresses. Funds sent here are
++    /// public on chain and show as "waiting to be shielded" until `shield` moves them to Sapling.
++    pub async fn get_transparent_address(&self, account_id: u32) -> Result<String, Error> {
++        Ok(self.addresses(account_id).await?.transparent)
++    }
++
++    /// Sapling beta: all three receive addresses in one call:
++    /// `{ unified, sapling, transparent, diversifierIndex }`.
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaAddresses")]
++    pub async fn get_addresses(&self, account_id: u32) -> Result<JsValue, Error> {
++        let a = self.addresses(account_id).await?;
++        Ok(a.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
++    }
++
++    async fn addresses(&self, account_id: u32) -> Result<ReceiveAddresses, Error> {
+         let db = self.inner.db.read().await;
+-        if let Some(address) = db.get_last_generated_address_matching(
+-            account_id.into(),
+-            UnifiedAddressRequest::ALLOW_ALL,
+-        )? {
+-            Ok(address.encode(&self.inner.network))
+-        } else {
+-            Err(Error::AccountNotFound(account_id))
+-        }
++        // The default address (diversifier index of the first valid Sapling diversifier); its
++        // Sapling and transparent receivers share that index, as ZIP 316 requires.
++        let (ua, diversifier_index) = db
++            .get_last_generated_address_matching(
++                account_id.into(),
++                UnifiedAddressRequest::ALLOW_ALL,
++            )?
++            .map(|ua| {
++                let idx = db
++                    .get_account(account_id.into())
++                    .ok()
++                    .flatten()
++                    .and_then(|acct| {
++                        use zcash_client_backend::data_api::Account as _;
++                        acct.ufvk()
++                            .and_then(|ufvk| ufvk.sapling().cloned())
++                            .and_then(|dfvk| ua.sapling().and_then(|pa| dfvk.decrypt_diversifier(pa)))
++                            .map(|(idx, _scope)| idx)
++                    });
++                (ua, idx)
++            })
++            .ok_or(Error::AccountNotFound(account_id))?;
++        let sapling = *ua
++            .sapling()
++            .ok_or_else(|| Error::Generic("the account has no Sapling receiver".into()))?;
++        let transparent = *ua
++            .transparent()
++            .ok_or_else(|| Error::Generic("the account has no transparent receiver".into()))?;
++        let unified = UnifiedAddress::from_receivers(None, Some(sapling), Some(transparent))
++            .ok_or_else(|| Error::Generic("could not build the Sapling + transparent unified address".into()))?;
++        let net = self.inner.network.network_type();
++        Ok(ReceiveAddresses {
++            unified: unified.encode(&self.inner.network),
++            sapling: zcash_address::ZcashAddress::from_sapling(net, sapling.to_bytes()).encode(),
++            transparent: transparent.encode(&self.inner.network),
++            diversifier_index: diversifier_index.map(|d| {
++                u128::from(d).to_string()
++            }),
++        })
++    }
++
++    /// Sapling beta (ADR-018 § 1): balances split into "shielded (Sapling) spendable" and
++    /// "transparent waiting to be shielded", in zatoshis:
++    /// `{ saplingSpendableZat, saplingPendingChangeZat, saplingPendingZat, saplingTotalZat,
++    ///    transparentShieldableZat, transparentPendingZat, transparentTotalZat,
++    ///    chainTipHeight, fullyScannedHeight }`. Orchard/Ironwood funds are never counted.
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaBalances")]
++    pub async fn get_balances(&self, account_id: u32) -> Result<JsValue, Error> {
++        let b = self.inner.balances(account_id.into()).await?;
++        Ok(b.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
++    }
++
++    /// Sapling beta upgrade guard, for the game to show. Never throws; returns
++    /// `{ allowed, expectedBranch, chainBranch, chainName, chainTip, nextBlockBranch,
++    ///    pendingUpgrade, pools, code, reason }`.
++    /// `allowed` is true only when lightwalletd's consensus branch equals the branch this build
++    /// targets (`expected_consensus_branch()`) and no announced upgrade activates within 41
++    /// blocks; otherwise every send/shield refuses with `code` (`consensus_branch_mismatch`,
++    /// `consensus_upgrade_pending` or `consensus_branch_unknown`), while sync and balance keep
++    /// working.
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaSendingStatus")]
++    pub async fn sending_status(&self) -> Result<JsValue, Error> {
++        let status = self.inner.sending_status().await;
++        Ok(status.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
++    }
++
++    /// Sapling beta (ADR-018 § 2, § 5, § 6): the ONE general send. Pays every output in a single
++    /// transaction built only from Sapling notes, with change to Sapling, and broadcasts it.
++    ///
++    /// * `outputs` - `[{ to: string, amountZat: number | bigint | string, memo?: string,
++    ///   withdrawal?: boolean }]` (1–8 outputs). A player payment is the recipient output plus the
++    ///   project fee output (memo `zw-fee:v1:<nonce>`); a name fee is one output; a withdrawal is
++    ///   one output marked `withdrawal: true`, which may go to a transparent address (no memo).
++    ///
++    /// Returns `{ txids: string[], feeZat, amountZat, outputs: [{ to, pool, amountZat, hasMemo }] }`.
++    /// Proving runs in a Web Worker. Errors carry a stable `code` (see `sapling_beta_error_codes`).
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaSendResult")]
++    pub async fn send(
++        &self,
++        account_id: u32,
++        #[wasm_bindgen(unchecked_param_type = "SaplingBetaOutput[]")] outputs: JsValue,
++        seed_phrase: &str,
++        account_hd_index: u32,
++    ) -> Result<JsValue, Error> {
++        assert!(!thread::is_web_worker_thread());
++        let outputs = parse_outputs(&outputs)?;
++        let (usk, _) = usk_from_seed_str(seed_phrase, account_hd_index, &self.inner.network)?;
++        let wallet = self.inner.clone();
++        let handle = thread::Builder::new()
++            .name("sapling_beta_send".to_string())
++            .spawn_async(move || async move {
++                wallet
++                    .send_payments(&usk, AccountId::from(account_id), outputs)
++                    .await
++                    .map_err(|e| e.to_string())
++            })
++            .unwrap_throw()
++            .join_async();
++        let result = join_worker(handle.await)?;
++        Ok(result.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
++    }
++
++    /// Sapling beta: what `send` would do for these outputs — `{ txids: [], feeZat, amountZat,
++    /// outputs }` — without proving, signing or broadcasting. Use it to show the network fee.
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaSendResult")]
++    pub async fn preview_send(
++        &self,
++        account_id: u32,
++        #[wasm_bindgen(unchecked_param_type = "SaplingBetaOutput[]")] outputs: JsValue,
++    ) -> Result<JsValue, Error> {
++        let outputs = parse_outputs(&outputs)?;
++        let result = self
++            .inner
++            .preview_payments(AccountId::from(account_id), outputs)
++            .await?;
++        Ok(result.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
++    }
++
++    /// Sapling beta (ADR-018 § 1): shields the account's confirmed transparent funds into its own
++    /// Sapling address (version-5 transaction, ZIP 317 network fee, no project fee) and broadcasts
++    /// it. `threshold_zat` (optional, default 1) is the minimum transparent input to shield; inputs
++    /// that cannot pay the network fee plus a non-dust amount are refused (`nothing_to_shield`).
++    ///
++    /// Returns `{ txid, utxos, transparentInZat, feeZat, shieldedZat }`.
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaShieldResult")]
++    pub async fn shield(
++        &self,
++        account_id: u32,
++        seed_phrase: &str,
++        account_hd_index: u32,
++        threshold_zat: Option<u64>,
++    ) -> Result<JsValue, Error> {
++        assert!(!thread::is_web_worker_thread());
++        let threshold = shielding_threshold(threshold_zat)?;
++        let (usk, _) = usk_from_seed_str(seed_phrase, account_hd_index, &self.inner.network)?;
++        let wallet = self.inner.clone();
++        let handle = thread::Builder::new()
++            .name("sapling_beta_shield".to_string())
++            .spawn_async(move || async move {
++                wallet
++                    .shield(&usk, AccountId::from(account_id), threshold)
++                    .await
++                    .map_err(|e| e.to_string())
++            })
++            .unwrap_throw()
++            .join_async();
++        let result = join_worker(handle.await)?;
++        Ok(result.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
++    }
++
++    /// Sapling beta: what `shield` would do — `{ txid: "", utxos, transparentInZat, feeZat,
++    /// shieldedZat }` — without proving or broadcasting.
++    #[wasm_bindgen(unchecked_return_type = "SaplingBetaShieldResult")]
++    pub async fn preview_shield(
++        &self,
++        account_id: u32,
++        threshold_zat: Option<u64>,
++    ) -> Result<JsValue, Error> {
++        let threshold = shielding_threshold(threshold_zat)?;
++        let result = self
++            .inner
++            .preview_shield(AccountId::from(account_id), threshold)
++            .await?;
++        Ok(result.serialize(&serde_wasm_bindgen::Serializer::json_compatible())?)
+     }
+ 
+     /// Create a Shielding PCZT (Partially Constructed Zcash Transaction).
+@@ -535,22 +736,15 @@ impl WebWallet {
+             .map(Into::into)
+     }
+ 
+-    /// Get the current unified address for a given account and extracts the transparent component. This is returned as a string in canonical encoding
++    /// Get the transparent receiver of the account's receive address (same as
++    /// `get_transparent_address`; kept for the existing game code).
+     ///
+     /// # Arguments
+     ///
+     /// * `account_id` - The ID of the account to get the address for
+     ///
+     pub async fn get_current_address_transparent(&self, account_id: u32) -> Result<String, Error> {
+-        let db = self.inner.db.read().await;
+-        if let Some(address) = db.get_last_generated_address_matching(
+-            account_id.into(),
+-            UnifiedAddressRequest::ALLOW_ALL,
+-        )? {
+-            Ok(address.transparent().unwrap().encode(&self.inner.network))
+-        } else {
+-            Err(Error::AccountNotFound(account_id))
+-        }
++        Ok(self.addresses(account_id).await?.transparent)
+     }
+ 
+     /// Get transaction history for an account
+@@ -683,25 +877,38 @@ impl WalletSummary {
+     }
+ }
+ 
++/// Sapling beta: balances cover the Sapling pool and transparent funds only. There is no Orchard
++/// (or Ironwood) field: this build cannot spend those pools, so it never reports them.
+ #[derive(Debug, Serialize, Deserialize)]
+ pub struct AccountBalance {
++    /// Spendable Sapling value (zatoshis).
+     pub sapling_balance: u64,
+-    pub orchard_balance: u64,
++    /// Spendable transparent value (zatoshis); only usable via shielding to Sapling.
+     pub unshielded_balance: u64,
+-    /// Change from sent transactions waiting for mining confirmation
++    /// Sapling + transparent change from sent transactions waiting for mining confirmation
+     pub pending_change: u64,
+-    /// Received notes waiting for required confirmations to become spendable
++    /// Sapling + transparent received value waiting for required confirmations
+     pub pending_spendable: u64,
+ }
+ 
+ impl From<zcash_client_backend::data_api::AccountBalance> for AccountBalance {
+     fn from(balance: zcash_client_backend::data_api::AccountBalance) -> Self {
++        let sapling = balance.sapling_balance();
++        let unshielded = balance.unshielded_balance();
++        let sum = |a: zcash_protocol::value::Zatoshis, b: zcash_protocol::value::Zatoshis| -> u64 {
++            u64::from(a).saturating_add(u64::from(b))
++        };
+         AccountBalance {
+-            sapling_balance: balance.sapling_balance().spendable_value().into(),
+-            orchard_balance: balance.orchard_balance().spendable_value().into(),
+-            unshielded_balance: balance.unshielded_balance().spendable_value().into(),
+-            pending_change: balance.change_pending_confirmation().into(),
+-            pending_spendable: balance.value_pending_spendability().into(),
++            sapling_balance: sapling.spendable_value().into(),
++            unshielded_balance: unshielded.spendable_value().into(),
++            pending_change: sum(
++                sapling.change_pending_confirmation(),
++                unshielded.change_pending_confirmation(),
++            ),
++            pending_spendable: sum(
++                sapling.value_pending_spendability(),
++                unshielded.value_pending_spendability(),
++            ),
+         }
+     }
+ }
+@@ -728,3 +935,211 @@ where
+         }
+     }
+ }
++
++/// Sapling beta: the consensus branch this wallet build targets, as lightwalletd prints it
++/// ("37a5165b" = NU6.3). Sending is refused when the chain reports another branch.
++#[wasm_bindgen]
++pub fn expected_consensus_branch() -> String {
++    crate::sapling_beta::expected_branch_hex()
++}
++
++/// Sapling beta: the stable error codes the engine's errors may carry (as `error.code` and as the
++/// message prefix "<code>: ").
++#[wasm_bindgen]
++pub fn sapling_beta_error_codes() -> Vec<String> {
++    crate::error::ERROR_CODES.iter().map(|c| c.to_string()).collect()
++}
++
++/// Sapling beta: the three receive addresses of an account (see `WebWallet::get_addresses`).
++#[derive(Debug, Serialize)]
++#[serde(rename_all = "camelCase")]
++struct ReceiveAddresses {
++    /// ZIP-316 unified address with only a Sapling and a transparent receiver.
++    unified: String,
++    /// The Sapling receiver alone (zs1… on mainnet).
++    sapling: String,
++    /// The transparent receiver alone (t1… on mainnet).
++    transparent: String,
++    /// The diversifier index the receivers were derived at (decimal string), when known.
++    diversifier_index: Option<String>,
++}
++
++/// Restores the result of a worker thread: worker errors travel as strings (coded messages keep
++/// their code); a panic becomes `transaction_build_failed`.
++fn join_worker<T>(
++    joined: Result<Result<T, String>, Box<dyn std::any::Any + Send>>,
++) -> Result<T, Error> {
++    match joined {
++        Ok(Ok(v)) => Ok(v),
++        Ok(Err(message)) => Err(Error::from_worker(message)),
++        Err(panic) => {
++            let detail = panic
++                .downcast_ref::<String>()
++                .cloned()
++                .or_else(|| panic.downcast_ref::<&str>().map(|s| s.to_string()))
++                .unwrap_or_else(|| "unknown panic".to_string());
++            Err(Error::TransactionBuildFailed(format!(
++                "the wallet worker panicked: {}",
++                detail
++            )))
++        }
++    }
++}
++
++/// 1 zatoshi, i.e. no extra minimum. Upstream compares the threshold with the WHOLE
++/// transparent input, and the change strategy already refuses an input that cannot pay the network
++/// fee plus a non-dust shielded amount, so a higher default only left small deposits (say 0.0009
++/// ZEC) stuck as "waiting to be shielded". Not 0: with every input dropped as dust, 0 would reach
++/// an empty proposal (`proposal_failed`) instead of `nothing_to_shield`.
++const DEFAULT_SHIELDING_THRESHOLD_ZAT: u64 = 1;
++
++fn shielding_threshold(threshold_zat: Option<u64>) -> Result<zcash_protocol::value::Zatoshis, Error> {
++    let zat = threshold_zat.unwrap_or(DEFAULT_SHIELDING_THRESHOLD_ZAT);
++    zcash_protocol::value::Zatoshis::from_u64(zat)
++        .map_err(|_| Error::InvalidAmountZat(format!("shielding threshold {}", zat)))
++}
++
++/// Parses `[{ to, amountZat, memo?, withdrawal? }]` from JavaScript.
++fn parse_outputs(value: &JsValue) -> Result<Vec<crate::sapling_beta::OutputRequest>, Error> {
++    use crate::sapling_beta::{parse_amount, parse_memo, OutputRequest, MAX_OUTPUTS};
++    let bad = |m: String| Error::InvalidOutputs(m);
++    if !js_sys::Array::is_array(value) {
++        return Err(bad("outputs must be an array of { to, amountZat, memo?, withdrawal? }".into()));
++    }
++    let arr = js_sys::Array::from(value);
++    if arr.length() == 0 {
++        return Err(bad("at least one output is required".into()));
++    }
++    if arr.length() as usize > MAX_OUTPUTS {
++        return Err(bad(format!("at most {} outputs are allowed", MAX_OUTPUTS)));
++    }
++    let get = |obj: &JsValue, key: &str| js_sys::Reflect::get(obj, &JsValue::from_str(key)).unwrap_or(JsValue::UNDEFINED);
++    let mut outputs = Vec::with_capacity(arr.length() as usize);
++    for (i, item) in arr.iter().enumerate() {
++        if !item.is_object() {
++            return Err(bad(format!("output {} is not an object", i)));
++        }
++        let to = get(&item, "to")
++            .as_string()
++            .ok_or_else(|| bad(format!("output {}: `to` must be an address string", i)))?;
++        let to = ZcashAddress::try_from_encoded(to.trim())
++            .map_err(|e| Error::from(e).at_output(i))?;
++        let amount_js = get(&item, "amountZat");
++        let zat: u64 = if let Some(n) = amount_js.as_f64() {
++            if !(n.is_finite() && n.fract() == 0.0 && n >= 0.0 && n <= 9_007_199_254_740_991.0) {
++                return Err(Error::InvalidAmountZat(format!("output {}: amountZat {} is not a whole number of zatoshis", i, n)));
++            }
++            n as u64
++        } else if amount_js.is_bigint() {
++            u64::try_from(js_sys::BigInt::from(amount_js.clone()))
++                .map_err(|_| Error::InvalidAmountZat(format!("output {}: amountZat is out of range", i)))?
++        } else if let Some(s) = amount_js.as_string() {
++            s.trim()
++                .parse::<u64>()
++                .map_err(|_| Error::InvalidAmountZat(format!("output {}: amountZat {:?} is not a whole number of zatoshis", i, s)))?
++        } else {
++            return Err(Error::InvalidAmountZat(format!("output {}: amountZat is missing", i)));
++        };
++        let amount = parse_amount(zat).map_err(|e| e.at_output(i))?;
++        let memo_js = get(&item, "memo");
++        let memo = if memo_js.is_undefined() || memo_js.is_null() {
++            None
++        } else {
++            let text = memo_js
++                .as_string()
++                .ok_or_else(|| bad(format!("output {}: `memo` must be a string", i)))?;
++            Some(parse_memo(&text).map_err(|e| e.at_output(i))?)
++        };
++        let withdrawal_js = get(&item, "withdrawal");
++        let withdrawal = if withdrawal_js.is_undefined() || withdrawal_js.is_null() {
++            false
++        } else {
++            withdrawal_js
++                .as_bool()
++                .ok_or_else(|| bad(format!("output {}: `withdrawal` must be a boolean", i)))?
++        };
++        outputs.push(OutputRequest {
++            to,
++            amount,
++            memo,
++            withdrawal,
++        });
++    }
++    Ok(outputs)
++}
++
++#[wasm_bindgen(typescript_custom_section)]
++const SAPLING_BETA_TS: &'static str = r#"
++/** Zocial World Sapling beta (ADR-018): one output of `WebWallet.send` / `preview_send`. */
++export interface SaplingBetaOutput {
++  /** Unified (u1…, needs a Sapling receiver — its transparent receiver is never paid), Sapling (zs1…) or, for withdrawals only, a plain transparent (t1…) address. */
++  to: string;
++  /** Whole zatoshis, 1..=21e14. A number must be a safe integer. */
++  amountZat: number | bigint | string;
++  /** UTF-8 text memo, at most 512 bytes. Not allowed on a transparent output. */
++  memo?: string | null;
++  /** true for a withdrawal to the player's own external wallet: allows a transparent recipient. */
++  withdrawal?: boolean | null;
++}
++export interface SaplingBetaResolvedOutput {
++  /** The receiver actually paid: a plain Sapling (zs1…) or transparent (t1…) address. */
++  to: string;
++  pool: "sapling" | "transparent";
++  amountZat: number;
++  hasMemo: boolean;
++}
++export interface SaplingBetaSendResult {
++  /** Transaction ids as explorers print them (empty for preview_send). */
++  txids: string[];
++  /** ZIP 317 network fee. */
++  feeZat: number;
++  /** Sum of the outputs (network fee and change excluded). */
++  amountZat: number;
++  outputs: SaplingBetaResolvedOutput[];
++}
++export interface SaplingBetaShieldResult {
++  /** Transaction id (empty for preview_shield). */
++  txid: string;
++  utxos: number;
++  transparentInZat: number;
++  feeZat: number;
++  /** transparentInZat - feeZat: what arrives in the Sapling balance. */
++  shieldedZat: number;
++}
++export interface SaplingBetaBalances {
++  saplingSpendableZat: number;
++  saplingPendingChangeZat: number;
++  saplingPendingZat: number;
++  saplingTotalZat: number;
++  /** "Waiting to be shielded": confirmed transparent funds `shield` can spend now. */
++  transparentShieldableZat: number;
++  transparentPendingZat: number;
++  transparentTotalZat: number;
++  chainTipHeight: number;
++  fullyScannedHeight: number;
++}
++export interface SaplingBetaAddresses {
++  /** ZIP-316 unified address with ONLY Sapling + transparent receivers (no Orchard). */
++  unified: string;
++  /** The Sapling receiver alone (zs1…). */
++  sapling: string;
++  /** The transparent receiver alone (t1…), for exchanges. */
++  transparent: string;
++  diversifierIndex: string | null;
++}
++export interface SaplingBetaSendingStatus {
++  allowed: boolean;
++  /** Branch this build targets, e.g. "37a5165b" (NU6.3). */
++  expectedBranch: string;
++  /** Branch lightwalletd reports for the chain tip; null if it could not be read. */
++  chainBranch: string | null;
++  chainName: string | null;
++  chainTip: number | null;
++  nextBlockBranch: string | null;
++  pendingUpgrade: { name: string; height: number } | null;
++  pools: string[];
++  /** "consensus_branch_mismatch" | "consensus_upgrade_pending" | "consensus_branch_unknown" when not allowed. */
++  code: string | null;
++  reason: string | null;
++}
++"#;
+diff --git a/crates/webzjs-wallet/src/error.rs b/crates/webzjs-wallet/src/error.rs
+index a360053..1b8693c 100644
+--- a/crates/webzjs-wallet/src/error.rs
++++ b/crates/webzjs-wallet/src/error.rs
+@@ -25,7 +25,7 @@ pub enum Error {
+     },
+     #[error("Address generation error")]
+     AddressGeneration(#[from] zcash_keys::keys::AddressGenerationError),
+-    #[error("Error attempting to decode address: {0}")]
++    #[error("invalid_address: could not decode the address: {0}")]
+     AddressDecoding(#[from] zcash_address::ParseError),
+     #[error("Error attempting to decode key: {0}")]
+     KeyDecoding(String),
+@@ -91,11 +91,157 @@ pub enum Error {
+     // TODO: Remove this. It is just to help with the inability to handle the generic tests from LRZ at the moment
+     #[error("An generic error occurred: {0}")]
+     Generic(String),
++
++    // ---- Sapling beta (Zocial World ADR-018 § 1–2). Every message starts with a stable,
++    // machine-readable code followed by ": "; the JS error also carries it as `error.code`.
++    /// A message that already starts with a stable code (errors cross the Web Worker boundary as
++    /// strings and are restored with this variant).
++    #[error("{0}")]
++    Coded(String),
++    /// The recipient has no Sapling receiver (a UA without one: Orchard/Ironwood-only, or Orchard
++    /// + transparent). A UA's transparent receiver is never paid, not even for a withdrawal.
++    #[error("recipient_no_sapling_receiver: the recipient ({0}) has no Sapling receiver; the Sapling beta wallet pays Sapling receivers (and plain transparent t-addresses for withdrawals)")]
++    RecipientNoSaplingReceiver(String),
++    /// A transparent recipient in an output not marked as a withdrawal.
++    #[error("recipient_transparent_not_allowed: transparent addresses can only receive withdrawals (an output marked withdrawal: true)")]
++    RecipientTransparentNotAllowed,
++    /// TEX (ZIP 320), Sprout, or a unified address with no receiver this build understands.
++    #[error("recipient_unsupported: {0} is not supported by the Sapling beta wallet")]
++    RecipientUnsupported(String),
++    /// The recipient address is for another network (e.g. a testnet address on mainnet).
++    #[error("recipient_wrong_network: the recipient address is not a {0} address")]
++    RecipientWrongNetwork(String),
++    /// A memo on an output that goes to a transparent address.
++    #[error("memo_not_allowed: output {0} goes to a transparent address, which cannot carry a memo")]
++    MemoNotAllowed(usize),
++    /// A memo longer than 512 bytes (UTF-8).
++    #[error("memo_too_long: the memo is {0} bytes; at most 512 bytes are allowed")]
++    MemoTooLong(usize),
++    /// An amount that is not an integer number of zatoshis in 1..=MAX_MONEY.
++    #[error("invalid_amount: {0}")]
++    InvalidAmountZat(String),
++    /// The outputs list is empty, too long or malformed.
++    #[error("invalid_outputs: {0}")]
++    InvalidOutputs(String),
++    /// lightwalletd reports a consensus branch other than the one this build targets.
++    #[error("consensus_branch_mismatch: this wallet build targets consensus branch {expected} but the chain reports {chain}; sending is disabled until an updated wallet build ships (sync and balance keep working)")]
++    ConsensusBranchMismatch { expected: String, chain: String },
++    /// lightwalletd announces a network upgrade that activates before a new transaction would
++    /// expire; sending pauses until the updated build ships.
++    #[error("consensus_upgrade_pending: network upgrade {name} activates at height {height} (chain tip {tip}); sending is paused until an updated wallet build ships (sync and balance keep working)")]
++    ConsensusUpgradePending { name: String, height: u64, tip: u64 },
++    /// The chain's consensus branch could not be read, so sending is refused (fail-safe).
++    #[error("consensus_branch_unknown: could not read the chain's consensus branch from lightwalletd ({0}); sending is refused until it can be checked")]
++    ConsensusBranchUnknown(String),
++    /// A proposal or transaction is not Sapling-only v5 (an internal safety assertion).
++    #[error("sapling_only_violation: {0}")]
++    SaplingOnlyViolation(String),
++    /// The spendable balance cannot cover amount + fee.
++    #[error("insufficient_funds: spendable balance {available} zat is less than the {required} zat required (amount + network fee)")]
++    InsufficientFunds { available: u64, required: u64 },
++    /// No confirmed transparent funds, or not enough to pay the network fee and leave a non-dust
++    /// shielded amount.
++    #[error("nothing_to_shield: {0}")]
++    NothingToShield(String),
++    /// The wallet has not been synced (or is too far behind the chain tip) to build a transaction.
++    #[error("wallet_not_synced: {0}")]
++    WalletNotSynced(String),
++    /// Proposal construction failed for another reason.
++    #[error("proposal_failed: {0}")]
++    ProposalFailed(String),
++    /// Proving/signing/building the transaction failed.
++    #[error("transaction_build_failed: {0}")]
++    TransactionBuildFailed(String),
++    /// lightwalletd (the node behind it) explicitly rejected the transaction. It was built and
++    /// stored, so its inputs stay reserved until it expires; `txid` names it.
++    #[error("broadcast_failed: [txid={txid}] the network rejected the transaction (code {code}): {reason}")]
++    BroadcastFailed { code: i32, reason: String, txid: String },
++    /// The transaction was built and stored, but sending it failed at the transport
++    /// level (the bridge or lightwalletd did not answer, or the answer was lost). It MAY have
++    /// reached the network: the game must not offer an immediate retry (it would pay twice), and
++    /// reports `txid` instead.
++    #[error("broadcast_uncertain: [txid={txid}] the transaction was built but the network's answer to sending it was lost ({detail}); it may have been sent - check the wallet history before trying again")]
++    BroadcastUncertain { txid: String, detail: String },
++}
++
++/// Stable error codes carried by Sapling-beta errors (message prefix and `error.code`).
++pub const ERROR_CODES: &[&str] = &[
++    "invalid_address",
++    "recipient_no_sapling_receiver",
++    "recipient_transparent_not_allowed",
++    "recipient_unsupported",
++    "recipient_wrong_network",
++    "memo_not_allowed",
++    "memo_too_long",
++    "invalid_amount",
++    "invalid_outputs",
++    "consensus_branch_mismatch",
++    "consensus_upgrade_pending",
++    "consensus_branch_unknown",
++    "sapling_only_violation",
++    "insufficient_funds",
++    "nothing_to_shield",
++    "wallet_not_synced",
++    "proposal_failed",
++    "transaction_build_failed",
++    "broadcast_failed",
++    "broadcast_uncertain",
++];
++
++/// Returns the stable code a message starts with (`"<code>: ..."`), if any. Errors that cross a
++/// Web Worker boundary travel as strings, so the code is recovered from the message prefix.
++pub fn error_code_of(message: &str) -> Option<&'static str> {
++    ERROR_CODES
++        .iter()
++        .find(|code| {
++            message.starts_with(*code) && message[code.len()..].starts_with(':')
++        })
++        .copied()
++}
++
++impl Error {
++    /// Restores an error that crossed a worker boundary as a string: coded messages keep their
++    /// code, anything else becomes `transaction_build_failed`.
++    pub fn from_worker(message: String) -> Error {
++        if error_code_of(&message).is_some() {
++            Error::Coded(message)
++        } else {
++            Error::TransactionBuildFailed(message)
++        }
++    }
++
++    /// Adds "output <i>: " after the code, so the game can point at the offending output.
++    pub fn at_output(self, index: usize) -> Error {
++        let message = self.to_string();
++        match error_code_of(&message) {
++            Some(code) => Error::Coded(format!(
++                "{}: output {}: {}",
++                code,
++                index,
++                message[code.len() + 1..].trim_start()
++            )),
++            None => self,
++        }
++    }
++
++    /// The stable code of this error, if it has one.
++    pub fn code(&self) -> Option<&'static str> {
++        error_code_of(&self.to_string())
++    }
+ }
+ 
+ impl From<Error> for JsValue {
+     fn from(e: Error) -> Self {
+-        js_sys::Error::new(&e.to_string()).into()
++        let message = e.to_string();
++        let err = js_sys::Error::new(&message);
++        if let Some(code) = error_code_of(&message) {
++            let _ = js_sys::Reflect::set(&err, &JsValue::from_str("code"), &JsValue::from_str(code));
++            // A broadcast error names the transaction it is about (`error.txid`).
++            if let Some(txid) = crate::sapling_beta::txid_of_message(&message) {
++                let _ = js_sys::Reflect::set(&err, &JsValue::from_str("txid"), &JsValue::from_str(txid));
++            }
++        }
++        err.into()
+     }
+ }
+ 
+diff --git a/crates/webzjs-wallet/src/lib.rs b/crates/webzjs-wallet/src/lib.rs
+index cacd624..228d971 100644
+--- a/crates/webzjs-wallet/src/lib.rs
++++ b/crates/webzjs-wallet/src/lib.rs
+@@ -8,10 +8,12 @@ pub mod bindgen;
+ 
+ mod error;
+ pub mod init;
++pub mod sapling_beta;
+ pub mod validation;
+ 
+ pub mod wallet;
+ pub use wallet::Wallet;
++pub use error::{error_code_of, Error, ERROR_CODES};
+ 
+ use wasm_bindgen::prelude::*;
+ 
+diff --git a/crates/webzjs-wallet/src/sapling_beta.rs b/crates/webzjs-wallet/src/sapling_beta.rs
+new file mode 100644
+index 0000000..a1d20d6
+--- /dev/null
++++ b/crates/webzjs-wallet/src/sapling_beta.rs
+@@ -0,0 +1,753 @@
++// Zocial World "Sapling beta" policy (ADR-018 § 1–2), MIT OR Apache-2.0 like the rest of WebZjs.
++//
++// The memory wallet backend (zcash_client_memory) does not track the NU6.3 Ironwood pool, so this
++// build restricts the in-game wallet to the Sapling pool (plus transparent deposits that are
++// shielded into Sapling). NU6.3 leaves Sapling unchanged; ZIP 229: "version 4, version 5, and
++// version 6 transactions are all valid from NU6.3 activation onward".
++//
++// * receive:  the account's unified address carries ONLY a Sapling and a transparent receiver
++//             (ZIP 316), never Orchard; the plain transparent (t1) and Sapling (zs1) encodings of
++//             the same receivers are offered too;
++// * shield:   transparent UTXOs are spent into the wallet's own Sapling address (no transparent
++//             outputs), version-5 transaction;
++// * send:     only Sapling notes are selected (SpendPolicy), every payment goes to a Sapling
++//             receiver except withdrawal outputs, which may go to a transparent address; change
++//             goes to Sapling; the transaction is version 5 under the NU6.3 branch with no Orchard
++//             or Ironwood bundle;
++// * upgrade guard: before any transaction is built or broadcast, the chain's consensus branch
++//             (lightwalletd GetLightdInfo) must equal the branch this build targets.
++//
++// Everything is enforced twice: the proposal is constrained by zcash_client_backend's own knobs
++// (spend policy, fallback change pool, proposed tx version, resolved recipients), and the result
++// is re-checked (`check_proposal` before proving, `check_transaction` before broadcasting).
++
++use std::collections::BTreeSet;
++
++use serde::Serialize;
++use zcash_address::{ConversionError, ToAddress, ZcashAddress};
++use zcash_client_backend::data_api::wallet::input_selection::SpendPolicy;
++use zcash_client_backend::proposal::Proposal;
++use zcash_keys::address::Address;
++use zcash_primitives::transaction::{Transaction, TxVersion};
++use zcash_protocol::consensus::{BranchId, NetworkType};
++use zcash_protocol::memo::MemoBytes;
++use zcash_protocol::value::{Zatoshis, MAX_MONEY};
++use zcash_protocol::{PoolType, ShieldedPool};
++use zcash_transparent::address::TransparentAddress;
++use zcash_transparent::bundle::OutPoint;
++
++use crate::error::Error;
++
++/// The consensus branch this wallet build was made for: NU6.3 (Ironwood), `0x37A5165B`, active on
++/// mainnet from height 3,428,143 (ZIP 258). The regtest variant is used only with a local chain
++/// whose upgrades through NU6.3 are active from height 1, so it targets the same branch.
++/// It is the newest entry of `SUPPORTED_BRANCHES`.
++pub const EXPECTED_BRANCH: BranchId = BranchId::Nu6_3;
++
++/// Every consensus branch this build may create transactions for. The NU6.3 build supports only
++/// NU6.3. A NU7 build whose librustzcash knows the NU7 mainnet height lists `[Nu6_3, Nu7]`, so it
++/// keeps sending before activation and switches by itself at the activation height (the builder
++/// picks the branch with `BranchId::for_height`); see build/README.md "Moving to NU7".
++pub const SUPPORTED_BRANCHES: &[BranchId] = &[BranchId::Nu6_3];
++
++/// Whether this build may create transactions for `branch`.
++pub fn supports_branch(branch: u32) -> bool {
++    SUPPORTED_BRANCHES.iter().any(|b| u32::from(*b) == branch)
++}
++
++/// The supported branches as lightwalletd prints them, e.g. "37a5165b".
++pub fn supported_branches_hex() -> String {
++    SUPPORTED_BRANCHES
++        .iter()
++        .map(|b| branch_hex(u32::from(*b)))
++        .collect::<Vec<_>>()
++        .join("|")
++}
++
++/// The only transaction version the Sapling beta creates. V5 carries Sapling and (empty) Orchard
++/// bundles and no Ironwood bundle; it stays valid under NU6.3 (ZIP 229).
++pub const TX_VERSION: TxVersion = TxVersion::V5;
++
++/// Default number of blocks a created transaction stays valid for (zcash_primitives' builder
++/// default, `DEFAULT_TX_EXPIRY_DELTA`). Sending pauses when a pending network upgrade activates
++/// within this many blocks, because a transaction built for the current branch could still be
++/// waiting in a mempool when the branch changes.
++pub const UPGRADE_GUARD_BLOCKS: u64 = 40;
++
++/// The most outputs one `send` call accepts (recipient + project fee is 2; withdrawals and name
++/// fees are 1). A small bound keeps proofs and fees predictable.
++pub const MAX_OUTPUTS: usize = 8;
++
++/// Lower-case 8-digit hex form used by lightwalletd (`LightdInfo.consensusBranchId`).
++pub fn branch_hex(branch: u32) -> String {
++    format!("{:08x}", branch)
++}
++
++pub fn expected_branch_hex() -> String {
++    branch_hex(u32::from(EXPECTED_BRANCH))
++}
++
++/// Parses lightwalletd's `consensusBranchId` ("37a5165b", tolerating a 0x prefix / upper case).
++pub fn parse_branch_hex(s: &str) -> Option<u32> {
++    let t = s.trim();
++    let t = t
++        .strip_prefix("0x")
++        .or_else(|| t.strip_prefix("0X"))
++        .unwrap_or(t);
++    if t.is_empty() || t.len() > 8 {
++        return None;
++    }
++    u32::from_str_radix(t, 16).ok()
++}
++
++/// Input-pool selection for every Sapling-beta payment: Sapling notes only, never Orchard,
++/// Ironwood or transparent UTXOs (transparent funds are only ever spent by `shield`).
++pub fn spend_policy() -> SpendPolicy {
++    SpendPolicy::shielded_pools([ShieldedPool::Sapling])
++}
++
++/// The pool for change and for the shielded value of a shielding transaction when the transaction
++/// has no shielded inputs of its own. Sapling-only payments already put change in Sapling
++/// (zcash_client_backend's `select_change_pool` follows the input pools).
++pub const FALLBACK_CHANGE_POOL: ShieldedPool = ShieldedPool::Sapling;
++
++fn network_name(net: NetworkType) -> &'static str {
++    match net {
++        NetworkType::Main => "mainnet",
++        NetworkType::Test => "testnet",
++        NetworkType::Regtest => "regtest",
++    }
++}
++
++/// Which pool a resolved output pays into.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
++#[serde(rename_all = "lowercase")]
++pub enum OutputPool {
++    Sapling,
++    Transparent,
++}
++
++impl OutputPool {
++    pub fn pool_type(self) -> PoolType {
++        match self {
++            OutputPool::Sapling => PoolType::SAPLING,
++            OutputPool::Transparent => PoolType::Transparent,
++        }
++    }
++}
++
++/// A payment recipient reduced to the single receiver the Sapling beta pays.
++#[derive(Clone, Debug)]
++pub struct ResolvedRecipient {
++    /// A plain Sapling or transparent address (never a unified address), so that
++    /// zcash_client_backend cannot route the payment to any other pool.
++    pub address: ZcashAddress,
++    pub pool: OutputPool,
++}
++
++fn transparent_zaddr(net: NetworkType, t: &TransparentAddress) -> ZcashAddress {
++    match t {
++        TransparentAddress::PublicKeyHash(data) => ZcashAddress::from_transparent_p2pkh(net, *data),
++        TransparentAddress::ScriptHash(data) => ZcashAddress::from_transparent_p2sh(net, *data),
++    }
++}
++
++/// Resolves a payment recipient to the one receiver the Sapling beta pays, or refuses it.
++///
++/// * a Sapling address → itself;
++/// * a unified address → its Sapling receiver;
++/// * a transparent address → itself, for withdrawal outputs only
++///   (`recipient_transparent_not_allowed` otherwise);
++/// * a unified address WITHOUT a Sapling receiver (Orchard/Ironwood-only, or Orchard +
++///   transparent) → `recipient_no_sapling_receiver`, for withdrawals too. ADR-018 § 2 refuses a
++///   recipient without a Sapling receiver; paying such a UA's transparent receiver would make the
++///   amount and the address public although the player never typed a transparent address
++///   at all. A player who wants a public withdrawal pastes the plain t-address, which the
++///   game warns about;
++/// * a TEX address (ZIP 320), a Sprout address or an unparseable UA → `recipient_unsupported`;
++/// * an address of another network → `recipient_wrong_network`.
++pub fn resolve_recipient(
++    net: NetworkType,
++    to: &ZcashAddress,
++    withdrawal: bool,
++) -> Result<ResolvedRecipient, Error> {
++    let addr: Address = match to.clone().convert_if_network::<Address>(net) {
++        Ok(addr) => addr,
++        Err(ConversionError::IncorrectNetwork { .. }) => {
++            return Err(Error::RecipientWrongNetwork(network_name(net).to_string()))
++        }
++        Err(ConversionError::Unsupported(kind)) => {
++            return Err(Error::RecipientUnsupported(format!("{} address", kind)))
++        }
++        Err(ConversionError::User(e)) => {
++            return Err(Error::RecipientUnsupported(format!("unusable address ({})", e)))
++        }
++    };
++    match addr {
++        Address::Sapling(pa) => Ok(ResolvedRecipient {
++            address: ZcashAddress::from_sapling(net, pa.to_bytes()),
++            pool: OutputPool::Sapling,
++        }),
++        Address::Unified(ua) => {
++            if let Some(pa) = ua.sapling() {
++                return Ok(ResolvedRecipient {
++                    address: ZcashAddress::from_sapling(net, pa.to_bytes()),
++                    pool: OutputPool::Sapling,
++                });
++            }
++            // Never fall back to a UA's transparent receiver, not even for a withdrawal.
++            Err(Error::RecipientNoSaplingReceiver(if ua.has_orchard() {
++                "a unified address whose only shielded receiver is Orchard/Ironwood".to_string()
++            } else {
++                "a unified address without a Sapling receiver".to_string()
++            }))
++        }
++        Address::Transparent(t) => {
++            if withdrawal {
++                Ok(ResolvedRecipient {
++                    address: transparent_zaddr(net, &t),
++                    pool: OutputPool::Transparent,
++                })
++            } else {
++                Err(Error::RecipientTransparentNotAllowed)
++            }
++        }
++        Address::Tex(_) => Err(Error::RecipientUnsupported(
++            "a TEX (ZIP 320 transparent-source-only) address".to_string(),
++        )),
++    }
++}
++
++/// One requested output of a `send` call.
++#[derive(Clone, Debug)]
++pub struct OutputRequest {
++    pub to: ZcashAddress,
++    pub amount: Zatoshis,
++    pub memo: Option<MemoBytes>,
++    pub withdrawal: bool,
++}
++
++/// An output after recipient resolution, ready to become a ZIP 321 payment.
++#[derive(Clone, Debug)]
++pub struct ResolvedOutput {
++    pub recipient: ResolvedRecipient,
++    pub amount: Zatoshis,
++    pub memo: Option<MemoBytes>,
++    pub withdrawal: bool,
++}
++
++/// Validates an amount given in zatoshis: an integer in 1..=MAX_MONEY.
++pub fn parse_amount(zat: u64) -> Result<Zatoshis, Error> {
++    if zat == 0 || zat > MAX_MONEY {
++        return Err(Error::InvalidAmountZat(format!(
++            "{} zatoshis (must be 1..={})",
++            zat, MAX_MONEY
++        )));
++    }
++    Zatoshis::from_u64(zat).map_err(|_| Error::InvalidAmountZat(zat.to_string()))
++}
++
++/// Encodes a text memo (ZIP 302: UTF-8, at most 512 bytes).
++pub fn parse_memo(text: &str) -> Result<MemoBytes, Error> {
++    let bytes = text.as_bytes();
++    if bytes.len() > 512 {
++        return Err(Error::MemoTooLong(bytes.len()));
++    }
++    MemoBytes::from_bytes(bytes).map_err(|_| Error::MemoTooLong(bytes.len()))
++}
++
++/// Resolves and validates every output of a `send` call.
++pub fn resolve_outputs(
++    net: NetworkType,
++    outputs: Vec<OutputRequest>,
++) -> Result<Vec<ResolvedOutput>, Error> {
++    if outputs.is_empty() {
++        return Err(Error::InvalidOutputs("at least one output is required".into()));
++    }
++    if outputs.len() > MAX_OUTPUTS {
++        return Err(Error::InvalidOutputs(format!(
++            "{} outputs requested; at most {} are allowed",
++            outputs.len(),
++            MAX_OUTPUTS
++        )));
++    }
++    let mut total: u64 = 0;
++    let mut resolved = Vec::with_capacity(outputs.len());
++    for (i, o) in outputs.into_iter().enumerate() {
++        let recipient = resolve_recipient(net, &o.to, o.withdrawal).map_err(|e| e.at_output(i))?;
++        if recipient.pool == OutputPool::Transparent && o.memo.is_some() {
++            return Err(Error::MemoNotAllowed(i));
++        }
++        total = total.saturating_add(u64::from(o.amount));
++        if total > MAX_MONEY {
++            return Err(Error::InvalidAmountZat("the outputs add up to more than MAX_MONEY".into()));
++        }
++        resolved.push(ResolvedOutput {
++            recipient,
++            amount: o.amount,
++            memo: o.memo,
++            withdrawal: o.withdrawal,
++        });
++    }
++    Ok(resolved)
++}
++
++/// The stored transparent outputs the wallet still counts as spendable that
++/// lightwalletd's current UTXO set (GetAddressUtxos) no longer contains. They were spent by a
++/// transaction this wallet did not create (another wallet holding the same seed), or the server
++/// lags behind: they are only candidates, and a UTXO is marked spent only once its mined spending
++/// transaction is found on chain.
++pub fn missing_outpoints(stored: &[OutPoint], live: &BTreeSet<OutPoint>) -> Vec<OutPoint> {
++    let mut out: Vec<OutPoint> = stored.iter().filter(|o| !live.contains(o)).cloned().collect();
++    out.sort();
++    out.dedup();
++    out
++}
++
++/// Which of `candidates` a transaction spends (its transparent inputs).
++pub fn spent_outpoints(tx: &Transaction, candidates: &BTreeSet<OutPoint>) -> Vec<OutPoint> {
++    tx.transparent_bundle()
++        .map(|b| {
++            b.vin
++                .iter()
++                .map(|txin| txin.prevout().clone())
++                .filter(|prevout| candidates.contains(prevout))
++                .collect()
++        })
++        .unwrap_or_default()
++}
++
++/// The marker an error message carries for the transaction it is about, so the game
++/// can report the txid of a transaction that may have reached the network. Errors cross the Web
++/// Worker boundary as strings, so the txid travels inside the message (`[txid=<hex>]`) and is
++/// restored as `error.txid` on the JavaScript side.
++pub fn txid_marker(txid: &str) -> String {
++    format!("[txid={}]", txid)
++}
++
++/// The txid of a `txid_marker` in an error message, if any (64 lower-case hex digits).
++pub fn txid_of_message(message: &str) -> Option<&str> {
++    let start = message.find("[txid=")? + "[txid=".len();
++    let rest = &message[start..];
++    let end = rest.find(']')?;
++    let txid = &rest[..end];
++    (txid.len() == 64 && txid.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
++        .then_some(txid)
++}
++
++/// What a transaction is expected to look like.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum TxKind {
++    /// Transparent UTXOs → the wallet's own Sapling address. No Sapling spends, no transparent
++    /// outputs.
++    Shielding,
++    /// Sapling notes → Sapling outputs and `transparent_outputs` transparent (withdrawal)
++    /// outputs. No transparent inputs.
++    Payment { transparent_outputs: usize },
++    /// Broadcast-time check for a transaction already checked precisely at creation: either of
++    /// the shapes above.
++    Any,
++}
++
++/// Checks that a proposal is a single step, asks for a version-5 transaction, never touches the
++/// Orchard or Ironwood pool, returns change only to Sapling, and has the expected shape:
++/// shielding spends transparent UTXOs only; a payment spends Sapling notes only and pays Sapling
++/// receivers, plus transparent receivers exactly for the payments marked `transparent_payments`.
++pub fn check_proposal<FeeRuleT, NoteRef>(
++    proposal: &Proposal<FeeRuleT, NoteRef>,
++    kind: TxKind,
++    transparent_payments: &[usize],
++) -> Result<(), Error> {
++    let violation = |m: String| Err(Error::SaplingOnlyViolation(m));
++    if proposal.proposed_version() != Some(TX_VERSION) {
++        return violation(format!(
++            "proposal asks for transaction version {:?}, the Sapling beta only builds {:?}",
++            proposal.proposed_version(),
++            TX_VERSION
++        ));
++    }
++    if proposal.steps().len() != 1 {
++        return violation(format!(
++            "proposal has {} steps; the Sapling beta builds single-step transactions only",
++            proposal.steps().len()
++        ));
++    }
++    for step in proposal.steps().iter() {
++        if step.involves(PoolType::ORCHARD) || step.involves(PoolType::IRONWOOD) {
++            return violation("proposal involves the Orchard or Ironwood pool".to_string());
++        }
++        if !step.prior_step_inputs().is_empty() {
++            return violation("proposal spends outputs of a prior step".to_string());
++        }
++        let shielding = matches!(kind, TxKind::Shielding);
++        if step.input_in_pool(PoolType::Transparent) != shielding {
++            return violation(if shielding {
++                "shielding proposal has no transparent inputs".to_string()
++            } else {
++                "payment proposal spends transparent inputs".to_string()
++            });
++        }
++        if shielding && step.input_in_pool(PoolType::SAPLING) {
++            return violation("shielding proposal spends Sapling notes".to_string());
++        }
++        if !shielding && !step.input_in_pool(PoolType::SAPLING) {
++            return violation("payment proposal spends no Sapling notes".to_string());
++        }
++        for (idx, pool) in step.payment_pools().iter() {
++            let allowed = *pool == PoolType::SAPLING
++                || (*pool == PoolType::Transparent && transparent_payments.contains(idx));
++            if !allowed {
++                return violation(format!("payment {} goes to the {:?} pool", idx, pool));
++            }
++        }
++        if let TxKind::Payment { transparent_outputs } = kind {
++            let n = step
++                .payment_pools()
++                .values()
++                .filter(|p| **p == PoolType::Transparent)
++                .count();
++            if n != transparent_outputs {
++                return violation(format!(
++                    "proposal pays {} transparent outputs, expected {}",
++                    n, transparent_outputs
++                ));
++            }
++        }
++        for change in step.balance().proposed_change() {
++            if change.output_pool() != PoolType::SAPLING {
++                return violation(format!(
++                    "change output goes to the {:?} pool",
++                    change.output_pool()
++                ));
++            }
++        }
++    }
++    Ok(())
++}
++
++/// The shape of a transaction, as checked and reported (`inspect`).
++#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
++#[serde(rename_all = "camelCase")]
++pub struct TxShape {
++    pub txid: String,
++    pub version: String,
++    pub consensus_branch_id: String,
++    pub transparent_inputs: usize,
++    pub transparent_outputs: usize,
++    pub sapling_spends: usize,
++    pub sapling_outputs: usize,
++    pub orchard_actions: usize,
++    pub ironwood_actions: usize,
++    pub has_orchard_bundle: bool,
++    pub has_ironwood_bundle: bool,
++    pub has_sprout_bundle: bool,
++}
++
++pub fn inspect(tx: &Transaction) -> TxShape {
++    let (t_in, t_out) = tx
++        .transparent_bundle()
++        .map(|b| (b.vin.len(), b.vout.len()))
++        .unwrap_or((0, 0));
++    let (s_sp, s_out) = tx
++        .sapling_bundle()
++        .map(|b| (b.shielded_spends().len(), b.shielded_outputs().len()))
++        .unwrap_or((0, 0));
++    TxShape {
++        txid: tx.txid().to_string(),
++        version: format!("{:?}", tx.version()),
++        consensus_branch_id: branch_hex(u32::from(tx.consensus_branch_id())),
++        transparent_inputs: t_in,
++        transparent_outputs: t_out,
++        sapling_spends: s_sp,
++        sapling_outputs: s_out,
++        orchard_actions: tx.orchard_bundle().map(|b| b.actions().len()).unwrap_or(0),
++        ironwood_actions: tx.ironwood_bundle().map(|b| b.actions().len()).unwrap_or(0),
++        has_orchard_bundle: tx.orchard_bundle().is_some(),
++        has_ironwood_bundle: tx.ironwood_bundle().is_some(),
++        has_sprout_bundle: tx.sprout_bundle().is_some(),
++    }
++}
++
++/// Checks a built transaction before it can be broadcast: version 5, consensus branch = this
++/// build's branch, no Orchard, Ironwood or Sprout bundle, and the shape `kind` asks for.
++pub fn check_transaction(tx: &Transaction, kind: TxKind) -> Result<(), Error> {
++    let violation = |m: String| Err(Error::SaplingOnlyViolation(m));
++    let s = inspect(tx);
++    if tx.version() != TX_VERSION {
++        return violation(format!(
++            "transaction {} has version {}, expected {:?}",
++            s.txid, s.version, TX_VERSION
++        ));
++    }
++    if !supports_branch(u32::from(tx.consensus_branch_id())) {
++        return violation(format!(
++            "transaction {} commits to branch {}, this build supports {}",
++            s.txid,
++            s.consensus_branch_id,
++            supported_branches_hex()
++        ));
++    }
++    if s.has_orchard_bundle || s.has_ironwood_bundle || s.has_sprout_bundle {
++        return violation(format!(
++            "transaction {} has an Orchard, Ironwood or Sprout bundle",
++            s.txid
++        ));
++    }
++    let shielding_shape = s.transparent_inputs > 0
++        && s.transparent_outputs == 0
++        && s.sapling_spends == 0
++        && s.sapling_outputs > 0;
++    let payment_shape = |t_out: Option<usize>| {
++        s.transparent_inputs == 0
++            && s.sapling_spends > 0
++            && t_out.map_or(true, |n| s.transparent_outputs == n)
++    };
++    let ok = match kind {
++        TxKind::Shielding => shielding_shape,
++        TxKind::Payment {
++            transparent_outputs,
++        } => payment_shape(Some(transparent_outputs)),
++        TxKind::Any => shielding_shape || payment_shape(None),
++    };
++    if !ok {
++        return violation(format!(
++            "transaction {} does not have the expected {:?} shape: {:?}",
++            s.txid, kind, s
++        ));
++    }
++    Ok(())
++}
++
++/// What the game shows about sending (see `WebWallet::sending_status`).
++#[derive(Clone, Debug, Serialize)]
++#[serde(rename_all = "camelCase")]
++pub struct SendingStatus {
++    /// true only when the chain's branch equals `expected_branch` (and no network upgrade is
++    /// about to activate).
++    pub allowed: bool,
++    /// The branch this build targets, e.g. "37a5165b".
++    pub expected_branch: String,
++    /// The branch lightwalletd reports for its chain tip, or null when it could not be read.
++    pub chain_branch: Option<String>,
++    /// lightwalletd's chain name ("main", "test", "regtest"), when known.
++    pub chain_name: Option<String>,
++    /// lightwalletd's tip height, when known.
++    pub chain_tip: Option<u64>,
++    /// The branch this build's own consensus rules give the next block, when the tip is known.
++    pub next_block_branch: Option<String>,
++    /// The next network upgrade lightwalletd announces (name, height), when one is scheduled.
++    pub pending_upgrade: Option<PendingUpgrade>,
++    /// Pools this build can spend from / pay to.
++    pub pools: Vec<String>,
++    /// The stable error code when `allowed` is false: `consensus_branch_mismatch`,
++    /// `consensus_upgrade_pending` or `consensus_branch_unknown`.
++    pub code: Option<String>,
++    /// Error code + explanation when `allowed` is false.
++    pub reason: Option<String>,
++}
++
++#[derive(Clone, Debug, Serialize)]
++#[serde(rename_all = "camelCase")]
++pub struct PendingUpgrade {
++    pub name: String,
++    pub height: u64,
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    // Mainnet test vectors. Generated from a throwaway seed with the same zcash_keys revision
++    // (see artifacts-sb/fixtures/addresses-main.json); they hold no funds.
++    fn parse(s: &str) -> ZcashAddress {
++        ZcashAddress::try_from_encoded(s).expect("valid encoding")
++    }
++
++    #[test]
++    fn branch_parsing() {
++        assert_eq!(parse_branch_hex("37a5165b"), Some(0x37A5165B));
++        assert_eq!(parse_branch_hex("0x37A5165B"), Some(0x37A5165B));
++        assert_eq!(parse_branch_hex(""), None);
++        assert_eq!(parse_branch_hex("zz"), None);
++        assert_eq!(parse_branch_hex("123456789"), None);
++        assert_eq!(expected_branch_hex(), "37a5165b");
++    }
++
++    #[test]
++    fn amounts_and_memos() {
++        assert!(parse_amount(0).is_err());
++        assert!(parse_amount(MAX_MONEY + 1).is_err());
++        assert_eq!(u64::from(parse_amount(100_000).unwrap()), 100_000);
++        assert!(parse_memo(&"x".repeat(512)).is_ok());
++        let e = parse_memo(&"x".repeat(513)).unwrap_err().to_string();
++        assert!(e.starts_with("memo_too_long:"), "{e}");
++    }
++
++    #[test]
++    fn recipient_rules() {
++        let net = NetworkType::Main;
++        // Transparent P2PKH (all-zero hash) and TEX of the same hash.
++        let t = ZcashAddress::from_transparent_p2pkh(net, [7u8; 20]);
++        let tex = ZcashAddress::from_tex(net, [7u8; 20]);
++        assert_eq!(
++            resolve_recipient(net, &t, true).unwrap().pool,
++            OutputPool::Transparent
++        );
++        let e = resolve_recipient(net, &t, false).unwrap_err().to_string();
++        assert!(e.starts_with("recipient_transparent_not_allowed:"), "{e}");
++        let e = resolve_recipient(net, &tex, true).unwrap_err().to_string();
++        assert!(e.starts_with("recipient_unsupported:"), "{e}");
++        let e = resolve_recipient(NetworkType::Test, &t, true)
++            .unwrap_err()
++            .to_string();
++        assert!(e.starts_with("recipient_wrong_network:"), "{e}");
++        // Encoded addresses round-trip through the parser.
++        let _ = parse(&t.encode());
++    }
++
++    /// Real transactions this engine built on the local NU6.3 regtest chain.
++    fn fixture(name: &str) -> Transaction {
++        let all: serde_json::Value =
++            serde_json::from_str(include_str!("testdata/regtest-txs.json")).unwrap();
++        let hex = all["txs"][name]["rawTxHex"].as_str().unwrap();
++        let tx = Transaction::read(&hex::decode(hex).unwrap()[..], BranchId::Nu6_3).unwrap();
++        assert_eq!(tx.txid().to_string(), all["txs"][name]["txid"].as_str().unwrap());
++        tx
++    }
++
++    #[test]
++    fn produced_transactions_are_v5_nu63_sapling_only() {
++        for (name, kind) in [
++            ("shield", TxKind::Shielding),
++            ("payment", TxKind::Payment { transparent_outputs: 0 }),
++            ("nameFee", TxKind::Payment { transparent_outputs: 0 }),
++            ("withdrawal", TxKind::Payment { transparent_outputs: 1 }),
++        ] {
++            let tx = fixture(name);
++            let shape = inspect(&tx);
++            assert_eq!(shape.version, "V5", "{name}");
++            assert_eq!(shape.consensus_branch_id, "37a5165b", "{name}");
++            assert!(tx.orchard_bundle().is_none() && tx.ironwood_bundle().is_none(), "{name}");
++            assert_eq!(shape.orchard_actions + shape.ironwood_actions, 0, "{name}");
++            check_transaction(&tx, kind).unwrap_or_else(|e| panic!("{name}: {e}"));
++            check_transaction(&tx, TxKind::Any).unwrap();
++        }
++        // Wrong expectations are refused.
++        let e = check_transaction(&fixture("payment"), TxKind::Shielding).unwrap_err().to_string();
++        assert!(e.starts_with("sapling_only_violation:"), "{e}");
++        let e = check_transaction(&fixture("withdrawal"), TxKind::Payment { transparent_outputs: 0 })
++            .unwrap_err()
++            .to_string();
++        assert!(e.starts_with("sapling_only_violation:"), "{e}");
++        let e = check_transaction(&fixture("shield"), TxKind::Payment { transparent_outputs: 0 })
++            .unwrap_err()
++            .to_string();
++        assert!(e.starts_with("sapling_only_violation:"), "{e}");
++    }
++
++    // Mainnet unified addresses derived from a throwaway test seed (zw-tx-decrypt
++    // examples/test_addresses.rs); they hold no funds.
++    const ORCHARD_ONLY: &str = "u1zk72nlz2j200yhhlhtyaxkuzyfc0n4nns3p8kcu5e6sq0cv0wce9upf6lz33fhgguxl28nt4u38003ha4t2yzvdwr4c05kfmhsjkxrwz";
++    const ORCHARD_SAPLING: &str = "u1lwv0t8aqfdslxa0pe0q4gh93a8mwcknzjc2rzdntx9tzgecytffwjung4zzazg0cv3qsqphc5w9rx7d0zxfwv7u6qaxu6n0mywa5j6tpvaears084lqm778tsjjcszswdrfu8enjrspde9at8crvcj7qmx6mh5k978ml5kz3acjzk9hx";
++    const ORCHARD_TRANSPARENT: &str = "u13zdrp55q4ty020lpp8grl28ecq5pfs57vmzxlfkuvh63wlg824tf73sphdwfj9gpf06cl7mgps2rvp5dfs479fpr6xyq7t4ketrxk0yqxsylvzvgfdl2pxa0dvavcwxu0h0aq05aqpp";
++    const TEX: &str = "tex1qsxle9gn7xt26cmzqvs0xaj6mpdc6a6cnw4jse";
++
++    #[test]
++    fn unified_address_rules() {
++        let net = NetworkType::Main;
++        // Orchard/Ironwood-only UA: refused for payments and withdrawals alike.
++        for withdrawal in [false, true] {
++            let e = resolve_recipient(net, &parse(ORCHARD_ONLY), withdrawal)
++                .unwrap_err()
++                .to_string();
++            assert!(e.starts_with("recipient_no_sapling_receiver:"), "{e}");
++        }
++        // Orchard + Sapling UA: always its Sapling receiver, as a plain zs1 address.
++        let r = resolve_recipient(net, &parse(ORCHARD_SAPLING), false).unwrap();
++        assert_eq!(r.pool, OutputPool::Sapling);
++        assert!(r.address.encode().starts_with("zs1"));
++        // Orchard + transparent UA: refused for payments AND withdrawals (never
++        // silently pay a UA's public transparent receiver).
++        for withdrawal in [false, true] {
++            let e = resolve_recipient(net, &parse(ORCHARD_TRANSPARENT), withdrawal)
++                .unwrap_err()
++                .to_string();
++            assert!(e.starts_with("recipient_no_sapling_receiver:"), "{e}");
++        }
++        // A plain t-address typed by the player is still a valid (public) withdrawal.
++        let t = ZcashAddress::from_transparent_p2pkh(net, [7u8; 20]).encode();
++        let r = resolve_recipient(net, &parse(&t), true).unwrap();
++        assert_eq!(r.pool, OutputPool::Transparent);
++        assert!(r.address.encode().starts_with("t1"));
++        let e = resolve_recipient(net, &parse(TEX), true).unwrap_err().to_string();
++        assert!(e.starts_with("recipient_unsupported:"), "{e}");
++        // Output-level checks: memo on a transparent output, empty list, too many outputs.
++        let out = |to: &str, withdrawal: bool, memo: bool| OutputRequest {
++            to: parse(to),
++            amount: parse_amount(1000).unwrap(),
++            memo: memo.then(|| parse_memo("hi").unwrap()),
++            withdrawal,
++        };
++        let e = resolve_outputs(net, vec![out(&t, true, true)])
++            .unwrap_err()
++            .to_string();
++        assert!(e.starts_with("memo_not_allowed:"), "{e}");
++        // The u1 is refused for what it is, not with a confusing memo error.
++        let e = resolve_outputs(net, vec![out(ORCHARD_TRANSPARENT, true, true)])
++            .unwrap_err()
++            .to_string();
++        assert!(e.starts_with("recipient_no_sapling_receiver: output 0:"), "{e}");
++        let e = resolve_outputs(net, vec![out(ORCHARD_SAPLING, false, true), out(ORCHARD_ONLY, false, false)])
++            .unwrap_err()
++            .to_string();
++        assert!(e.starts_with("recipient_no_sapling_receiver: output 1:"), "{e}");
++        assert!(resolve_outputs(net, vec![]).unwrap_err().to_string().starts_with("invalid_outputs:"));
++        let many = (0..=MAX_OUTPUTS).map(|_| out(ORCHARD_SAPLING, false, false)).collect();
++        assert!(resolve_outputs(net, many).unwrap_err().to_string().starts_with("invalid_outputs:"));
++        let ok = resolve_outputs(net, vec![out(ORCHARD_SAPLING, false, true), out(&t, true, false)]).unwrap();
++        assert_eq!(ok.iter().map(|o| o.recipient.pool).collect::<Vec<_>>(), vec![OutputPool::Sapling, OutputPool::Transparent]);
++    }
++
++    /// A UTXO missing from lightwalletd's UTXO set is a candidate; a transaction
++    /// marks exactly the candidates it spends.
++    #[test]
++    fn transparent_reconcile_helpers() {
++        let shield = fixture("shield");
++        let spent: Vec<OutPoint> = shield
++            .transparent_bundle()
++            .expect("the shielding fixture spends transparent inputs")
++            .vin
++            .iter()
++            .map(|i| i.prevout().clone())
++            .collect();
++        assert!(!spent.is_empty());
++        let other = OutPoint::new([9u8; 32], 0);
++        let stored: Vec<OutPoint> = spent.iter().cloned().chain([other.clone()]).collect();
++        // lightwalletd still lists `other` as unspent, not the shielded inputs.
++        let live: BTreeSet<OutPoint> = [other.clone()].into_iter().collect();
++        let missing = missing_outpoints(&stored, &live);
++        let mut expected = spent.clone();
++        expected.sort();
++        assert_eq!(missing, expected);
++        let candidates: BTreeSet<OutPoint> = missing.into_iter().collect();
++        assert_eq!(spent_outpoints(&shield, &candidates).len(), spent.len());
++        // A payment (Sapling spends only) spends none of them; nor does anything spend `other`.
++        assert!(spent_outpoints(&fixture("payment"), &candidates).is_empty());
++        let only_other: BTreeSet<OutPoint> = [other].into_iter().collect();
++        assert!(spent_outpoints(&shield, &only_other).is_empty());
++        // Everything still live: nothing to reconcile.
++        let all_live: BTreeSet<OutPoint> = stored.iter().cloned().collect();
++        assert!(missing_outpoints(&stored, &all_live).is_empty());
++    }
++
++    /// The txid travels in the message of a broadcast error.
++    #[test]
++    fn txid_markers() {
++        let txid = "ab".repeat(32);
++        let message = format!("broadcast_uncertain: {} lost", txid_marker(&txid));
++        assert_eq!(txid_of_message(&message), Some(txid.as_str()));
++        assert_eq!(txid_of_message("broadcast_failed: no marker"), None);
++        assert_eq!(txid_of_message("x [txid=abc] y"), None);
++        assert_eq!(txid_of_message(&format!("x [txid={}] y", "AB".repeat(32))), None);
++    }
++}
+diff --git a/crates/webzjs-wallet/src/testdata/regtest-txs.json b/crates/webzjs-wallet/src/testdata/regtest-txs.json
+new file mode 100644
+index 0000000..54d2230
+--- /dev/null
++++ b/crates/webzjs-wallet/src/testdata/regtest-txs.json
+@@ -0,0 +1,25 @@
++{
++ "note": "Transactions built by this engine on a local zebrad regtest chain with NU6.3 active from height 1 (regtest test keys only).",
++ "txs": {
++  "shield": {
++   "txid": "3a47f167aa26e84b9d65a6142795af84b8c031b59c7c56bbc0a5213461e5b1f2",
++   "height": 111,
++   "rawTxHex": "050000800a27a7265b16a53700000000970000000302ac0d0d2db33f7f4778a2a6308ee3fa15f84ccb5f5bc6b1632c6694b51ff5aa000000006a4730440220484b8924f77c3d298023bf396759ebd6e84419a098dc854f141b6ffe72a24d7a0220581e7cc34f07cc3dc9d52a866dc9592e5ff2eda1d0c98713ce2b9aff637836180121026f316a143c8892c510eb45b09e6e0a9d939f4853e1e62840474c74cf69adbfcfffffffff23d92e751c5521ba8bf14ab5b686a9838af9a05fd1fcb47167c96d251dbab59d000000006a47304402205b782b08839a1bdd3a535025412464417edd12665e4f8cfcee4b5bb931c9a1b502200902407456b1e525cf9314bc7b986417f8cb64f24c56316e8bf22947aa28acab0121026f316a143c8892c510eb45b09e6e0a9d939f4853e1e62840474c74cf69adbfcfffffffffafa9e39b974a6b013703b532e99a49e22b5d27e68a5f3efc3392dc6ae9656dfc000000006a47304402201e1d48a78601ef6418c3ac4b266d47526a46f35e50c7c20be39db5cf179b319702206380837240928caafacd224c72d7241352c6a43d5eabc3fbac950225bd1a347f0121026f316a143c8892c510eb45b09e6e0a9d939f4853e1e62840474c74cf69adbfcfffffffff0000043cc5e8e065450e39dac713363fcb3e564ecd8e0ee0428fa69794f5c9100bc208f931628d04765f4395982a93ed4064367020715d47180ce1dc07682687c4ed310c7a145246422d6ba2b21c15872cb35ca6a1f9133af75583aa63770961ef5b357f74c3aa9e7de23bcc55ebb360680f094b8fceb2fa32601c810095c6e8f77773ef0e93fe095f139c818a248dd8eedd6f188e541ab68ed1f617d7d31005dbcb6dfafbb1c5fe1ed13d46a900a34a74500238059fa516e1ae2fb182bcbb113b0d601da14c59d0d574894b5082067393a201cc43911a6cdb21b5d51618842c227c07968dbe4257f02ffe4673a3768e555d0cd1e36b4f550444af6320450db392851a95c5eeba2048b06647763a7434bd18557648412327172e6ddefd1509aa33939d83bde2ba1cdd30f6f2a282fcc840d0766e2ea10e281eeb59fa547d27774c4cb9717c3276ba49dbb5b1a2b21fe3367a0518fa640b8fdb6172577351d055134a82b3347a7521da69279cc9b9cb2808ddaea6a76a485cf4708a5f843fdabbf073b7ee221c5f921f9265b0bd574a0eb6c160b04d18d6e1d3f05709e8fbc6b463d0852d6068649fcfa40a81695447f59f36ec416d3c0dc91e5e9ce78f3271417c2bc144bc95844bcd725bc74e05987cb23344f10416ca73af02601fc2c5a121fd7363d75082410fc60145eff8e4ddea34b77e41679bea8905e6d730eaf857838680b8aa3acaec31ac27b31ce732d9d64d6d0763508dee0cfda9c30e6be636ae153d53c7827a76d61e2393185f2aa62123f2d97258adf1191c7ced1e64c671c3b156283438e37d078bccb45e9313d38f00abaa1df70acb67d112bf23a3f1bea88748cc0a15099abe9666a43ca184f226633583735a81f82705fc509270eb7f815a36ec6ff8e0f02f15e00bf3cb2f1b7d3e6f0aa717ff4bd47acda67dabad24dc84b3d159af27d1dc5150d5290ca0e8c4a50b183be0d0f23be500c9fa34f26833d9ed142095f84514dc236e66626a93cc477ec8b5e179f6d22a7b1cafc6f6365b3bbf4328f94e66a71a813a59dd2b07f54a8c3c13e514cd1e8198192d44624730e41c840467f47f832b55968962b854335e1b7dfe0c2d6f901ba3a59cb495a939ca782d423dc9a548cfeba8421e7642b28fb01cf483dd186bb803d4f9c673c5b115307f1d9205088420129ca3b0a6937354b8d3896224ac59e0e61a4558620c1f4945fe9fb90cc68d464a750ac07e1827baf9102468f43162c174864fcdd62f45ed2bd1e3691e21b650a6b4bc992a06763987c1e1f98cbcd1f24f448a24028011bc7da7d6eb0f30b37962c371f918c5bcbb3cf67a1ecdae84d84f1db9b8adba3d788a7878739bafc24fc52fa3c0935b898a0c871ae7bd5007a0843a09277ac600ae76dab615569b78dd25f85ff63abfc1252f47af4a606dc990858adc6bcaafda29f28606acbc1f43effecf915d597044a3b2e1ea0b397e321e846dc080aa708009913a3ddec5f868b14a3c4a992ec47dc633b23419c0422a0d4df907b4c7c65660afe1e799fb7b9762abdda89974730ed73fbbf280d825394dc105d31eae5098203f92192138c4f9e965f6d891bc35fffe2b48c34c3ceeb0c2952b15c218143b43db689524d6a92d5b186f5b43200cbac02ac513e48befaa91c5c023334db2faecd70ae2924786cf4bb86641e2c262afb8ac19d32affb4a9eb5c6ca5cce7c402d24f5911c9714dabae449e0af0330023052012a90e688eaebca612cc263f32d391701303852bc4e19dba3de6e81d3c8bfbc47fe3c2681c77eb6945d15dbc8d70ce4a5e9b333b092d1f38763d600bd0ec050b66803d0da2d9f7f19ff73ab2473474993bf23420ea23092e673fdc19b6e20a7ec010d566b29d9b3f413ad0e11166b04e1f0c1428b22c7d57633882b39a18a44c303ce6ce83fa20101d651d19a5e016cf64e69e16d89c88ef001791d111a37be861b4ecf7073968f5d5b4a092f64731d5e256a33476178ccfb16e01de1178780e4a50c5b886922cc9ecaef557dc5df6d5d60b05d8e6a030fce7972d16e449aebcf0f891299f13d4294f5cab71268b9c0217400340657ea6b66e462d7b6f85cb3c41cc6cafb62ef04c7704ab61aae622d71cd8a3d83ce6da84ad0283b23c393cf8a6cfa0daf947e733cf98965d3eab2d83dd4928e5f98a862327ea4c19d78857a2a906d6f03437880031d045ffceae62cc62e074e5a7b09d2a549eda9435ecc8e0741cdd403e021e67f0b3ffdf241c89875bfe2f2b31cd0ae7b8f2e95d70a36705ff7153f0ff58b4e44b2176a20a92c97c703e5f4046c0d2c72bcce67864184dba232729cba5661ec0f30aafb664feaaee2527ff940d294ca97ecb7f746f39bf9c9e58020a94f71cca05ca1bd8845e77c38be18a1cc2e963c1ff88e6fcd7f4f50196a4261a9aa9b9ce4532ddfa8ded6941f69269cddabbef8c92d5736e6a30fe0ca8697cc3c69a2fa1cf7a8c575595d883d1e94ad480840d9f20016bd531c25245bae3054fe829cf816c1efb2c95def0ea8eb4222560a4764c57ef99bfd58686be02bcc99fc2a917fdaf215348eed66e0ba07128ee483f7efaa03aca409b3498dc03c11e54c53ada2502bd470a044211f51b9ef6650b4acfee84bdd60c7ee31048e22165c058da801faf1f1954ebc62f32f2adc62a54dbaf58f9187584fdc76e4174cf8dd5c9098783920572b84598157d3d69d06a92871090b02ee42a9be7d75fa1b6977bae5da3bf280eb76d797a597527467127cf24bd1564f9a73764f9780aeaf9493aa982894c089f6f9daa8f3bd67d82601b1fcaaae9fab963d35fef04a78ebe918250fbc1dd263fc6080c535ed7a142ab77a471dc6df2c930ed20c34f28b709e62319834893fa94bd56c08acdcd00910642739d6f023cd32a64fa1ef839a68f41ad876ddab96d0d2c0aedaa773b330d3f8355e14868abef2d4ea93f5b5aef56fcc057b9bc6f9aed25c849b1fea8da9a15f1e345f2ab60c9d2a6044fadcae81b8b18ce4b68eae5ab638e563ae0e0f285c1dca1fe899f5ee4f0da5186a24f6c757c1a42e41e108d051c3bab2f80a826e8675e3dd5c8b680b277207e90ec7d031fdbaf7a362a3cc0f34dc468b0b5c8a1861a1fce355b55d9b34dec1c280eff4bf36f9f147dae4c416a0a2182f71872bff3f13d88176a39054a6c32c7ba90b4310fc9de87a0b89f924555fa72e25d439ddb70020debf9cb036e9f8b9dbea2bdb8031b79d0f3bf0ed722f64cd1a95f36252a9696612e5202f3fa57f6cd7bc5f6c96cd12f30628e2f5f232dd545f7132124f29660440951cfd0372e6c6164b33820a4cb8f7abf422a0ab493d86e72905fbce84c9d870802fcf75dc1d232c0a43155fe97135074ac67ae58c36e8878c22ee648c2072bda5f03f9bd0e80fdd27f8583fffa122d371417293b85d5c4bf1763e93116c8fdb9f21af05397d5708435d4a4c97b8bf4abdd90a6ead1c047bf319044a6c147e2e801f7101556fd00d6727d497ed2edfdb0fc1200034cb6f7198f1a7f4c459eafd69744dde94fc8b9c41555f57bc54ccaae16f8a774ca98957d40f019ca623a64188ac574b6b72a9260ab7646df8fcc299b36f6a3d551c00d80c8752b636d79edb3cb19d2ede082775167f053d87e2677375b42a92c1dc24408d0ba70d6e32abcdab1afd086e4e37a0ca6c1d04336ddb9b6543631ab5db2f16fef0442d5984ae04730907d683cf7b485ea5f1aad2f56c1dcb87d6cfca94fd682457fb137dd6b314621f98c852ccc4d40310abaa66593ab447cd6e6f4a9aa95b520918138d5461883765779d1f7aa313e8a2b199d37a25df0aa30e6f14335ceed45a269ea7de3d717a201cbebb51b64331433c3a2196eed553b18392d05e0bb6c4063cd915759be59ec673c6468122b9b45b9a00de56ea5e90c6ff11b83c1dd8b051ccdb465d9adb036879118430d01921b361f4faa43744ef03b32b9d8efc97bdb2a1427ed1bac923d0537e858ac2bc15a615b42a52da106d7d254811cfc2d02065267d413a62d8d8dda839f7a393447f43610a38ff92f46cff8589e3c94ed63adcd9d2ca9e3ec52dfa0d0689da4436e4dfaf634a17ac9fc9a1b8a028c1202040710056eca24a43759535a9043f48a0efa10a2bb457373c0910d48a04715262a593c3271d91ec2dd2ef629fed837313218e431ee387d7bb64095c7df12125b72a36c3bc2d4e4eddb4ac0f75658525e08eb709263fe762bc6cae5153cfeb7afe821d5c314de991fd76ea57b303f96c569fc5c05f84d3e90ffffffffab15610f29844e32cda8a8b1baff37c158be3e5df7600cb9e4ffe063f0a71af53539172673ebb92ce9cddd434654faa18b3126aeb25d79ae5790c2a0edff95e63a20e9e76221242125c7c27b0b7c0c67b6fb9fb6e1ea3c66018a237b6212c5890d5942e396b859bfc4c755b4e72974863fc99beab4aa5d9c9f98335be05313858cc30bf6720583af7268aaa8ba94467ea90155bc1d7c262a7cfaf55eb34aa8451859a071d2e3244b6022e0016c6939872a64c6ec25670664af971d911946d334a6797823b339e848c66d7e2082236888ae66e77200538c3b232f5c641f71d8a3f4909387b0cfa0fefd75c87e841313bb914878c2baca791c1842b20dec3758ba58c59f5151428be32d3c438d0884ef0626a7154c9e0e35cb61448d0a1ffccf4f0b12c02e2a5299ecb2261be28f1ce4e23190b4d254da274db1be7e1530afba96f7095f63cff5b7552b8c8677bbb103aca800de92b65a6e7c2381d70f4475879ca0a29993e2105f1f6fdb95d504c683076c9db0224c81bfe825837a32bb8f8af6b55ba65d29fca566f28bde7458147bf8b86925d7f7469b5557141156a5435dceb85a03f5cdc283c871a32e59d8efe3578d1a7c2c7d3987621cf7f87584c7b1101b2b43b9fea00444b9de4a904b49e9a91f7001ecf9939ff48dea7026a4c64f8e17c6e78f3ccff2dad51e357efe7662b78ccf832866c487edde7771d1159259ea47f32cba47128f17f8c1cab06a35222cb93dd990822cecd91c2a2b91f8629f7cc3b9680cfdc82fb56012389eec193c62b13b42d66504a496c5a16ff06e8e00eaa02ac6d317a27070593cb4680e84f18848bf41ad862aad7503a4e58b01ad413dbda85dc21a8881ac18f14b3384087ca3aa4be93daf45d643f91e4a14e7be3b83548b945066374c80eaa410cbe18a5901e69472f5052188ba57b414667164db0016efd242eb4ebc4a6dc9923639bc4494733682d96ddb652997a799fa801ac6b623b93c3effdcf7c41820d1258898c63f95dfee4880e698da062b596e1a70843ba65752d3857828357a22111486a867d5b1c2dc1ff2d1cca11474fbb2ab2571f3fbcdfda3b304af594ec48877925d7a1957b9c52042423ad3452261d5cbcf644a2e3f919880ddeee5e6a64d14cfe939171aa0e5f6097214b98925ac3adde9690e00"
++  },
++  "payment": {
++   "txid": "275e1f8b79fe2a8a61471565bae2062174ab096efb3a7ae7bf11ba2a55e4c6dc",
++   "height": 112,
++   "rawTxHex": "050000800a27a7265b16a537000000009800000000000137baacca54626b2328851b5a92f48642c4913a4e22064655bbfa2a928d1827629261ec5f8b48e29119d31865459e1567b7ccc4e369e9c2bcbf1a1181989ac16876275bdd7ff7cdb931d54371b6d34dcd855bdde20f6a6896efa0bf90ee68f96b039a0a020a0f77c860b2a1f739cf279d44444009c3cadcc3be01a91b171aa1f6b220bbf0b7c8e1f433256b86f0d6ef00476e6c731d4bf649e0afa786818c78d231b51a374f6d48a2af439cf71a138f3514eae37faa85fcfaa0afce477240bf20b547623889bbe33c6d730a9791fccb58052886352e58e3c237cc07386b4b44615153c19ae1388e355eddb59c631f2ba71ad92c8e8f989bbfe0c1b6c8314454eff2373bb46cc725e5a28a1b424a3b41f9295f11f7966f88a3e1c694e0f094c599db35e72e3e4c4ac26797c6cc7a5b5f5e79c9d1d270b98d21e9c26a6842e6f3a15db331dffbbe011a8b1c202a3afe0a4168af47644105cc372ad54d2a55a4405d3202846067a3efaae325cb5ce27c9caf7110d18b273f5b9199c7ecd50ccc29c937930dbbd068abbd1a04dbb8e854a95b3916aa8432c0f79255ff288de5f1c9c8c58ace58d571d52394cddd3309df014ef4931d5dfd30874a424dd23fb41bc4615059a2db9312da17128df57981e38fa15a600e7cbf1cd8b342c0690e660df5a8664e177d607dab25fb2f3f6120de3e4041f1b0009480ebd9af540bb1e363a11ce060434aa44dd710138d35ddaa9348eeebcc61a44d115e482343065ced90e2de12ef364113602d621aad7d8dd24e6aac74dea728c7836348f3a1e6ffb27a5092224f315804474d86c94dbc371317559922981de554dd88e9c499a9f1e3ca3947c7cd90b412e90f3ba1102a1d96aa8be07e4bb50ae7a28fa2d3b5f140aaa88a185e1753fac1bfcbe08ba6079b34afc677b03829ab46d82c5ef48555378ad24d5e7b3c1198ac67075120451b40659ab807750077635163b131f195ece2beae2f16546ffd6d3323f7ae1b4c6a337aa25d336083038a916165dd44acc85def248988e6bec4399f3b2143561f9988d880181afd3f1bd7dd33fc67f6a002aea3a3072100011937556c16c26b1639f4bf7d6f334499fa20904d899110aea8e2cd3a82ee440c0f23451ab35da910e01a813c7a9e8238021257e3737361a4b4d42f9c8b5cc5b24dfc161dc5364707775808fbe1ae85b62a4dc934c5ae3e384edf47e73bc875c6c986c718cd58a0bc0aceb6b2413b383200c830bdf949504e5f3030a8266db427fef729ce9dfb8a9e6f5cb6b8cf521e444dd45c7a9f2869b53bda863d15578013f79c9e3226da3ab0703fefdac4ba60bf333d2a9f2132e768ba4cba9c747e861e7ea8458625296e86420d875fc6d478d668aa31e846df89a3d93ddfddc8f6d6ff14536de88efe451d76937fd6ff14cf76ad4109ef33f161b9f89b4a8cd3d667fa19457cad06ea7644cf8a1ef7e70f0a06fe35789f186f147aae7df5cc36916671915b43a7a506e1023f0c1ca07708aa56e63bee633ce3e2886331909add8e17efc1a30c85ea9aee17bd84c65d02eaa43b31eb99e502859f56078185cc9583663bbab89e1303e961b1fe6dac2176eb76d00292eb312f781285840c21b961a6d46427ad11ebabf45d7751819003770937c8cf712d3100ee90a742dbb8e92b52d95f603e0ccd93a39898ed854aae0606d5273420eb6af562853a4612fa143eb23f73e3f10c6ace5005ad734869a4c9826faaf9262fd4084b93142f07ff54bb326e972d8116f2c0c62d3cb2087f697f0e558fad40d7a8dfc996aa1c90022cc52eda6413528fd724a2131b8f1374788f42dcb232d3c151f8427c2a384b48d9032eeb913d4c9951e76f3d0b750e6090cc7e14a6379bffdeb998975c09dd2616f8c93303daa5d51c478faff86ff1a61f7b163f6a43b1d2819e6c50fd04e03ea080db48d7411dcf673025705fba672235bbc18da14b94ddc0dd718f6ffa3d37791526fc59dc22ad35462711540813ac74b90050d78f5b2bf7a9bbde35d29ecd4616986a56ba6f62662063ffe9205fe5d88329a53848de7cd08b5803c95ab48efa41f03cb451ef891197e6284bfe4b5793b54ab3037db9c7ab0eb4124be331f264afe020ab7fc615071d8710a81ea2fb3377cb7e381939e739cac3823c68227e7394472c717374c416ebe8611c7899c24b4e4391c4e68880d1496ecb923f0b137d1f4f988b005552171f99ab43843aad4c02a422409452744d63acdb3873e9162492c532b38124d9fa2213d913a80c89cd42a0a88f8277f1c351db58fe7c9ba34a11efb24b2bcad535355106d4471152b7c888fe0f996b1a578e1d783a0f29fb870cf2ef94589b4a5bca396fe3c44e09367a2e5adc09a0e1eedf2c06797fddb82425d4161733ae00b7a41351e90f09bf160624769c52f76888e16aa1080fe6be8f6ba1fa15d3255849aaad7814a8bdb29e51eaa8d716ee8ba6606bbccb6eb21c5bae2300e59c55d52ad81ac95dc6d9c678a1f207fc7df412014f95d84c5df0291010158c5e44ff1b1c82ff0727b019a502418380117c2d1129e1f59740f0d1f4f003f4bd9810f6bcafd86866a53b50f7a423853c226260bfdecfd3457eaca842bdf7e9e69e565fcf19858b0c147efd9449169d4246394a5723f36c100b0f75f2d691906d54ca7c58ae0035b8dc5c5790e59d6f9d05b536544ecf1f47af6a8a4c5e413c0ec579f64c35c2a1898d864708da1ebf1664549bc8eab503e1d1303dfec64657cb4f2816ddb73d3d37798e2c4e8f410f75ee3dfbc8e7b216f0963d4f8189694bf72adf27ea51a28b0e7cb1440af15ef4a7f5ea2789e80bf449b8e8805baf203bfa82548f01c976765f70ee2d625d8d4ad573336f53d13ba1f6719830288f88224255432cb736065782b151440f137c77c6a730d743e5e82495dd007ebbffe8f1aac59438e802e2e3fbddce0c523020bee8d1d6aad70585d13f794fee3e7a419005301a4aa1fffe9c4293cc15dd903014f113a2994f2aee708ea67c7cb6f2c4a555e10cd2fa018463fc483b51eb773d75c0dc980c599bc9efc2bfd9a61e4d714d94b6814cfd053fdbe4b76e8de787fd00230d340f1ccde3d64aae40c61c1f9d61e954bf231145abbe4184089e581736ba08faf356b3d64233429781d349b32e057f894f0fc830c34a957fe410f3f2afe7780203ad12f32dcc7e94bc8f690b3f19259fa830da1c915d383cae7d1eb93dfcd7db36811f065b13abc7ed823890a650709565ab11274c5d403c470bf09911ea3470760959170e180292ad4c5a1888be09bde50f3876a16c27aed2cecc7efbd09372fc3fe1659d73f05b7e2077983a000000000000920376b8feea7272d0be125b709f882ef8a99564f27a94848aac60ce71850f1e85f49afd07990a22982877e54d49a18b086e83920863f2c7fa036a39735d7c4635b801bdcbf45893c8215e90167a25f7a988fd185d67fa572ceb2d0eeb05018a58e7102d14a4f2109c4984fd34acf45c68de108edcd5869ca0e4c52cbc7859ec078c3ef790cc774fe777aba89ba0b798d4a4176c44b5e71a54673341c9906f1149a23da34a5dab256309725d80f43046a13d6f2cec2900bf7197d8b38903f354b8066c0aa88852551c2f498fadef2b9062e934c6d23d2b0c847abbf62fbc0ec85e04dc939e807ddfa2c9899f08089e8a15f4b732d030a16c42402f10e856b341d61e1a1ec33549a9fe675c1efda4c6e34a73aa4a98bf8528f6f74ca03402f8008ea9f53fd847415391676a9025759127be14a871a819d19b2f28f3538e3ec0034683cd792259b389888d2cb47370696fb37d83dda88cf31b88ceb5cca9a8f41b72a0606b635172b012f286a913a87af1efac4c1d48351b39e39cb5ef380b517011d53799f6cf1ce86ce4193c6a348a3f89470386e5c70e4d19247bf35d732b4a1c306c0be81a17abce4938887410563badf644f3af967749ace9689667cf1f854e1261fa65d2f0a8a50dd6e85a1270ed14edb4531be01b63eb4052c80b2634c28e60fe5463170f32f211d2d8e68843f61fb4f3991eb0aee9aaa91cd6efe37dcf93d904a6e8ca6a5b019a29040ffa27ed9674f91bf189525245bcdb453a35b796aa36bce2f5500bb08ef2252e02ca77425d82fbe2c26374ee2e2df3e07fa821c3182140630b8a3e2eb15e85e76aced86bdf985b51cf738367cc9310d7f1ece6004ac4abf394f9624f3c8d98cf977dc6dab81956981a22d8804e7ec6c7061f651462f2e6501325357e9191e3b0191032d29bb3a5f78c53a9185f0efaa65e69ac37b6be1bc55e863e3c162b585824e14bfa725e394749b0c4552bdbebbcc8c28d26d4993da4f5f1ed035ab222bc0ba6e63994fc53db01c58c6bf4a9998f66c6b169a832f491981083c15d1cf96646308da1868fd954fa800957e7be99bf8ac8d3d90b2decd4129e78ca45df2041060ea3d6a2bd916ca528c53489d7ffcfab9746ca727780c2d30b5ed19c25c212758ba823a4070645ee90ee19926f3ca6ab7caedb0d67c8b7968a0b727ac5dc34e3b8e58d060474a1d1ba8e67b4805ef3a64da172a715a84cd72a90f95ec3f1485d7eeb1a870722c65bebeb68e73031e6baea67dcdd8a7ac63942b30601c02a443456b1ba80804e4151c4021560e2003f608b1d0400"
++  },
++  "nameFee": {
++   "txid": "1d63f0abeb462e17b5f7369030c8a383cb53702b005dfd49c00f5cb59570134e",
++   "height": 113,
++   "rawTxHex": "050000800a27a7265b16a53700000000990000000000013ccd82f752420a4d0bad9fbad1ecd76f4ecd6dda343dfd596bd3813cba63f0e0131915a1e7d86bd4977a65cdae9f344ed4f4252ea7e272f6869b29a068207b6d65b8215ba3c9d4692fa795ff2a9b7ad8af20e1d592d7a0ccdee302345b8be2a402e5d7b41f4ee87e9e4df01d712c545c9412425087efa226bf8948895538424e85761bead7dd491eea41fe5497af229f376d6ad4f95f7e0c369bf0e3760c6b4d3611fb7372ac220e03114a2903785438b63bf6104f8af1e78b6db7bc82358269a5f07b686d6496c16e9424a9e0829465284822bd046f2f3679991c4914378076a5e00b93cbd86c59a8c982b117e6c3eb44928b8e3cf31ad06d4384370f9fbe0de90e045f14d2c39c444d2eded18ff2347e099d4aeb82d5d3e461c53acc6dc8afe97a5349da8aae4813d63ae5456afc9b7d5d66756613444a22e3768694eb49de97a8ce41107d7e71674976e61b5347d07b1a565b107bfbae585373462eed143401d3676f339b4eb6b14ab59956d36a18c275008a0d29239f97ffd386934d1d20bd29120b8949a64140a5bf6e38c2f8bd2864aaa73355bad20fd4d86b1c7eb8035d228a7e5d5321580a4b6093a84b1b6ae9cb9b3d7238e73cb0ff1728409cb52ce6780e5dd0db0c7c9a9a443cb29da0b6a606e0829397c19ca4e2169ab9f3862492a070658ddb2523bccb25604e8049d51447a33dba953a43a8c40acf7e957d8ac19a3f11ac4869c260a954036edc0b85edcb2892bb51de3bf28642e88036f1e12fc1ee9aba1a8c48216812eb7f703444a8ced1b357a0ae2da56a2c4c548e14fcc1a121d07fd9892bad4bbf60f8b91bbb0d7b9ba296f4aba30b07b95c48375c6fc91bafaed03374b35da7e74943989d3e6c75c9502b5f8581b7735f6df89f614d37202b6c8f6188959e3538f098349ce7850f1774a95318452aec1f130b4b817d52e132b695cd38eeb15ba025cdaa2db94392629228a4bba96609bef4eabb08d553939dd156a6e4931ccd6948783733593485eb13bea30c2d149b99e66af84d73c1dc33f71478519d1217a6a178cb4dd37b45b89ff579eee4df9979de81a0917b51aab4b03933f26568723317c40747714a79da20071d7a5cc6fe9683effe1aff0db03c6449ac73bfe9699f05f0ba305043b9e0c4548f3bad38105f357a2e6917239717e20e3ede270aa157ab62a8783f5cd6bb90bfd14f25ea857ace101dbd658a09c887e2478ad2b30e37902c806bb9780813c1a504756ea2b651226c8aa8a135288b1fc19c2a3271436eb7534bdc5f117f20df6b70da90961c96165a8969f312ebab858a141f6aaeaf660c54871359daf21b95c05872c0db9faf180290fe30cda5b184bb4cfb29e520b55622f13f8d58e3add09f5b1236d8d36808805bcd9e64be4856ef6fe1c6be7b3e46a4922aa10d672ece0f4c5ae0218343dd86b7139b5cb369a62ce82195a036b7e734142b8ab667ef60d05eb4f1366fb3cd5327463069553303a9d8973746c349e38cf47cb68594dba70915eadc9cf413de1bed5ee8d64a3b24faedfea2c51443d6255f306889320b5f33f76bca56d914808849e8da2ab6e99bb7b74a1f6b384cc5b1f1082079d77ae48ae6143d9f871258fe013f6d1bdf15104af0710d388e82f9d8492a0f2f96d8957059e491d5a21e13def4e67979122854e410d46e4e4b061f47f578dc9fe382bbee1ba08720f51b32254863b53bea7687822a20d26399b06ae8ab48b260a5db64cdceb2365a63481a95c20ec2f662a100af0699606999c4ef037ccd69a11e8afbde54bdfada5d5674577dd7d34ae49b0f068e71cbfd6f6f4e488c65d3621cb9689b6d6005a2e934019d3c92499f49bb1d62efa785fad35cd2a1c5c9d940a60266787514aa3ee61081a2dc7355be74259bafc6e26a2bb7fcac92ac8202dbf0e6fdb86d67926d2e22fcfb421c258a3c7fe577541b5a90f8f27f02cb761a51b21a02b7f2ba4ee59fbfec883f638ae19eb36cba9179d8a2e320935f55dcc1176c267c844ff509d9da8efdfa3d97b4fab3009cd964f35750cc6b2711c5f4029cd082f494bc183cfa85f6d23a7f0d6b3adf5d3c0c96605b788b0379ba50614baa6fbd1c369f89fd4ef5d6ef0e01d5280aa1a1c48c2da3c43ad4b137fa8de7313f65bf05705026cddf21cda2690d2e990f804f38ca0fd425cedbd707e796a04c9a281e0c16433a288c7175a18ec0dd4c8388bbe579e77ba6942239ff4574e2562e57cb4975527f3462d15361e474ac9a25940d66e5d059ba9b102700000000000033c50df37355f38374e784112c9f6a1142e2b8e2f64f62fe958fe07a31d11a5a96dee663b5e1602e2054dd315b3cceefb6dd15525c93415ab5aabdf46ec4acafb4143696729378942bf172326f53b1f0a9ed06177de6d51f83bff2b42d2175d60e5d37e62cd974a944ead6cfb00b86a451a15be07a1f9e159d54489e0b86d8de0a5fd05b1e9df12be6749c31493e9750dec29ba6a33c261e94a42cb9aa00f63095b2b1ddfc0d9b291f7f7ea675e54e0aa134aa886d15e6f7df27b021990fbf2a132aebaee05511f556dfa018f07cd51ab97aaaeb7529f91f169ab068eeeb701c5dab1f87baeb67e4de03a71d9e06cc068121026682b260843b6a05499ed76c9065f9d9e964e2911ba94b5cd3469611ed6fc610eea508d86f2373136cd519280ca9ab0f045f1d125dbb09d9bbf83f0d7d2fcfac6528ce7771caf92a182fb7d9f5ab6295eaddf9873118dbd5feee48592a807e7bef7d9b889fa9621e5012ffd8adb2c25db4c41f49114f3ddbb8fc9b94efe5f56a5f6ded498b802f20a410fcae9b1107ccdb660065a492ce251ce92115215caacd27179fa3a1de93129322429e18224acef2641d57cf3b55db68fdec92e7a0259caae7bed6e7ddee0d8d79802dd343ac4cb41d4f56bace75b64b058d02ab8fc9bd5e97dcdf85f328b62108f4a3cca67ca1cb9034da04deca532a5bb25791bc419b9ecf12c4b66a1b4e95d0a1168e366e8aeabb2131c3ebdbbaf462660c66b9f4f35855a976610daf858e1279b48088fb8054f781269f9c354349401659c096287e88bf5a5f9bb23efab8ffd296ce10b49c9d9989586249d62c1d45d7745ae46475d93f9a7a551af7569da2f56a9580cf29c69104e1b432000980043ebc6aa576a7fb889c02e07b27f19191c60ac6cbb963ed54c006bde1bf1b4bfee379338a2b81d98d77ca86148060b6308248aa9e4203ccbd9bef955e6eb16cac31464e251e8c0f5b543aec5b91c6e45e4ed0bb6bfda40d495c0bd8c5fc484763771526881da5c6b4a5e52e33fbe98d656b100d00"
++  },
++  "withdrawal": {
++   "txid": "5435ec370207fa5ed46fc7577d620825bfc0f9c01f277292f89ee3ceedd0242e",
++   "height": 114,
++   "rawTxHex": "050000800a27a7265b16a537000000009a000000000150c30000000000001976a9140af071571d8994b5627f2fbb1ec0acecab748f9488ac0145d052c281f699800f00d77ac85b01cfda550224c058fd28d83bde67e7bccf99740f25123ad0024750f2a2efe46a301c5d5402f4d8927249095f916786ccf1d49685752bd8bea5ac01462cc27482eef77a27ca9f3f903312ee65a09c1dc5a0b502607ea7aadd6e56a97133c331177975bd2787f4da54a7edbf45797b3c7f5ff569db3884a35ecd6d0c14affe93b13b5badb7f322a90cfc5bbf5c6b3608c25efe541da62704779a54601cd60cfeda2f8d44747beedd794c75d78ac06cfa9ff46b8829a5844ce9f87d5d8e282851c76727c898a05e213416f77be319aca10d897b34d3aff9507f9fd737373de36af580f8d20ec0f79e428cb0415cf57c1a385c988685d924a2bf7b2a4865110075682d071ba73bf4aba2b0aba43f73f19e3b2f0ab8908a8da34228a044732b0d4f9c1c94be6217f4b17988ad006e14620370d01b880119d50ec767be6c7a3aa8f8a6e97f819a86df481f8cb4d665d3ec62db027cd00fe674f5f224c1d52a0054d4ec969d247838796db66cc29afb98350f2155d7c20b7e327fe67f0277b840b42d5265ce5246acfc0437c3ece2b550934edb9dc3edae8d7d6dcbddac4d59b09c38ad3639c8b1b878402af6533d5ecd7136178adb03830c5caf78df0bfad066da68c3abfa710649d044b41adc40954b108dcdbeea43563f256ac751afa679bfc09d1068cf20af7fe6f413c985b24170a498c0db789d7cc49a1aff5b47d76f6a9d0d87fa61483417cb9894937d77e3a7ce8b0c9022a91bbfd802829ea5cdab1e8556d220e5f4b57cc2e7b376f65d302bbffb7437b4321b49e88baef8598d2786565387176e361a4567dfe4e6c63b83807decdddd70573e3cdd5d381831b5ae25fa000b56225f18cd80321a3b36e8520c26024a097a16aa45ee4d8ec8e8141a54788308467065e573634daa59b6a3074fbf0b32fe80dd97eb38edbbb31fefcd490f405d42815cc1f3fe84e1bd5ed26c5309e576cb1ac963e1633ad96c7d58e16e1be721b1a2f1068fd88eb29e24dac29edd129e9eaa2d192d1296b65d649e65a68eb875a09206019422f3d6375e7faa39636f81234590d211e0d63a8bbec94996423c73d63af97ce8d36a7e6af21e8013ca15339b359758d1e6ef57ca1b823eab941fcd82861218d362a3b220d99425418f10dcbf67e7a024e1003be543dcfa8dec0f92f8144c432d85f846002a5842285320f62979102eb392b9848df7a2f7cdfcd3d54e17467046150926f196a6093c416e6e3e77b8a6f734ec846bb330c3f0dcd510b59f1b2fdaa609c07141ed06787d1ae8ccfa5cf4c0b70e12297d2e9b913b3e08ce29521710ced6203863d417c20967f3706fafb9f1dab780bc8040cbea3c766ed5e93ba4747a6c19e0087244f62ba257badc2f43a374a6986723174895f27e8a5136ee8bb9d74832ce54bf64cd1b19f476bd36f1715f66934dc6570bea1de63d7c662dcee343e9758f82dc05b115550d6c442b9fe0a04cc706a5659b5d832609b4020790e23bd7ca05cebad3994ebb14ccc2e1ad4764f9a05e8dac4c389e619c9e3e114721ac3aa2035b6981d3197f831c571c331fcdfc746f408af56b3f8a8ae9045573cc1461a1630f82f84e60778f95f214a6b026d3fe37454a6a5fbe823e8b83a67c8202372524493d352cc133eb79dff13c16f984bdcfac1bfdfcf33b0aceaff30904137309eeafddb35da8df648a48954605071b8d943a1c4a6abeb343f7f551ad95cbe1c8faed50bff218b45322fda5f08482ccaed4068bdc9333ffd1eac88a5f8f2917fb27b0e4dad377bb5b4c1f050b7c5997c5c68e07faf89ff126d0013102dc8eb021dd5e3800ff5151f2702536a879f9a649cd3f85b10e5852df6b9b179a69c9b8e094bed17c07e7761695ea2082f8f0bb4f564f55d14b2850e1775f395809166e43d9d410a5c8756efeac928cf1ce45db0f6125ec5ced63cce2e4c6f5c6d6b611a960eacf8d4cf700ae97057bc3041eb8cb860597febf0dbacb57f12a1910f9b9e106ed362bd5f3d13a4202d8e6cb194f78750a9bb974a94ff1e9909c0a8e1a53e752a469b0185791f67740be426d6404e38559a5439b6f641a0dae897e5bb43d14fc738ca7d838f87a0b816ef50b9867f5c97480d8c64f46854e2cab067bb548dea301328039f96570d1ad205ad2df4204af44030ea63cc346fa01b120d212e90912e165748e17a8f15b6e39b48fa201257c86a378835fe5d87fa0d8aa2a4cd81803118fc2044cf2e107742cde8ae93f5b1b0968e8fd000000000000f9c290747d931bd2121b0dedfb1971d992f361092513bb86b3c72dd093ba144a970c0a3115705df83e4a4613006cc2c6114a56997f7aac7727848fc4f76a10fdb15f10fa4b7cac6a7410ea7ecb6e7e79858b860b30de0df45cc2cabfbaa659693581c07b4940fad41bb12e32b719ecc5ff9db43df8edb0aaddd50e579c4bb28300a56afa26e7d155b7a4d5023661570ecc604cacd44de1db6302d4591609d43c52ef965f9bc49713e3548d876e9e9498afa3a5c47fe8c71cf9ab206f925aa68dc4361c322c62dae5ad1f7a3c18f7f0d8ed1ff7e19d2189e29c0e0f2c6dc67918e27c7d412f8bc1f373b0e3fb9497469fdb6035dd0838dbad585e1fd3089bbd6fd545041fb5ba03c2620e9830b2afc09a274a3263346aacede31c29faa4c8010589f8e9c8aa97521755ca5bd4d0877ebca9e37dd51e80a5444d992bf6aac688f7a6caa8d82bee17a3dd36d954b132c77a87bbc63d51d07ae3ccf67737a266b4cb947b2ba5d4925eed5e98096df892cb61034a4bc2e9da7566e0cf3ec2d3b0e0e909c3b27637e2396e3708f297df37b29e25720fde762c9008f179b1aaab03344948d652e8dacffda4b8ab79fe84e39f6f97e94fa48bed6f8baf534141dd6b731cb1933fa2f3e3fa25669495b2944c0540ed219fd8a9cab3f8e0d7b731fce22585b8b227844211521fa685e25d452a027ab5f739fb725d5a9d8f8750f0b9381910ec66d17539ec3c2b531bc8778a599c0194e3fd011739d7c99646807e9f878ef238b95fd306a7a780ee66cb43d8c6568b74751e17f019bb13de63ea2af75317e40a5283eaa4cdb80702022815fe2bce36ec5dfe1fb9a361026c99f7cde0a3bffe7489da39fb950f6630b2136dc8c4f63e982428f51a62de8b8110e9def83cb586eccbd95ab358201421936a11258486ecdc3a20af5e00334bd87329d8b1aed67cbdb25b0f366f9226cbd29c591fc5cc5b7dab072cd9d2c9de5c5039cbc10bd2e76877b53485c57fc9126a8aafd44f4a62513a1b7959bdfb8f1fe3dac9392bee0d00"
++  }
++ }
++}
+\ No newline at end of file
+diff --git a/crates/webzjs-wallet/src/wallet.rs b/crates/webzjs-wallet/src/wallet.rs
+index 8fac959..d15cc0f 100644
+--- a/crates/webzjs-wallet/src/wallet.rs
++++ b/crates/webzjs-wallet/src/wallet.rs
+@@ -9,6 +9,9 @@ use tonic::{
+ };
+ 
+ use crate::error::Error;
++use crate::sapling_beta::{
++    self, OutputPool, OutputRequest, PendingUpgrade, ResolvedOutput, SendingStatus, TxKind,
++};
+ use crate::BlockRange;
+ use webzjs_common::Network;
+ 
+@@ -31,7 +34,6 @@ use zcash_client_backend::data_api::wallet::{
+     extract_and_store_transaction_from_pczt, input_selection::GreedyInputSelector,
+     propose_shielding, propose_transfer, ConfirmationsPolicy, SpendingKeys,
+ };
+-use zcash_client_backend::data_api::wallet::input_selection::SpendPolicy;
+ use zcash_client_backend::data_api::CoinbaseFilter;
+ use zcash_client_backend::data_api::{
+     Account, AccountBirthday, AccountPurpose, InputSource, WalletRead, WalletSummary, WalletWrite,
+@@ -50,10 +52,10 @@ use zcash_keys::keys::{UnifiedFullViewingKey, UnifiedSpendingKey};
+ use zcash_primitives::transaction::fees::FeeRule;
+ use zcash_primitives::transaction::TxId;
+ use zcash_proofs::prover::LocalTxProver;
+-use zcash_protocol::ShieldedProtocol;
+ 
+ use zcash_client_backend::sync::run;
+ 
++use zcash_protocol::consensus::BlockHeight;
+ use zcash_protocol::consensus::BranchId;
+ use zcash_protocol::consensus::Parameters;
+ use zcash_protocol::value::Zatoshis;
+@@ -303,6 +305,7 @@ where
+ 
+     ///
+     /// Create a transaction proposal to send funds from the wallet to a given address
++    /// (legacy single-output API; Sapling beta: the recipient must have a Sapling receiver).
+     ///
+     pub async fn propose_transfer(
+         &self,
+@@ -311,43 +314,71 @@ where
+         value: u64,
+         memo: Option<String>,
+     ) -> Result<Proposal<StandardFeeRule, NoteRef>, Error> {
+-        let input_selector = GreedyInputSelector::new();
++        let output = OutputRequest {
++            to: to_address,
++            amount: sapling_beta::parse_amount(value)?,
++            memo: memo.as_deref().map(sapling_beta::parse_memo).transpose()?,
++            withdrawal: false,
++        };
++        let (proposal, _) = self.propose_payments(account_id, vec![output]).await?;
++        Ok(proposal)
++    }
+ 
+-        let change_strategy = MultiOutputChangeStrategy::new(
++    /// The change strategy every Sapling-beta transaction uses: ZIP 317 fees, change (and the
++    /// shielded value of a shielding transaction) to Sapling.
++    fn change_strategy(
++        &self,
++    ) -> Result<MultiOutputChangeStrategy<W>, Error> {
++        Ok(MultiOutputChangeStrategy::new(
+             StandardFeeRule::Zip317,
+             None,
+-            ShieldedProtocol::Orchard,
++            sapling_beta::FALLBACK_CHANGE_POOL,
+             DustOutputPolicy::default(),
+             SplitPolicy::with_min_output_value(
+                 NonZeroUsize::new(self.target_note_count)
+                     .ok_or(Error::FailedToCreateTransaction)?,
+                 Zatoshis::from_u64(self.min_split_output_value)?,
+             ),
+-        );
+-        let payment = match &memo {
+-            Some(m) => Payment::new(
+-                to_address,
+-                Some(Zatoshis::from_u64(value)?),
+-                Some(zcash_protocol::memo::MemoBytes::from_bytes(m.as_bytes())?),
+-                None,
+-                None,
+-                vec![],
+-            )
+-            .map_err(|_| Error::UnsupportedMemoRecipient)?, // zip321 0.9: Payment::new returns Result
+-            None => Payment::without_memo(to_address, Zatoshis::from_u64(value)?),
+-        };
+-        let request = TransactionRequest::new(vec![payment])?;
++        ))
++    }
++
++    /// Sapling beta: a proposal paying every output in ONE single-step, version-5 transaction that
++    /// spends only Sapling notes. Recipients are resolved to their Sapling receiver (or, for an
++    /// output marked `withdrawal`, a transparent receiver); change goes to Sapling.
++    pub async fn propose_payments(
++        &self,
++        account_id: AccountId,
++        outputs: Vec<OutputRequest>,
++    ) -> Result<(Proposal<StandardFeeRule, NoteRef>, Vec<ResolvedOutput>), Error> {
++        // Refuse before doing anything if the chain moved to another consensus branch.
++        self.require_sending_allowed().await?;
++        let resolved = sapling_beta::resolve_outputs(self.network.network_type(), outputs)?;
++        let input_selector = GreedyInputSelector::new();
++        let change_strategy = self.change_strategy()?;
++        let payments = resolved
++            .iter()
++            .map(|o| {
++                Payment::new(
++                    o.recipient.address.clone(),
++                    Some(o.amount),
++                    o.memo.clone(),
++                    None,
++                    None,
++                    vec![],
++                )
++                .map_err(|_| Error::MemoNotAllowed(0))
++            })
++            .collect::<Result<Vec<_>, Error>>()?;
++        let request = TransactionRequest::new(payments)?;
++        let transparent_payments: Vec<usize> = resolved
++            .iter()
++            .enumerate()
++            .filter(|(_, o)| o.recipient.pool == OutputPool::Transparent)
++            .map(|(i, _)| i)
++            .collect();
+ 
+-        tracing::info!("Chain height: {:?}", self.db.read().await.chain_height()?);
+-        tracing::info!(
+-            "target and anchor heights: {:?}",
+-            self.db
+-                .read()
+-                .await
+-                .get_target_and_anchor_heights(self.min_confirmations.trusted())?
+-        );
+         let mut db = self.db.write().await;
+-        let proposal = propose_transfer::<_, _, _,_, <W as WalletCommitmentTrees>::Error>(
++        let proposal = propose_transfer::<_, _, _, _, <W as WalletCommitmentTrees>::Error>(
+             &mut *db,
+             &self.network,
+             account_id,
+@@ -355,29 +386,120 @@ where
+             &change_strategy,
+             request,
+             self.min_confirmations,
+-            // client_backend 0.24 added a spend policy (which pools/transparent
+-            // sources may be spent) and an explicit proposed tx version. Default
+-            // spend policy preserves prior behaviour; `None` lets the builder pick
+-            // the tx version for the target height (v6 post-NU6.3 activation).
+-            &SpendPolicy::default(),
+-            None,
++            // Sapling beta: select Sapling notes only, and build a version-5 transaction (valid
++            // under NU6.3; it has no Ironwood bundle, which this backend cannot track).
++            &sapling_beta::spend_policy(),
++            Some(sapling_beta::TX_VERSION),
++        )
++        .map_err(map_proposal_error)?;
++        sapling_beta::check_proposal(
++            &proposal,
++            TxKind::Payment {
++                transparent_outputs: transparent_payments.len(),
++            },
++            &transparent_payments,
++        )?;
++        tracing::info!(
++            "Sapling-beta payment proposal: {} output(s), {} transparent, fee {:?}",
++            resolved.len(),
++            transparent_payments.len(),
++            proposal.steps().head.balance().fee_required()
++        );
++        Ok((proposal, resolved))
++    }
++
++    /// Sapling beta: a proposal that spends the account's transparent UTXOs into its own Sapling
++    /// address (version 5, no transparent outputs, ZIP 317 fee).
++    pub async fn propose_shield(
++        &self,
++        account_id: AccountId,
++        threshold: Zatoshis,
++    ) -> Result<Proposal<StandardFeeRule, std::convert::Infallible>, Error> {
++        self.require_sending_allowed().await?;
++        let change_strategy = self.change_strategy()?;
++        let input_selector = GreedyInputSelector::new();
++        let mut db = self.db.write().await;
++        let max_height = db
++            .chain_height()?
++            .ok_or_else(|| Error::WalletNotSynced("sync the wallet before shielding".into()))?;
++        // Ask at the TARGET height (tip + 1) — the height `propose_shielding` selects the UTXOs
++        // for (`get_target_and_anchor_heights`) and the balance reports "waiting to be shielded" at. Asking at
++        // the tip hid a deposit with exactly one confirmation ("nothing to shield" while the balance showed it).
++        let target_height = max_height + 1;
++        let from_addrs = db
++            .get_transparent_balances(account_id, target_height.into(), self.min_confirmations)?
++            .into_keys()
++            .collect::<Vec<_>>();
++        if from_addrs.is_empty() {
++            return Err(Error::NothingToShield(
++                "the account has no confirmed transparent funds".into(),
++            ));
++        }
++        let proposal = propose_shielding::<_, _, _, _, <W as WalletCommitmentTrees>::Error>(
++            &mut *db,
++            &self.network,
++            &input_selector,
++            &change_strategy,
++            threshold,
++            &from_addrs,
++            account_id,
++            self.min_confirmations,
++            // Shield every confirmed transparent output of the account's receive address(es),
++            // coinbase included (the memory backend does not tell them apart).
++            CoinbaseFilter::AllTransparentOutputs,
+         )
+-        .map_err(|_e| Error::Generic("something bad happened when calling propose transfer. Possibly insufficient balance..".to_string()))?;
+-        tracing::info!("Transfer proposal created");
++        .map_err(|e| match map_proposal_error(e) {
++            Error::InsufficientFunds {
++                available,
++                required,
++            } => Error::NothingToShield(format!(
++                // Upstream compares the threshold with the whole transparent input,
++                // and the change strategy refuses an input that cannot pay the network fee plus a
++                // non-dust shielded amount; `required` is whichever of the two failed.
++                "confirmed transparent funds of {} zat do not cover the {} zat this shielding needs (the network fee plus a non-dust shielded amount, or the shielding threshold)",
++                available, required
++            )),
++            other => other,
++        })?
++        // Sapling beta: the shielding transaction is version 5 too (shielded value to Sapling).
++        .with_proposed_version(Some(sapling_beta::TX_VERSION));
++        sapling_beta::check_proposal(&proposal, TxKind::Shielding, &[])?;
+         Ok(proposal)
+     }
+ 
+-    ///
+-    /// Do the proving and signing required to create one or more transaction from the proposal. Created transactions are stored in the wallet database.
+-    ///
+-    /// Note: At the moment this requires a USK but ideally we want to be able to hand the signing off to a separate service
+-    ///     e.g. browser plugin, hardware wallet, etc. Will need to look into refactoring librustzcash create_proposed_transactions to allow for this
+-    ///
+-    pub async fn create_proposed_transactions(
++    /// Makes sure the wallet's view of the chain is recent enough to build a transaction whose
++    /// anchor the network accepts; syncs when it is more than 10 blocks behind.
++    pub async fn ensure_synced_for_send(&self) -> Result<(), Error> {
++        let mut client = self.client.clone();
++        let chain_tip: u32 = client
++            .get_latest_block(service::ChainSpec::default())
++            .await?
++            .into_inner()
++            .height
++            .try_into()
++            .map_err(|_| Error::WalletNotSynced("invalid chain tip height".into()))?;
++        let wallet_height = self.db.read().await.chain_height()?;
++        match wallet_height {
++            None => Err(Error::WalletNotSynced(
++                "the wallet has never been synced".into(),
++            )),
++            Some(h) if chain_tip.saturating_sub(u32::from(h)) > 10 => {
++                tracing::info!("wallet at {} < tip {}: syncing before sending", u32::from(h), chain_tip);
++                self.sync().await
++            }
++            Some(_) => Ok(()),
++        }
++    }
++
++    /// Builds (proves and signs) the transactions of a checked proposal, stores them in the
++    /// wallet, and checks each built transaction against `kind`.
++    async fn create_checked<N: Copy + Eq + Ord + Debug>(
+         &self,
+-        proposal: Proposal<StandardFeeRule, NoteRef>,
++        proposal: &Proposal<StandardFeeRule, N>,
+         usk: &UnifiedSpendingKey,
++        kind: TxKind,
+     ) -> Result<NonEmpty<TxId>, Error> {
++        self.require_sending_allowed().await?;
+         let prover = LocalTxProver::bundled();
+         let mut db = self.db.write().await;
+         let transactions = create_proposed_transactions::<
+@@ -394,31 +516,201 @@ where
+             &prover,
+             &SpendingKeys::from_unified_spending_key(usk.clone()),
+             OvkPolicy::Sender,
+-            &proposal,
++            proposal,
+             // client_backend 0.24 added an explicit expiry height; `None` keeps the
+-            // builder's default expiry behaviour.
++            // builder's default expiry (target height + 40).
+             None,
+         )
+-        .map_err(|_| Error::FailedToCreateTransaction)?;
++        .map_err(|e| Error::TransactionBuildFailed(format!("{:?}", e)))?;
++        // Assert what was built (v5, NU6.3 branch, Sapling only, expected shape) before anything
++        // can broadcast it; broadcasting checks again.
++        for txid in transactions.iter() {
++            let tx = db
++                .get_transaction(*txid)?
++                .ok_or(Error::TransactionNotFound(*txid))?;
++            sapling_beta::check_transaction(&tx, kind)?;
++        }
+         Ok(transactions)
+     }
+ 
+-    pub async fn send_authorized_transactions(&self, txids: &NonEmpty<TxId>) -> Result<(), Error> {
++    ///
++    /// Do the proving and signing required to create one or more transaction from the proposal. Created transactions are stored in the wallet database.
++    /// (Legacy API; Sapling beta: Sapling payments only, no withdrawals.)
++    ///
++    pub async fn create_proposed_transactions(
++        &self,
++        proposal: Proposal<StandardFeeRule, NoteRef>,
++        usk: &UnifiedSpendingKey,
++    ) -> Result<NonEmpty<TxId>, Error> {
++        let kind = TxKind::Payment {
++            transparent_outputs: 0,
++        };
++        sapling_beta::check_proposal(&proposal, kind, &[])?;
++        self.create_checked(&proposal, usk, kind).await
++    }
++
++    /// Sapling beta: the general send. Pays every output in ONE transaction (player payment =
++    /// recipient + project fee output; name fee = one output; withdrawal = one output, which may
++    /// be transparent), built from Sapling notes only, and broadcasts it.
++    pub async fn send_payments(
++        &self,
++        usk: &UnifiedSpendingKey,
++        account_id: AccountId,
++        outputs: Vec<OutputRequest>,
++    ) -> Result<SendResult, Error> {
++        self.require_sending_allowed().await?;
++        self.ensure_synced_for_send().await?;
++        let (proposal, resolved) = self.propose_payments(account_id, outputs).await?;
++        let kind = TxKind::Payment {
++            transparent_outputs: resolved
++                .iter()
++                .filter(|o| o.recipient.pool == OutputPool::Transparent)
++                .count(),
++        };
++        let fee = u64::from(proposal.steps().head.balance().fee_required());
++        // `create_checked` checks the upgrade guard right before proving and storing. From here on
++        // the transaction exists and its notes are reserved: the broadcast phase reports its txid
++        // with any failure and never re-checks the guard.
++        let txids = self.create_checked(&proposal, usk, kind).await?;
++        self.broadcast(&txids, kind, false).await?;
++        Ok(SendResult {
++            txids: txids.iter().map(|t| t.to_string()).collect(),
++            fee_zat: fee,
++            amount_zat: resolved.iter().map(|o| u64::from(o.amount)).sum(),
++            outputs: resolved
++                .iter()
++                .map(|o| ResolvedOutputInfo {
++                    to: o.recipient.address.encode(),
++                    pool: o.recipient.pool,
++                    amount_zat: u64::from(o.amount),
++                    has_memo: o.memo.is_some(),
++                })
++                .collect(),
++        })
++    }
++
++    /// Sapling beta: the network fee and resolved outputs a `send` would use, without proving or
++    /// broadcasting anything.
++    pub async fn preview_payments(
++        &self,
++        account_id: AccountId,
++        outputs: Vec<OutputRequest>,
++    ) -> Result<SendResult, Error> {
++        let (proposal, resolved) = self.propose_payments(account_id, outputs).await?;
++        Ok(SendResult {
++            txids: vec![],
++            fee_zat: u64::from(proposal.steps().head.balance().fee_required()),
++            amount_zat: resolved.iter().map(|o| u64::from(o.amount)).sum(),
++            outputs: resolved
++                .iter()
++                .map(|o| ResolvedOutputInfo {
++                    to: o.recipient.address.encode(),
++                    pool: o.recipient.pool,
++                    amount_zat: u64::from(o.amount),
++                    has_memo: o.memo.is_some(),
++                })
++                .collect(),
++        })
++    }
++
++    /// Sapling beta: shields the account's confirmed transparent funds into its own Sapling
++    /// address and broadcasts the transaction.
++    pub async fn shield(
++        &self,
++        usk: &UnifiedSpendingKey,
++        account_id: AccountId,
++        threshold: Zatoshis,
++    ) -> Result<ShieldResult, Error> {
++        self.require_sending_allowed().await?;
++        self.ensure_synced_for_send().await?;
++        let proposal = self.propose_shield(account_id, threshold).await?;
++        let result = shield_result(&proposal);
++        let txids = self.create_checked(&proposal, usk, TxKind::Shielding).await?;
++        self.broadcast(&txids, TxKind::Shielding, false).await?;
++        Ok(ShieldResult {
++            txid: txids.head.to_string(),
++            ..result
++        })
++    }
++
++    /// Sapling beta: what `shield` would do (inputs, fee, shielded value), without proving.
++    pub async fn preview_shield(
++        &self,
++        account_id: AccountId,
++        threshold: Zatoshis,
++    ) -> Result<ShieldResult, Error> {
++        let proposal = self.propose_shield(account_id, threshold).await?;
++        Ok(shield_result(&proposal))
++    }
++
++    /// Sapling beta: the account's balances split into "shielded (Sapling) spendable" and
++    /// "transparent waiting to be shielded".
++    pub async fn balances(&self, account_id: AccountId) -> Result<Balances, Error> {
++        let summary = self.get_wallet_summary().await?;
++        let summary = match summary {
++            Some(s) => s,
++            None => return Ok(Balances::default()),
++        };
++        let mut out = Balances {
++            chain_tip_height: u32::from(summary.chain_tip_height()),
++            fully_scanned_height: u32::from(summary.fully_scanned_height()),
++            ..Balances::default()
++        };
++        if let Some(b) = summary.account_balances().get(&account_id) {
++            let s = b.sapling_balance();
++            out.sapling_spendable_zat = s.spendable_value().into();
++            out.sapling_pending_change_zat = s.change_pending_confirmation().into();
++            out.sapling_pending_zat = s.value_pending_spendability().into();
++            out.sapling_total_zat = s.total().into();
++            let t = b.unshielded_balance();
++            out.transparent_shieldable_zat = t.spendable_value().into();
++            out.transparent_pending_zat = u64::from(t.change_pending_confirmation())
++                .saturating_add(u64::from(t.value_pending_spendability()));
++            out.transparent_total_zat = t.total().into();
++        }
++        Ok(out)
++    }
++
++    /// Broadcasts stored transactions after re-checking their shape (and, for the legacy
++    /// `send_authorized_transactions`, the branch).
++    ///
++    /// `send`/`shield` already checked the upgrade guard right before proving and
++    /// storing (`create_checked`), so they pass `check_branch = false`: one more GetLightdInfo
++    /// after a long proof only added a way to fail after the notes were reserved. Every failure of
++    /// the send itself names the transaction: `broadcast_failed` (the network rejected it) or
++    /// `broadcast_uncertain` (no answer: it may have been sent).
++    async fn broadcast(
++        &self,
++        txids: &NonEmpty<TxId>,
++        kind: TxKind,
++        check_branch: bool,
++    ) -> Result<(), Error> {
++        if check_branch {
++            // Sapling beta: never broadcast after the chain moved to another consensus branch.
++            self.require_sending_allowed().await?;
++        }
+         let mut client = self.client.clone();
+         for txid in txids.iter() {
+-            let (txid, raw_tx) = self
++            let tx = self
+                 .db
+                 .read()
+                 .await
+                 .get_transaction(*txid)?
+-                .map(|tx| {
+-                    let mut raw_tx = service::RawTransaction::default();
+-                    tx.write(&mut raw_tx.data).unwrap(); // safe to unwrap here as we know the tx is valid
+-                    (tx.txid(), raw_tx)
+-                })
+                 .ok_or(Error::TransactionNotFound(*txid))?;
++            // Sapling beta: only v5 Sapling-only transactions under this build's branch leave.
++            sapling_beta::check_transaction(&tx, kind)?;
++            let mut raw_tx = service::RawTransaction::default();
++            tx.write(&mut raw_tx.data)?;
++            let txid = tx.txid();
+ 
+-            let response = client.send_transaction(raw_tx).await?.into_inner();
++            let response = client
++                .send_transaction(raw_tx)
++                .await
++                .map_err(|status| Error::BroadcastUncertain {
++                    txid: txid.to_string(),
++                    detail: format!("gRPC status {:?}", status.code()),
++                })?
++                .into_inner();
+ 
+             if response.error_code != 0 {
+                 tracing::error!(
+@@ -431,24 +723,32 @@ where
+                 let hint = if response.error_message.contains("unknown-anchor") {
+                     " (Wallet out of sync - try resyncing)"
+                 } else if response.error_message.contains("missingorspent") {
+-                    " (UTXO already spent - try resyncing)"
++                    // The next sync reconciles UTXOs spent by another wallet.
++                    " (a transparent input was already spent elsewhere; the next sync removes it)"
+                 } else if response.error_message.contains("duplicate-nullifier") {
+                     " (Note already spent - try resyncing)"
+                 } else {
+                     ""
+                 };
+ 
+-                return Err(Error::SendFailed {
++                return Err(Error::BroadcastFailed {
+                     code: response.error_code,
+                     reason: format!("{}{}", response.error_message, hint),
++                    txid: txid.to_string(),
+                 });
+             } else {
+-                tracing::info!("Transaction {} sent successfully :)", txid);
++                tracing::info!("Transaction {} sent successfully", txid);
+             }
+         }
+         Ok(())
+     }
+ 
++    /// Broadcasts transactions created by `create_proposed_transactions` or the PCZT path
++    /// (legacy API; the shape was checked precisely when they were built).
++    pub async fn send_authorized_transactions(&self, txids: &NonEmpty<TxId>) -> Result<(), Error> {
++        self.broadcast(txids, TxKind::Any, true).await
++    }
++
+     ///
+     /// A helper function that creates a proposal, creates a transaction from the proposal and then submits it
+     ///
+@@ -506,10 +806,13 @@ where
+             ));
+         }
+ 
++        // Sapling beta: change (and shielded value of a shielding tx) goes to Sapling. With only
++        // Sapling inputs and outputs zcash_client_backend already picks Sapling; the fallback pool
++        // covers flows with no shielded component (shielding).
+         let change_strategy = MultiOutputChangeStrategy::new(
+             StandardFeeRule::Zip317,
+             None,
+-            ShieldedProtocol::Orchard,
++            sapling_beta::FALLBACK_CHANGE_POOL,
+             DustOutputPolicy::default(),
+             SplitPolicy::with_min_output_value(
+                 NonZeroUsize::new(self.target_note_count)
+@@ -556,6 +859,7 @@ where
+             "pczt_shield: Calling propose_shielding with threshold {:?}",
+             SHIELDING_THRESHOLD
+         );
++        self.require_sending_allowed().await?;
+         let proposal = propose_shielding::<_, _, _, _, <W as WalletCommitmentTrees>::Error>(
+             &mut *db,
+             &self.network,
+@@ -569,8 +873,11 @@ where
+         )
+         .map_err(|e| {
+             tracing::error!("pczt_shield: propose_shielding failed: {:?}", e);
+-            Error::Generic(format!("Error when shielding: {:?}", e))
+-        })?;
++            map_proposal_error(e)
++        })?
++        // Sapling beta: the shielding transaction is version 5 too (shielded value to Sapling).
++        .with_proposed_version(Some(sapling_beta::TX_VERSION));
++        sapling_beta::check_proposal(&proposal, TxKind::Shielding, &[])?;
+         tracing::info!("pczt_shield: proposal created successfully");
+ 
+         tracing::info!("pczt_shield: Creating PCZT from proposal");
+@@ -639,10 +946,13 @@ where
+         }
+ 
+         // Create the PCZT.
++        // Sapling beta: change (and shielded value of a shielding tx) goes to Sapling. With only
++        // Sapling inputs and outputs zcash_client_backend already picks Sapling; the fallback pool
++        // covers flows with no shielded component (shielding).
+         let change_strategy = MultiOutputChangeStrategy::new(
+             StandardFeeRule::Zip317,
+             None,
+-            ShieldedProtocol::Orchard,
++            sapling_beta::FALLBACK_CHANGE_POOL,
+             DustOutputPolicy::default(),
+             SplitPolicy::with_min_output_value(
+                 NonZeroUsize::new(self.target_note_count)
+@@ -651,10 +961,14 @@ where
+             ),
+         );
+ 
++        self.require_sending_allowed().await?;
++        let to_address =
++            sapling_beta::resolve_recipient(self.network.network_type(), &to_address, false)?
++                .address;
+         let input_selector = GreedyInputSelector::new();
+         let request = TransactionRequest::new(vec![Payment::without_memo(
+             to_address,
+-            Zatoshis::from_u64(value)?,
++            sapling_beta::parse_amount(value)?,
+         )])?;
+         let mut db = self.db.write().await;
+         let proposal = propose_transfer::<_, _, _,_, <W as WalletCommitmentTrees>::Error>(
+@@ -665,11 +979,18 @@ where
+             &change_strategy,
+             request,
+             self.min_confirmations,
+-            &SpendPolicy::default(),
+-            None,
++            &sapling_beta::spend_policy(),
++            Some(sapling_beta::TX_VERSION),
+         )
+-            .map_err(|e| Error::Generic(format!("something bad happened when calling propose transfer. Possibly insufficient balance... {:?}", e)))?;
+-        tracing::info!("PCZT proposal created");
++        .map_err(map_proposal_error)?;
++        sapling_beta::check_proposal(
++            &proposal,
++            TxKind::Payment {
++                transparent_outputs: 0,
++            },
++            &[],
++        )?;
++        tracing::info!("PCZT proposal created (Sapling only, v5)");
+         let pczt = create_pczt_from_proposal::<
+             _,
+             _,
+@@ -768,6 +1089,7 @@ where
+     }
+ 
+     pub async fn pczt_send(&self, pczt: Pczt) -> Result<(), Error> {
++        self.require_sending_allowed().await?;
+         // Verify the wallet is sufficiently synced before sending
+         // The network only accepts anchors within the last 100 blocks
+         let mut client = self.client.clone();
+@@ -836,6 +1158,157 @@ where
+             .await
+     }
+ 
++    /// Sapling beta upgrade guard: reads lightwalletd's consensus branch and compares it with the
++    /// branch this build targets. Never fails; problems are reported in `allowed`/`reason`.
++    async fn sending_status_inner(&self) -> SendingStatus {
++        let mut status = SendingStatus {
++            allowed: false,
++            expected_branch: sapling_beta::expected_branch_hex(),
++            chain_branch: None,
++            chain_name: None,
++            chain_tip: None,
++            next_block_branch: None,
++            pending_upgrade: None,
++            pools: vec!["sapling".to_string(), "transparent".to_string()],
++            code: None,
++            reason: None,
++        };
++        let mut client = self.client.clone();
++        let info = match client.get_lightd_info(service::Empty {}).await {
++            Ok(r) => r.into_inner(),
++            Err(e) => {
++                status.reason = Some(
++                    Error::ConsensusBranchUnknown(format!("GetLightdInfo failed: {}", e.message()))
++                        .to_string(),
++                );
++                return status;
++            }
++        };
++        status.chain_name = Some(info.chain_name.clone());
++        status.chain_tip = Some(info.block_height);
++        if info.upgrade_height > 0 && !info.upgrade_name.is_empty() {
++            status.pending_upgrade = Some(PendingUpgrade {
++                name: info.upgrade_name.clone(),
++                height: info.upgrade_height,
++            });
++        }
++        // The branch the transaction builder will use (target height = tip + 1) and the branch of
++        // the tip block, both under this build's own consensus parameters.
++        let tip_height = u32::try_from(info.block_height).unwrap_or(u32::MAX - 1);
++        let local_tip = BranchId::for_height(&self.network, BlockHeight::from_u32(tip_height));
++        let local_next =
++            BranchId::for_height(&self.network, BlockHeight::from_u32(tip_height.saturating_add(1)));
++        let local_expiry = BranchId::for_height(
++            &self.network,
++            BlockHeight::from_u32(
++                tip_height
++                    .saturating_add(1)
++                    .saturating_add(sapling_beta::UPGRADE_GUARD_BLOCKS as u32),
++            ),
++        );
++        status.next_block_branch = Some(sapling_beta::branch_hex(u32::from(local_next)));
++        if sapling_beta::supports_branch(u32::from(local_next)) {
++            status.expected_branch = sapling_beta::branch_hex(u32::from(local_next));
++        }
++        let expected = status.expected_branch.clone();
++        let chain = match sapling_beta::parse_branch_hex(&info.consensus_branch_id) {
++            Some(b) => b,
++            None => {
++                status.reason = Some(
++                    Error::ConsensusBranchUnknown(format!(
++                        "unparseable consensusBranchId {:?}",
++                        info.consensus_branch_id
++                    ))
++                    .to_string(),
++                );
++                return status;
++            }
++        };
++        status.chain_branch = Some(sapling_beta::branch_hex(chain));
++        // 1. The chain must be on a branch this build supports, and on the branch this build's
++        //    own rules give the tip (otherwise our activation heights disagree with the chain).
++        if !sapling_beta::supports_branch(chain) || chain != u32::from(local_tip) {
++            status.reason = Some(
++                Error::ConsensusBranchMismatch {
++                    expected,
++                    chain: sapling_beta::branch_hex(chain),
++                }
++                .to_string(),
++            );
++            return status;
++        }
++        // 2. No upgrade this build knows of may activate before a new transaction expires.
++        if local_next != local_tip || local_expiry != local_next {
++            // The first height in the window whose branch differs from the tip's.
++            let height = (1..=1 + sapling_beta::UPGRADE_GUARD_BLOCKS as u32)
++                .map(|d| tip_height.saturating_add(d))
++                .find(|h| BranchId::for_height(&self.network, BlockHeight::from_u32(*h)) != local_tip)
++                .unwrap_or(tip_height.saturating_add(1));
++            let name = format!(
++                "{:?}",
++                BranchId::for_height(&self.network, BlockHeight::from_u32(height))
++            );
++            let height = height as u64;
++            status.reason = Some(
++                Error::ConsensusUpgradePending {
++                    name,
++                    height,
++                    tip: info.block_height,
++                }
++                .to_string(),
++            );
++            status.code = Some("consensus_upgrade_pending".to_string());
++            return status;
++        }
++        // 3. Nor any upgrade lightwalletd announces (the NU6.3 build does not know NU7's height).
++        if let Some(up) = &status.pending_upgrade {
++            if up.height > info.block_height
++                && up.height <= info.block_height + 1 + sapling_beta::UPGRADE_GUARD_BLOCKS
++            {
++                status.reason = Some(
++                    Error::ConsensusUpgradePending {
++                        name: up.name.clone(),
++                        height: up.height,
++                        tip: info.block_height,
++                    }
++                    .to_string(),
++                );
++                status.code = Some("consensus_upgrade_pending".to_string());
++                return status;
++            }
++        }
++        status.allowed = true;
++        status
++    }
++
++    /// Sapling beta upgrade guard, with `code` filled in from `reason`.
++    pub async fn sending_status(&self) -> SendingStatus {
++        let mut status = self.sending_status_inner().await;
++        if !status.allowed && status.code.is_none() {
++            status.code = status
++                .reason
++                .as_deref()
++                .and_then(crate::error::error_code_of)
++                .map(str::to_string);
++        }
++        status
++    }
++
++    /// Refuses (`consensus_branch_mismatch`, `consensus_upgrade_pending` or
++    /// `consensus_branch_unknown`) unless sending is allowed. The error carries the same message
++    /// as `sending_status().reason`.
++    pub async fn require_sending_allowed(&self) -> Result<(), Error> {
++        let status = self.sending_status().await;
++        if status.allowed {
++            return Ok(());
++        }
++        let reason = status.reason.unwrap_or_else(|| {
++            Error::ConsensusBranchUnknown("unknown".to_string()).to_string()
++        });
++        tracing::warn!("Sending refused: {}", reason);
++        Err(Error::Coded(reason))
++    }
++
+     pub fn pczt_combine(&self, pczts: Vec<Pczt>) -> Result<Pczt, Error> {
+         Combiner::new(pczts)
+             .combine()
+@@ -843,6 +1316,258 @@ where
+     }
+ }
+ 
++/// Sapling beta: transaction "enhancement" for the memory backend. zcash_client_backend's sync
++/// only scans compact blocks, which carry no memos, so a received note's memo is unknown until the
++/// full transaction is fetched and decrypted. This fetches (GetTransaction, through the game
++/// server's bridge) every transaction that holds a received Sapling note with no memo and no stored
++/// raw data yet, and stores its decryption. Each transaction is fetched once (its raw data is then
++/// stored). Failures are logged and retried on the next sync; they never fail the sync.
++impl<T> Wallet<MemoryWalletDb<Network>, T>
++where
++    T: GrpcService<tonic::body::Body> + Clone,
++    T::Error: Into<StdError>,
++    T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
++    <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
++{
++    pub async fn enhance_received_memos(&self) -> Result<usize, Error> {
++        use zcash_protocol::memo::Memo;
++        let (candidates, tip) = {
++            let db = self.db.read().await;
++            let mut set = std::collections::BTreeSet::new();
++            for note in db.received_notes().iter() {
++                if note.pool() != zcash_protocol::PoolType::SAPLING
++                    || !matches!(note.memo(), Memo::Empty)
++                {
++                    continue;
++                }
++                let txid = note.txid();
++                if matches!(db.get_transaction(txid), Ok(Some(_))) {
++                    continue; // already have the full transaction (sent by us, or enhanced)
++                }
++                set.insert(txid);
++            }
++            (set.into_iter().collect::<Vec<_>>(), db.chain_height()?)
++        };
++        let mut client = self.client.clone();
++        let mut enhanced = 0;
++        for txid in candidates {
++            let raw = match client
++                .get_transaction(service::TxFilter {
++                    block: None,
++                    index: 0,
++                    hash: txid.as_ref().to_vec(),
++                })
++                .await
++            {
++                Ok(r) => r.into_inner(),
++                Err(e) => {
++                    tracing::warn!("enhancement: GetTransaction {} failed: {}", txid, e.message());
++                    continue;
++                }
++            };
++            let mined_height = u32::try_from(raw.height)
++                .ok()
++                .filter(|h| *h > 0 && *h < u32::MAX)
++                .map(BlockHeight::from_u32);
++            let branch_height = mined_height
++                .or(tip.map(|t| t + 1))
++                .unwrap_or_else(|| BlockHeight::from_u32(1));
++            let tx = match zcash_primitives::transaction::Transaction::read(
++                &raw.data[..],
++                BranchId::for_height(&self.network, branch_height),
++            ) {
++                Ok(tx) if tx.txid() == txid => tx,
++                Ok(_) | Err(_) => {
++                    tracing::warn!("enhancement: could not parse transaction {}", txid);
++                    continue;
++                }
++            };
++            let mut db = self.db.write().await;
++            match zcash_client_backend::data_api::wallet::decrypt_and_store_transaction(
++                &self.network,
++                &mut *db,
++                &tx,
++                mined_height,
++            ) {
++                Ok(()) => enhanced += 1,
++                Err(e) => tracing::warn!("enhancement: storing {} failed: {}", txid, e),
++            }
++        }
++        if enhanced > 0 {
++            tracing::info!("enhancement: decrypted {} full transaction(s)", enhanced);
++        }
++        Ok(enhanced)
++    }
++
++    /// Sapling beta: transparent UTXOs spent OUTSIDE this wallet.
++    ///
++    /// zcash_client_backend's `refresh_utxos` only inserts what GetAddressUtxos returns, and the
++    /// memory backend marks a UTXO spent only when it stores a transaction spending it (one this
++    /// wallet built, or one enhancement fetched because it holds a received Sapling note). When
++    /// another wallet with the same seed (Zodl, Zashi, Zingo, …) shields or spends the shared
++    /// t-address into Orchard/Ironwood or a transparent output, nothing tells this wallet: the UTXO
++    /// would show as "waiting to be shielded" forever and every shield would be rejected
++    /// (`missingorspent`).
++    ///
++    /// For every stored UTXO this wallet still counts as spendable that lightwalletd's current
++    /// UTXO set no longer lists, this looks for its spending transaction with
++    /// GetTaddressTransactions (from the UTXO's height to the tip) and stores that transaction's
++    /// transparent part only (no decryption), which marks the UTXO spent by a mined transaction.
++    /// Only a MINED transaction that really spends the outpoint counts, so a lagging or reorganised
++    /// server can never make funds disappear. Failures are logged and retried on the next sync.
++    /// Returns how many UTXOs were marked spent.
++    pub async fn reconcile_transparent_utxos(&self) -> Result<usize, Error> {
++        use futures_util::TryStreamExt;
++        use std::collections::{BTreeMap, BTreeSet};
++        use zcash_client_backend::data_api::wallet::TargetHeight;
++        use zcash_client_backend::data_api::DecryptedTransaction;
++        use zcash_keys::encoding::AddressCodec;
++        use zcash_transparent::address::TransparentAddress;
++        use zcash_transparent::bundle::OutPoint;
++
++        /// At most this many transactions are read per address and sync (a long-used t-address
++        /// is finished on later syncs).
++        const MAX_TXS_PER_ADDRESS: usize = 500;
++
++        // 1. The UTXOs this wallet still counts as spendable, per address.
++        let (stored, tip) = {
++            let db = self.db.read().await;
++            let tip = match db.chain_height()? {
++                Some(h) => h,
++                None => return Ok(0),
++            };
++            let target = TargetHeight::from(tip + 1);
++            let mut stored: Vec<(TransparentAddress, OutPoint, Option<BlockHeight>)> = Vec::new();
++            for account in db.get_account_ids()? {
++                for address in db.get_transparent_receivers(account, true, true)?.into_keys() {
++                    for utxo in db.get_spendable_transparent_outputs(
++                        &address,
++                        target,
++                        self.min_confirmations,
++                        CoinbaseFilter::AllTransparentOutputs,
++                    )? {
++                        stored.push((address, utxo.outpoint().clone(), utxo.mined_height()));
++                    }
++                }
++            }
++            (stored, tip)
++        };
++        if stored.is_empty() {
++            return Ok(0);
++        }
++
++        // 2. lightwalletd's current UTXO set for those addresses.
++        let start = stored
++            .iter()
++            .filter_map(|(_, _, h)| *h)
++            .min()
++            .unwrap_or_else(|| BlockHeight::from_u32(0));
++        let addresses: BTreeSet<String> = stored
++            .iter()
++            .map(|(a, _, _)| a.encode(&self.network))
++            .collect();
++        let mut client = self.client.clone();
++        let mut live = BTreeSet::new();
++        let mut replies = client
++            .get_address_utxos_stream(service::GetAddressUtxosArg {
++                addresses: addresses.into_iter().collect(),
++                start_height: u64::from(u32::from(start)),
++                max_entries: 0,
++            })
++            .await?
++            .into_inner();
++        while let Some(reply) = replies.try_next().await? {
++            if let (Ok(hash), Ok(index)) = (<[u8; 32]>::try_from(&reply.txid[..]), u32::try_from(reply.index)) {
++                live.insert(OutPoint::new(hash, index));
++            }
++        }
++        let outpoints: Vec<OutPoint> = stored.iter().map(|(_, o, _)| o.clone()).collect();
++        let missing: BTreeSet<OutPoint> = sapling_beta::missing_outpoints(&outpoints, &live)
++            .into_iter()
++            .collect();
++        if missing.is_empty() {
++            return Ok(0);
++        }
++
++        // 3. For each address with missing UTXOs: find the mined transactions that spend them.
++        let mut by_address: BTreeMap<String, BlockHeight> = BTreeMap::new();
++        for (address, outpoint, height) in &stored {
++            if missing.contains(outpoint) {
++                let from = height.unwrap_or(start);
++                let entry = by_address.entry(address.encode(&self.network)).or_insert(from);
++                *entry = (*entry).min(from);
++            }
++        }
++        let mut remaining = missing.clone();
++        let mut marked = 0;
++        for (address, from) in by_address {
++            if remaining.is_empty() {
++                break;
++            }
++            let filter = service::TransparentAddressBlockFilter {
++                address,
++                range: Some(service::BlockRange {
++                    start: Some(service::BlockId {
++                        height: u64::from(u32::from(from)),
++                        hash: vec![],
++                    }),
++                    end: Some(service::BlockId {
++                        height: u64::from(u32::from(tip)),
++                        hash: vec![],
++                    }),
++                    pool_types: vec![],
++                }),
++            };
++            let mut stream = client.get_taddress_txids(filter).await?.into_inner();
++            let mut seen = 0;
++            while let Some(raw) = stream.try_next().await? {
++                seen += 1;
++                if seen > MAX_TXS_PER_ADDRESS || remaining.is_empty() {
++                    break;
++                }
++                // Mined transactions only (mempool entries carry height 0 or u64::MAX).
++                let Some(height) = u32::try_from(raw.height)
++                    .ok()
++                    .filter(|h| *h > 0 && *h < u32::MAX)
++                    .map(BlockHeight::from_u32)
++                else {
++                    continue;
++                };
++                let Ok(tx) = zcash_primitives::transaction::Transaction::read(
++                    &raw.data[..],
++                    BranchId::for_height(&self.network, height),
++                ) else {
++                    tracing::warn!("utxo reconcile: could not parse a transaction at height {}", u32::from(height));
++                    continue;
++                };
++                let spends = sapling_beta::spent_outpoints(&tx, &remaining);
++                if spends.is_empty() {
++                    continue;
++                }
++                // Store the transaction's transparent part only: the memory backend marks every
++                // input the wallet holds as spent by this mined transaction.
++                let mut db = self.db.write().await;
++                db.store_decrypted_tx(DecryptedTransaction::new(
++                    Some(height),
++                    &tx,
++                    vec![],
++                    vec![],
++                    vec![],
++                ))?;
++                drop(db);
++                for outpoint in spends {
++                    remaining.remove(&outpoint);
++                    marked += 1;
++                }
++            }
++        }
++        if marked > 0 {
++            tracing::info!("utxo reconcile: {} transparent output(s) were spent elsewhere", marked);
++        }
++        Ok(marked)
++    }
++}
++
+ pub(crate) fn usk_from_seed_str(
+     seed: &str,
+     account_id: u32,
+@@ -860,3 +1585,112 @@ pub(crate) fn usk_from_seed_str(
+     let usk = UnifiedSpendingKey::from_seed(network, seed.expose_secret(), account_id.try_into()?)?;
+     Ok((usk, seed_fingerprint))
+ }
++
++/// Maps a zcash_client_backend proposal error to a coded Sapling-beta error.
++fn map_proposal_error<DE, TE, SE, FE, CE, N>(
++    e: zcash_client_backend::data_api::error::Error<DE, TE, SE, FE, CE, N>,
++) -> Error
++where
++    DE: Debug,
++    TE: Debug,
++    SE: Debug,
++    FE: Debug,
++    CE: Debug,
++    N: Debug,
++{
++    use zcash_client_backend::data_api::error::Error as BackendError;
++    match e {
++        BackendError::InsufficientFunds {
++            available,
++            required,
++        } => Error::InsufficientFunds {
++            available: available.into(),
++            required: required.into(),
++        },
++        other => Error::ProposalFailed(format!("{:?}", other)),
++    }
++}
++
++/// Sapling beta: what a `send` built (or would build).
++#[derive(Clone, Debug, Default, Serialize)]
++#[serde(rename_all = "camelCase")]
++pub struct SendResult {
++    /// Transaction ids as explorers print them (byte-reversed hex). Empty for a preview.
++    pub txids: Vec<String>,
++    /// ZIP 317 network fee in zatoshis.
++    pub fee_zat: u64,
++    /// Sum of the outputs' amounts (excluding the network fee and change).
++    pub amount_zat: u64,
++    /// The outputs as resolved (the receiver actually paid).
++    pub outputs: Vec<ResolvedOutputInfo>,
++}
++
++#[derive(Clone, Debug, Serialize)]
++#[serde(rename_all = "camelCase")]
++pub struct ResolvedOutputInfo {
++    /// The receiver paid: a plain Sapling (zs1…) or, for a withdrawal, transparent (t1…) address.
++    pub to: String,
++    pub pool: OutputPool,
++    pub amount_zat: u64,
++    pub has_memo: bool,
++}
++
++/// Sapling beta: what a `shield` built (or would build).
++#[derive(Clone, Debug, Default, Serialize)]
++#[serde(rename_all = "camelCase")]
++pub struct ShieldResult {
++    /// Transaction id (byte-reversed hex); empty for a preview.
++    pub txid: String,
++    /// Number of transparent UTXOs spent.
++    pub utxos: usize,
++    /// Value of the transparent UTXOs spent.
++    pub transparent_in_zat: u64,
++    /// ZIP 317 network fee.
++    pub fee_zat: u64,
++    /// Value arriving in the wallet's Sapling balance (transparent_in - fee).
++    pub shielded_zat: u64,
++}
++
++fn shield_result<N>(proposal: &Proposal<StandardFeeRule, N>) -> ShieldResult {
++    let step = &proposal.steps().head;
++    let inputs = step.transparent_inputs();
++    ShieldResult {
++        txid: String::new(),
++        utxos: inputs.len(),
++        transparent_in_zat: inputs
++            .iter()
++            .map(|i| u64::from(i.txout().value()))
++            .sum(),
++        fee_zat: step.balance().fee_required().into(),
++        shielded_zat: step
++            .balance()
++            .proposed_change()
++            .iter()
++            .map(|c| u64::from(c.value()))
++            .sum(),
++    }
++}
++
++/// Sapling beta: an account's balances (zatoshis). Orchard/Ironwood funds are never counted: this
++/// build cannot see or spend them.
++#[derive(Clone, Debug, Default, Serialize)]
++#[serde(rename_all = "camelCase")]
++pub struct Balances {
++    /// Shielded (Sapling) value that can be sent now.
++    pub sapling_spendable_zat: u64,
++    /// Sapling change from the wallet's own recent transactions, waiting for confirmation.
++    pub sapling_pending_change_zat: u64,
++    /// Sapling value received but not yet confirmed enough to spend.
++    pub sapling_pending_zat: u64,
++    /// All Sapling value the wallet knows (spendable + pending).
++    pub sapling_total_zat: u64,
++    /// Transparent value waiting to be shielded that `shield` can spend now (confirmed UTXOs).
++    pub transparent_shieldable_zat: u64,
++    /// Transparent value not yet confirmed enough (the memory backend reports confirmed UTXOs
++    /// only, so this is normally 0: deposits appear once mined).
++    pub transparent_pending_zat: u64,
++    /// All transparent value waiting to be shielded.
++    pub transparent_total_zat: u64,
++    pub chain_tip_height: u32,
++    pub fully_scanned_height: u32,
++}

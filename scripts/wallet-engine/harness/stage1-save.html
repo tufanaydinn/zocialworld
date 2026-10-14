@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Stage-1 save</title></head>
+<body>
+<script type="module">
+// Produces a REAL Stage-1 (memory backend) wallet save with the Stage-1 regtest engine served at
+// /pkg2/, so the Stage-2 engine can be shown to refuse it (wallet_format_unsupported). TESTING ONLY.
+import initWasm, { WebWallet } from "/pkg2/webzjs_wallet.js";
+try {
+  const cfg = await (await fetch("/__ctl/config")).json();
+  await initWasm();
+  const lwdUrl = `${location.origin}/zcash/lwd`;
+  const w = new WebWallet("test", lwdUrl, 1, 1, null);
+  const tip = Number(await w.get_latest_block());
+  const id = await w.create_account("A", cfg.seeds.A, 0, tip);
+  const bytes = await w.db_to_bytes();
+  let s = ""; for (const b of bytes) s += String.fromCharCode(b);
+  window.__save = { ok: true, id, len: bytes.length, base64: btoa(s), head: Array.from(bytes.slice(0, 8)) };
+} catch (e) {
+  window.__save = { ok: false, error: String(e?.message ?? e) };
+}
+</script>
+</body>
+</html>

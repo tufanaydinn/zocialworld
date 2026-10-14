@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Stage 2 regtest verification</title></head>
+<body>
+<pre id="out">starting…</pre>
+<script type="module">
+// Stage 2: the full regtest matrix of the Stage-2 engine (regtest twin of the
+// reproducible build) on a LOCAL zebrad regtest chain (NU6.3 active from height 1), through the
+// game's own lightwalletd bridge. Every Stage-2 flow, plus: the engine's five address encodings equal
+// zw-tx-decrypt 0.2's registryKeysFromSeed, and a Stage-1 player's saved wallet (made by the regtest
+// twin of the SHIPPED Stage-1 engine, served at /pkg2/) -> wallet_format_unsupported -> restore from
+// seed + birthday -> the restored wallet shields and pays. TESTING ONLY: the seeds are regtest test
+// keys served by the harness (/__ctl/config); they are never printed.
+import initWasm, { initThreadPool, WebWallet, expected_consensus_branch, sapling_beta_error_codes, engine_info, open_wallet_databases } from "/pkg/webzjs_wallet.js";
+import initS1, { initThreadPool as initThreadPoolS1, WebWallet as WalletS1 } from "/pkg2/webzjs_wallet.js";
+
+const out = document.getElementById("out");
+window.__run = { steps: [], txs: {}, ok: true, memos: {} };
+const step = (name, data) => {
+  const entry = { name, t: Math.round(performance.now()), ...(data ?? {}) };
+  window.__run.steps.push(entry);
+  out.textContent += `\n${JSON.stringify(entry)}`;
+  return entry;
+};
+const check = (name, cond, data) => { if (!cond) window.__run.ok = false; return step(`check:${name}`, { pass: !!cond, ...(data ?? {}) }); };
+const plain = (v) => JSON.parse(JSON.stringify(v ?? null, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
+const errInfo = (e) => ({ code: e?.code ?? null, message: String(e?.message ?? e).slice(0, 400) });
+async function expectError(name, code, fn) {
+  try { const r = await fn(); return check(name, false, { expectedCode: code, unexpectedResult: plain(r) }); }
+  catch (e) { const i = errInfo(e); return check(name, i.code === code, { expectedCode: code, ...i }); }
+}
+const post = (path) => fetch(path, { method: "POST" }).then((r) => r.json());
+const secs = (t0) => +((performance.now() - t0) / 1000).toFixed(1);
+
+try {
+  const cfg = await (await fetch("/__ctl/config")).json();
+  await initWasm();
+  await initThreadPool(Math.min(navigator.hardwareConcurrency || 4, 4));
+  await initS1();
+  await initThreadPoolS1(2);
+  const info = plain(engine_info());
+  step("wasm-ready", { crossOriginIsolated: self.crossOriginIsolated, expectedBranch: expected_consensus_branch(), info });
+  check("engine-info", info.regtest === true && info.txVersion === "V6" && /^sqlite 3\./.test(info.backend) && WebWallet.backend() === info.backend
+    && info.errorCodes.includes("wallet_format_unsupported") && info.errorCodes.includes("pool_policy_violation")
+    && sapling_beta_error_codes().includes("recipient_no_sapling_receiver") && info.pools.join() === "ironwood,sapling,orchard,transparent", info);
+  const lwdUrl = `${location.origin}/zcash/lwd`;
+  const probe = new WebWallet("test", lwdUrl, 1, 1, null);
+  const tipOf = async () => Number(await probe.get_latest_block());
+  const mine = async (n) => {
+    const r = await post(`/__ctl/mine?n=${n}`);
+    for (let i = 0; i < 120 && (await tipOf()) < r.height; i++) await new Promise((res) => setTimeout(res, 500));
+    return r.height;
+  };
+  const startTip = await tipOf();
+  step("chain", { tip: startTip });
+
+  const open = async (name, seed, birthday, hd = 0) => {
+    const w = new WebWallet("test", lwdUrl, 1, 1, null);
+    const id = await w.create_account(name, seed, hd, birthday);
+    return { name, w, id, seed, hd };
+  };
+  const A = await open("A", cfg.seeds.A, 2);
+  const B = await open("B", cfg.seeds.B, 2);
+  const C = await open("C", cfg.seeds.C, startTip);
+  const P = await open("P", cfg.seeds.PROJECT, startTip);
+  check("account-ids", A.id === 0 && B.id === 0 && C.id === 0 && P.id === 0);
+
+  // ---------- addresses (ADR-018 § 1 Stage 2 amendment) ----------
+  for (const W of [A, B, C, P]) {
+    const a = plain(await W.w.get_addresses(W.id));
+    W.addr = a;
+    step(`addresses:${W.name}`, { unified: a.unified.slice(0, 24), diversifierIndex: a.diversifierIndex });
+    check(`addresses-consistent:${W.name}`, (await W.w.get_current_address(W.id)) === a.unified && (await W.w.get_unified_address(W.id)) === a.unified
+      && (await W.w.get_transparent_address(W.id)) === a.transparent && (await W.w.get_sapling_address(W.id)) === a.sapling
+      && (await W.w.get_current_address_transparent(W.id)) === a.transparent);
+    // The engine's five encodings are exactly zw-tx-decrypt 0.2's registryKeysFromSeed for the same
+    // seed (full UA, shielded UA, Stage-1 UA, zs, t; one diversifier index): the Sapling and
+    // transparent receivers are the Stage-1 ones, and the server derives the same addresses.
+    const k = cfg.keys[W.name === "P" ? "PROJECT" : W.name];
+    check(`addresses-match-helper:${W.name}`, a.unified === k.unifiedAddress && a.unifiedShielded === k.unifiedShieldedAddress && a.unifiedSaplingTransparent === k.unifiedSaplingTransparentAddress
+      && a.sapling === k.saplingAddress && a.transparent === k.transparentAddress && a.diversifierIndex === k.diversifierIndex);
+  }
+  window.__run.addresses = Object.fromEntries([A, B, C, P].map((W) => [W.name, W.addr]));
+  check("B-unified-is-coinbase-recipient", B.addr.unified === cfg.bUnified);
+
+  // ---------- status ----------
+  const st0 = plain(await A.w.sending_status());
+  step("sending-status", st0);
+  check("sending-allowed", st0.allowed === true && st0.expectedBranch === "37a5165b" && st0.chainBranch === "37a5165b" && st0.pools.join() === "ironwood,sapling,orchard,transparent");
+
+  // ---------- 1. receive Ironwood (coinbase) ----------
+  let t0 = performance.now();
+  await B.w.sync();
+  const bB0 = plain(await B.w.get_balances(B.id));
+  step("B-synced", { seconds: secs(t0), balances: bB0 });
+  check("B-ironwood-coinbase-received", bB0.ironwoodTotalZat === cfg.bIronwoodCoinbaseZat && bB0.ironwoodSpendableZat === cfg.bIronwoodCoinbaseZat
+    && bB0.shieldedSpendableZat === bB0.ironwoodSpendableZat && bB0.saplingTotalZat === 0 && bB0.orchardTotalZat === 0 && bB0.totalZat === bB0.shieldedTotalZat + bB0.transparentTotalZat, { expected: cfg.bIronwoodCoinbaseZat });
+  check("fully-scanned", bB0.fullyScannedHeight === startTip && bB0.chainTipHeight === startTip, { startTip });
+
+  // ---------- 2. shield t -> Ironwood ----------
+  t0 = performance.now();
+  await A.w.sync();
+  const bA0 = plain(await A.w.get_balances(A.id));
+  step("A-synced", { seconds: secs(t0), balances: bA0 });
+  check("A-transparent-waiting", bA0.transparentShieldableZat === cfg.aTransparentCoinbaseZat && bA0.shieldedTotalZat === 0, { expected: cfg.aTransparentCoinbaseZat });
+  await expectError("send-before-shield-insufficient", "insufficient_funds", () => A.w.preview_send(A.id, [{ to: B.addr.unifiedShielded, amountZat: 100000 }]));
+  const pShield = plain(await A.w.preview_shield(A.id, null));
+  step("A-preview-shield", pShield);
+  t0 = performance.now();
+  const shield = plain(await A.w.shield(A.id, A.seed, 0, null));
+  step("A-shield", { seconds: secs(t0), ...shield });
+  window.__run.txs.shield = shield.txid;
+  check("shield-result", shield.txid.length === 64 && shield.pool === "ironwood" && shield.transparentInZat === cfg.aTransparentCoinbaseZat
+    && shield.shieldedZat + shield.feeZat === shield.transparentInZat && shield.feeZat === pShield.feeZat && shield.utxos === 3);
+  await mine(1);
+  await A.w.sync();
+  const bA1 = plain(await A.w.get_balances(A.id));
+  step("A-after-shield", bA1);
+  check("A-shielded-into-ironwood", bA1.ironwoodTotalZat === shield.shieldedZat && bA1.ironwoodSpendableZat === shield.shieldedZat && bA1.transparentTotalZat === 0 && bA1.saplingTotalZat === 0);
+
+  // ---------- 3. Ironwood -> Ironwood with the project fee output in ONE transaction ----------
+  const feeNonce = "n" + Math.random().toString(16).slice(2, 14);
+  const payOutputs = [
+    { to: A.addr.unifiedShielded, amountZat: 100000, memo: "zw-pay:v1:hello A, from B (regtest)" },
+    { to: P.addr.unifiedShielded, amountZat: cfg.feeZat, memo: `zw-fee:v1:${feeNonce}` },
+  ];
+  const pPay = plain(await B.w.preview_send(B.id, payOutputs));
+  step("B-preview-payment", pPay);
+  check("payment-preview-ironwood", pPay.outputs.every((o) => o.pool === "ironwood" && !o.tex) && pPay.amountZat === 100000 + cfg.feeZat && pPay.txids.length === 0);
+  t0 = performance.now();
+  const pay = plain(await B.w.send(B.id, payOutputs, B.seed, 0));
+  step("B-payment", { seconds: secs(t0), ...pay });
+  window.__run.txs.ironwoodPayment = pay.txids[0];
+  window.__run.feeNonce = feeNonce;
+  check("payment-one-tx", pay.txids.length === 1 && pay.feeZat === pPay.feeZat);
+  await mine(1);
+  await A.w.sync();
+  await P.w.sync();
+  const bA2 = plain(await A.w.get_balances(A.id));
+  const bP0 = plain(await P.w.get_balances(P.id));
+  check("A-received-ironwood-payment", bA2.ironwoodTotalZat === bA1.ironwoodTotalZat + 100000, { before: bA1.ironwoodTotalZat, after: bA2.ironwoodTotalZat });
+  check("P-received-ironwood-fee", bP0.ironwoodTotalZat === cfg.feeZat, bP0);
+  const histA = await A.w.get_transaction_history(A.id, 20, 0);
+  const histAe = (histA.transactions ?? []).map((t) => ({ txid: t.txid, memo: t.memo, status: t.status, pool: t.pool, value: t.value, tx_type: t.tx_type }));
+  step("A-history", { entries: histAe });
+  check("A-sees-memo", histAe.some((t) => t.txid === pay.txids[0] && t.memo === payOutputs[0].memo && t.pool === "ironwood" && t.value === 100000 && t.tx_type === "Received"));
+  const histP = await P.w.get_transaction_history(P.id, 20, 0);
+  check("P-sees-fee-memo", (histP.transactions ?? []).some((t) => t.txid === pay.txids[0] && t.memo === payOutputs[1].memo));
+  await B.w.sync();
+  const bB1 = plain(await B.w.get_balances(B.id));
+  check("B-debited-change-in-ironwood", bB1.ironwoodTotalZat === bB0.ironwoodTotalZat - 100000 - cfg.feeZat - pay.feeZat && bB1.saplingTotalZat === 0, { before: bB0.ironwoodTotalZat, after: bB1.ironwoodTotalZat, fee: pay.feeZat });
+  const histB = await B.w.get_transaction_history(B.id, 20, 0);
+  check("B-history-sent", (histB.transactions ?? []).some((t) => t.txid === pay.txids[0] && t.tx_type === "Sent" && t.value === -(100000 + cfg.feeZat + pay.feeZat) && t.fee === pay.feeZat && t.memo?.includes(feeNonce)));
+
+  // ---------- 4. player payment whose fee output goes to the Stage-1 registry address (Sapling) ----------
+  const payOutputs2 = [
+    { to: A.addr.unifiedShielded, amountZat: 110000, memo: "zw-pay:v1:second" },
+    { to: P.addr.unifiedSaplingTransparent, amountZat: cfg.feeZat, memo: `zw-fee:v1:${feeNonce}-s` },
+  ];
+  const pay2 = plain(await B.w.send(B.id, payOutputs2, B.seed, 0));
+  step("B-payment-sapling-fee", pay2);
+  window.__run.txs.paymentSaplingFee = pay2.txids[0];
+  check("payment2-pools", pay2.txids.length === 1 && pay2.outputs[0].pool === "ironwood" && pay2.outputs[1].pool === "sapling" && pay2.outputs[1].to.startsWith("zregtestsapling1"));
+  await mine(1);
+
+  // ---------- 5. Ironwood -> zs1 ----------
+  await B.w.sync();
+  const toC = plain(await B.w.send(B.id, [{ to: C.addr.sapling, amountZat: 50000000, memo: "zw-pay:v1:to C's zs1" }], B.seed, 0));
+  step("B-to-zs1", toC);
+  window.__run.txs.ironwoodToSapling = toC.txids[0];
+  check("ironwood-to-zs1", toC.outputs[0].pool === "sapling");
+  await mine(1);
+  await C.w.sync();
+  const bC0 = plain(await C.w.get_balances(C.id));
+  step("C-after-zs1", bC0);
+  check("C-received-sapling", bC0.saplingTotalZat === 50000000 && bC0.saplingSpendableZat === 50000000 && bC0.ironwoodTotalZat === 0);
+
+  // ---------- 6. Sapling -> Ironwood (change to Ironwood) ----------
+  const fromC = plain(await C.w.send(C.id, [{ to: A.addr.unified, amountZat: 10000000, memo: "zw-pay:v1:from C's Sapling" }], C.seed, 0));
+  step("C-sapling-to-ironwood", fromC);
+  window.__run.txs.saplingToIronwood = fromC.txids[0];
+  check("sapling-to-ironwood-output", fromC.outputs[0].pool === "ironwood");
+  await mine(1);
+  await C.w.sync();
+  await A.w.sync();
+  const bC1 = plain(await C.w.get_balances(C.id));
+  const bA3 = plain(await A.w.get_balances(A.id));
+  step("C-after-sapling-spend", bC1);
+  check("sapling-change-to-ironwood", bC1.saplingTotalZat === 0 && bC1.ironwoodTotalZat === 50000000 - 10000000 - fromC.feeZat, { fee: fromC.feeZat });
+  check("A-received-from-sapling", bA3.ironwoodTotalZat === bA2.ironwoodTotalZat + 110000 + 10000000, { before: bA2.ironwoodTotalZat, after: bA3.ironwoodTotalZat });
+
+  // ---------- 7. an Orchard-only u1 is now payable ----------
+  const pOO = plain(await B.w.preview_send(B.id, [{ to: cfg.projectOrchardOnly, amountZat: 20000 }]));
+  check("orchard-only-preview", pOO.outputs[0].pool === "ironwood", pOO);
+  const toOO = plain(await B.w.send(B.id, [{ to: cfg.projectOrchardOnly, amountZat: 20000, memo: "zw-pay:v1:orchard-only u1" }], B.seed, 0));
+  window.__run.txs.orchardOnlyUa = toOO.txids[0];
+  step("B-to-orchard-only-ua", toOO);
+  await mine(1);
+  await P.w.sync();
+  const bP1 = plain(await P.w.get_balances(P.id));
+  check("P-received-on-orchard-only-ua", bP1.ironwoodTotalZat === bP0.ironwoodTotalZat + 20000, { before: bP0.ironwoodTotalZat, after: bP1.ironwoodTotalZat });
+  await expectError("test-net-orchard-only-wrong-network", "recipient_wrong_network", () => B.w.preview_send(B.id, [{ to: cfg.addresses.main.orchardOnlyUa, amountZat: 10000 }]));
+
+  // ---------- 8. withdrawals: t1 and TEX ----------
+  await B.w.sync();
+  await expectError("withdraw-without-flag", "recipient_transparent_not_allowed", () => B.w.preview_send(B.id, [{ to: C.addr.transparent, amountZat: 50000 }]));
+  await expectError("withdraw-with-memo", "memo_not_allowed", () => B.w.preview_send(B.id, [{ to: C.addr.transparent, amountZat: 50000, memo: "x", withdrawal: true }]));
+  await expectError("tex-without-flag", "recipient_transparent_not_allowed", () => B.w.preview_send(B.id, [{ to: cfg.projectTex, amountZat: 60000 }]));
+  await expectError("tex-with-memo", "memo_not_allowed", () => B.w.preview_send(B.id, [{ to: cfg.projectTex, amountZat: 60000, memo: "x", withdrawal: true }]));
+  const wd = plain(await B.w.send(B.id, [{ to: C.addr.transparent, amountZat: 50000, withdrawal: true }], B.seed, 0));
+  step("B-withdrawal-t", wd);
+  window.__run.txs.withdrawalT = wd.txids[0];
+  window.__run.withdrawalTo = C.addr.transparent;
+  check("withdrawal-t", wd.txids.length === 1 && wd.outputs[0].pool === "transparent" && !wd.outputs[0].tex);
+  await mine(1);
+  await B.w.sync();
+  const pTex = plain(await B.w.preview_send(B.id, [{ to: cfg.projectTex, amountZat: 60000, withdrawal: true }]));
+  step("B-preview-tex", pTex);
+  const pT0 = plain(await P.w.get_balances(P.id));
+  let tex = null;
+  try {
+    tex = plain(await B.w.send(B.id, [{ to: cfg.projectTex, amountZat: 60000, withdrawal: true }], B.seed, 0));
+    step("B-withdrawal-tex", tex);
+    window.__run.txs.texStep1 = tex.txids[0];
+    window.__run.txs.texStep2 = tex.txids[1];
+    check("withdrawal-tex-two-steps", tex.txids.length === 2 && tex.outputs[0].tex === true && tex.outputs[0].pool === "transparent" && tex.feeZat === pTex.feeZat);
+  } catch (e) {
+    check("withdrawal-tex-two-steps", false, errInfo(e));
+    if (e?.txid) window.__run.txs.texFailed = e.txid;
+  }
+  await mine(1);
+  await P.w.sync();
+  const pT1 = plain(await P.w.get_balances(P.id));
+  check("P-received-tex-withdrawal-on-its-t-address", tex && pT1.transparentTotalZat === pT0.transparentTotalZat + 60000, { before: pT0.transparentTotalZat, after: pT1.transparentTotalZat });
+
+  // ---------- 9. name fee (Ironwood output with memo) ----------
+  await A.w.sync();
+  const nameMemo = `zw-name:v1:${"m" + Math.random().toString(16).slice(2, 12)}:0123456789abcdef`;
+  const nameFee = plain(await A.w.send(A.id, [{ to: P.addr.unified, amountZat: cfg.feeZat, memo: nameMemo }], A.seed, 0));
+  step("A-name-fee", nameFee);
+  window.__run.txs.nameFee = nameFee.txids[0];
+  window.__run.nameMemo = nameMemo;
+  await mine(1);
+
+  // ---------- 10. the game's current (legacy) path still works ----------
+  await A.w.sync();
+  const legacyMemo = "zw-legacy:v1:propose_transfer path";
+  const proposal = await A.w.propose_transfer(A.id, B.addr.unified, 20000n, legacyMemo);
+  const rawTxids = await A.w.create_proposed_transactions(proposal, A.seed, 0);
+  await A.w.send_authorized_transactions(rawTxids);
+  const legacyTxid = Array.from(rawTxids.slice(0, 32), (b) => b.toString(16).padStart(2, "0")).reverse().join("");
+  window.__run.txs.legacyPayment = legacyTxid;
+  step("A-legacy-payment", { txid: legacyTxid });
+  await expectError("legacy-propose-transparent", "recipient_transparent_not_allowed", () => A.w.propose_transfer(A.id, C.addr.transparent, 10000n, null));
+  await mine(1);
+  await B.w.sync();
+  const histL = await B.w.get_transaction_history(B.id, 30, 0);
+  check("legacy-path-received-with-memo", (histL.transactions ?? []).some((t) => t.txid === legacyTxid && t.memo === legacyMemo));
+  await A.w.sync();
+  const histA2 = await A.w.get_transaction_history(A.id, 30, 0);
+  const aTx = (histA2.transactions ?? []);
+  check("history-txids-match-send-results", [shield.txid, nameFee.txids[0], legacyTxid].every((id) => aTx.some((t) => t.txid === id)) && aTx.some((t) => t.txid === shield.txid && t.tx_type === "Shielded"), { count: aTx.length });
+  const summary = await A.w.get_wallet_summary();
+  const ab = summary?.account_balances ?? [];
+  check("wallet-summary-has-ironwood", Array.isArray(ab) && ab[0]?.[0] === 0 && ab[0]?.[1]?.ironwood_balance > 0 && "orchard_balance" in (ab[0]?.[1] ?? {}), { ab: plain(ab) });
+
+  // ---------- 11. recipient rules ----------
+  await expectError("mainnet-address", "recipient_wrong_network", () => A.w.preview_send(A.id, [{ to: cfg.addresses.main.orchardSaplingUa, amountZat: 10000 }]));
+  await expectError("garbage-address", "invalid_address", () => A.w.preview_send(A.id, [{ to: "u1notanaddress", amountZat: 10000 }]));
+  await expectError("zero-amount", "invalid_amount", () => A.w.preview_send(A.id, [{ to: B.addr.sapling, amountZat: 0 }]));
+  await expectError("long-memo", "memo_too_long", () => A.w.preview_send(A.id, [{ to: B.addr.sapling, amountZat: 1000, memo: "x".repeat(513) }]));
+  await expectError("no-outputs", "invalid_outputs", () => A.w.preview_send(A.id, []));
+  await expectError("too-many-outputs", "invalid_outputs", () => A.w.preview_send(A.id, Array.from({ length: 9 }, () => ({ to: B.addr.sapling, amountZat: 1000 }))));
+  const pOS = plain(await A.w.preview_send(A.id, [{ to: cfg.addresses.regtest.orchardSaplingUa, amountZat: 10000 }]));
+  check("orchard+sapling-ua-pays-ironwood", pOS.outputs[0].pool === "ironwood" && pOS.outputs[0].to.startsWith("uregtest1"), pOS);
+  const pOT = plain(await A.w.preview_send(A.id, [{ to: cfg.addresses.regtest.orchardTransparentUa, amountZat: 10000, withdrawal: true }]));
+  check("orchard+transparent-ua-pays-ironwood-never-transparent", pOT.outputs[0].pool === "ironwood", pOT);
+  const pST = plain(await A.w.preview_send(A.id, [{ to: B.addr.unifiedSaplingTransparent, amountZat: 10000, withdrawal: true }]));
+  check("sapling+transparent-ua-pays-sapling-never-transparent", pST.outputs[0].pool === "sapling", pST);
+  const Z = await open("Z", cfg.seeds.A, await tipOf(), 1); // A's seed, account 1: no funds
+  await expectError("never-synced-preview", "wallet_not_synced", () => Z.w.preview_send(Z.id, [{ to: B.addr.sapling, amountZat: 10000 }]));
+  await expectError("never-synced-send", "wallet_not_synced", () => Z.w.send(Z.id, [{ to: B.addr.sapling, amountZat: 10000 }], Z.seed, 1));
+  await Z.w.sync();
+  await expectError("zero-balance-send", "insufficient_funds", () => Z.w.send(Z.id, [{ to: B.addr.sapling, amountZat: 10000 }], Z.seed, 1));
+  try { await A.w.get_balances(7); check("unknown-account-refused", false); } catch (e) { check("unknown-account-refused", /not found/i.test(String(e?.message ?? e)), errInfo(e)); }
+
+  // ---------- 12. forced consensus branch mismatch / announced upgrade ----------
+  await post("/__ctl/lightd?branch=c8e71055");   // NU6's branch id: "the chain moved"
+  const stM = plain(await A.w.sending_status());
+  step("status-mismatch", stM);
+  check("status-mismatch", stM.allowed === false && stM.code === "consensus_branch_mismatch" && stM.chainBranch === "c8e71055");
+  await expectError("send-mismatch", "consensus_branch_mismatch", () => A.w.send(A.id, [{ to: B.addr.sapling, amountZat: 10000 }], A.seed, 0));
+  await expectError("preview-mismatch", "consensus_branch_mismatch", () => A.w.preview_send(A.id, [{ to: B.addr.unified, amountZat: 10000 }]));
+  await expectError("shield-mismatch", "consensus_branch_mismatch", () => C.w.shield(C.id, C.seed, 0, null));
+  await expectError("legacy-mismatch", "consensus_branch_mismatch", () => A.w.propose_transfer(A.id, B.addr.unified, 10000n, null));
+  await mine(1);
+  await A.w.sync();
+  const bAm = plain(await A.w.get_balances(A.id));
+  check("sync-and-balance-during-mismatch", bAm.ironwoodTotalZat > 0 && bAm.chainTipHeight === (await tipOf()), bAm);
+  const tipNow = await tipOf();
+  await post(`/__ctl/lightd?upgradeName=NU7&upgradeHeight=${tipNow + 20}`);
+  const stU = plain(await A.w.sending_status());
+  step("status-upgrade-pending", stU);
+  check("status-upgrade-pending", stU.allowed === false && stU.code === "consensus_upgrade_pending");
+  await expectError("send-upgrade-pending", "consensus_upgrade_pending", () => A.w.preview_send(A.id, [{ to: B.addr.sapling, amountZat: 10000 }]));
+  await post(`/__ctl/lightd?upgradeName=NU7&upgradeHeight=${tipNow + 500}`);
+  const stF = plain(await A.w.sending_status());
+  check("status-upgrade-far", stF.allowed === true && stF.pendingUpgrade?.name === "NU7");
+  await post("/__ctl/lightd?clear=1");
+  check("status-restored", plain(await A.w.sending_status()).allowed === true);
+
+  // ---------- 13. persistence: db_to_bytes, Stage-1 save, seed + birthday ----------
+  await B.w.sync();
+  const bBnow = plain(await B.w.get_balances(B.id));
+  const histBnow = await B.w.get_transaction_history(B.id, 50, 0);
+  const dbB = await B.w.db_to_bytes();
+  const head = String.fromCharCode(...dbB.slice(0, 15));
+  const B2 = new WebWallet("test", lwdUrl, 1, 1, dbB);
+  const bB2 = plain(await B2.get_balances(0));
+  const hist2 = await B2.get_transaction_history(0, 50, 0);
+  const addrB2 = plain(await B2.get_addresses(0));
+  check("restore-from-db_to_bytes", head === "SQLite format 3" && JSON.stringify(bB2) === JSON.stringify(bBnow) && hist2.total_count === histBnow.total_count
+    && JSON.stringify(addrB2) === JSON.stringify(B.addr) && (hist2.transactions ?? []).some((t) => t.memo === legacyMemo), { bytes: dbB.length, count: hist2.total_count });
+  await mine(1);
+  await B2.sync();
+  check("restored-wallet-keeps-syncing", plain(await B2.get_balances(0)).chainTipHeight === (await tipOf()));
+  await expectError("garbage-save-refused", "wallet_format_unsupported", async () => new WebWallet("test", lwdUrl, 1, 1, new Uint8Array([1, 2, 3])));
+  // Damaged SQLite saves give wallet_format_unsupported (the game then restores from the seed) — page
+  // size 0 used to hit an assert! inside sqlite-wasm-rs (a trap of the whole instance), the others uncoded errors.
+  const pageSize0 = dbB.slice(); pageSize0[16] = 0; pageSize0[17] = 0;
+  await expectError("s2-page-size-0-save-refused", "wallet_format_unsupported", async () => new WebWallet("test", lwdUrl, 1, 1, pageSize0));
+  await expectError("s2-truncated-save-refused", "wallet_format_unsupported", async () => new WebWallet("test", lwdUrl, 1, 1, dbB.slice(0, 600)));
+  const corruptPage1 = dbB.slice(); corruptPage1.fill(0xff, 100, 4096);
+  await expectError("s2-corrupt-page1-save-refused", "wallet_format_unsupported", async () => new WebWallet("test", lwdUrl, 1, 1, corruptPage1));
+  const B4 = new WebWallet("test", lwdUrl, 1, 1, dbB);
+  check("s2-engine-alive-after-damaged-saves", JSON.stringify(plain(await B4.get_addresses(0))) === JSON.stringify(B.addr) && plain(await B4.get_balances(0)).ironwoodTotalZat === bBnow.ironwoodTotalZat);
+  B4.free();
+  // A Stage-1 player restores from the seed and birthday: a full rescan finds every pool.
+  t0 = performance.now();
+  const B3 = await open("B3", cfg.seeds.B, 2);
+  await B3.w.sync();
+  const bB3 = plain(await B3.w.get_balances(B3.id));
+  const bBlatest = plain(await B2.get_balances(0));
+  step("restore-from-seed", { seconds: secs(t0), bB3 });
+  check("restore-from-seed-and-birthday", bB3.ironwoodTotalZat === bBlatest.ironwoodTotalZat && bB3.saplingTotalZat === bBlatest.saplingTotalZat && bB3.transparentTotalZat === bBlatest.transparentTotalZat
+    && bB3.totalZat === bBlatest.totalZat && JSON.stringify(plain(await B3.w.get_addresses(B3.id))) === JSON.stringify(B.addr), { seed: bB3.totalZat, bytes: bBlatest.totalZat });
+  const hist3 = await B3.w.get_transaction_history(B3.id, 50, 0);
+  check("restore-from-seed-finds-memos", (hist3.transactions ?? []).some((t) => t.memo === legacyMemo), { count: hist3.total_count });
+
+
+  // ---------- 13b. a Stage-1 player's saved wallet -> wallet_format_unsupported -> restore from seed + birthday ----------
+  // D = seed C, account 3: a player of the Stage-1 game. Their wallet lives in the Stage-1 engine (the
+  // regtest twin of the shipped Sapling-beta engine, memory backend) with Sapling funds + memo and a
+  // transparent deposit waiting to be shielded; the game saved it with db_to_bytes().
+  await B.w.sync();
+  const dBirthday = await tipOf();
+  const D1 = new WalletS1("test", lwdUrl, 1, 1, null);
+  const d1Id = await D1.create_account("Zocial World", cfg.seeds.C, 3, dBirthday);
+  const d1Addr = plain(await D1.get_addresses(d1Id));
+  check("stage1-player-addresses-match-helper", d1Addr.unified === cfg.keys.D.unifiedSaplingTransparentAddress && d1Addr.sapling === cfg.keys.D.saplingAddress && d1Addr.transparent === cfg.keys.D.transparentAddress, { unified: d1Addr.unified.slice(0, 20) });
+  const s1Memo = "zw-pay:v1:to a Stage-1 player";
+  const toS1 = plain(await B.w.send(B.id, [{ to: d1Addr.unified, amountZat: 300000, memo: s1Memo }, { to: d1Addr.transparent, amountZat: 120000, withdrawal: true }], B.seed, 0));
+  step("B-pays-stage1-player", toS1);
+  window.__run.txs.toStage1Player = toS1.txids[0];
+  check("stage2-pays-stage1-player-in-one-tx", toS1.txids.length === 1 && toS1.outputs[0].pool === "sapling" && toS1.outputs[1].pool === "transparent", toS1);
+  await mine(1);
+  await D1.sync();
+  const bD1 = plain(await D1.get_balances(d1Id));
+  step("stage1-player-balances", bD1);
+  check("stage1-engine-sees-the-funds", bD1.saplingTotalZat === 300000 && bD1.transparentTotalZat === 120000, bD1);
+  const hD1 = await D1.get_transaction_history(d1Id, 10, 0);
+  check("stage1-engine-sees-the-memo", (hD1.transactions ?? []).some((t) => t.memo === s1Memo));
+  const s1Save = await D1.db_to_bytes();
+  const s1Head = Array.from(s1Save.slice(0, 16));
+  D1.free();
+  step("stage1-save", { bytes: s1Save.length, head: s1Head });
+  // The game hands the saved bytes to the Stage-2 engine:
+  await expectError("stage1-save-refused", "wallet_format_unsupported", async () => new WebWallet("test", lwdUrl, 1, 1, s1Save));
+  // The game's restore from the seed: new WebWallet(net, url, 1, 1, null) -> create_account("Zocial World", seed, 0|hd, birthday) -> sync() -> db_to_bytes().
+  t0 = performance.now();
+  const R = new WebWallet("test", lwdUrl, 1, 1, null);
+  const rId = await R.create_account("Zocial World", cfg.seeds.C, 3, dBirthday);
+  await R.sync();
+  const bR = plain(await R.get_balances(rId));
+  step("restored-stage1-player", { seconds: secs(t0), bR });
+  check("stage1-player-restored-from-seed-and-birthday", bR.saplingTotalZat === bD1.saplingTotalZat && bR.saplingSpendableZat === 300000 && bR.transparentTotalZat === bD1.transparentTotalZat
+    && bR.transparentShieldableZat === 120000 && bR.ironwoodTotalZat === 0 && bR.totalZat === 420000 && bR.shieldedSpendableZat === 300000, bR);
+  const rAddr = plain(await R.get_addresses(rId));
+  check("restored-wallet-keeps-the-stage1-address", rAddr.unifiedSaplingTransparent === d1Addr.unified && rAddr.sapling === d1Addr.sapling && rAddr.transparent === d1Addr.transparent
+    && rAddr.unified === cfg.keys.D.unifiedAddress && rAddr.unifiedShielded === cfg.keys.D.unifiedShieldedAddress);
+  const hR = await R.get_transaction_history(rId, 10, 0);
+  check("restored-history-has-the-stage1-memo", (hR.transactions ?? []).some((t) => t.txid === toS1.txids[0] && t.memo === s1Memo && t.tx_type === "Received"), { count: hR.total_count });
+  const rBytes = await R.db_to_bytes();
+  const R2 = new WebWallet("test", lwdUrl, 1, 1, rBytes);
+  check("restored-wallet-saves-in-stage2-format", String.fromCharCode(...rBytes.slice(0, 15)) === "SQLite format 3" && JSON.stringify(plain(await R2.get_balances(0))) === JSON.stringify(bR), { bytes: rBytes.length });
+  R2.free();
+  // ... and is fully usable: it shields the deposit into Ironwood and pays from the Stage-1 Sapling notes.
+  const rShield = plain(await R.shield(rId, cfg.seeds.C, 3, null));
+  step("restored-shield", rShield);
+  window.__run.txs.restoredShield = rShield.txid;
+  check("restored-wallet-shields-to-ironwood", rShield.pool === "ironwood" && rShield.transparentInZat === 120000 && rShield.utxos === 1, rShield);
+  await mine(1);
+  await R.sync();
+  const restoredMemo = "zw-pay:v1:from a restored Stage-1 wallet";
+  const rPay = plain(await R.send(rId, [{ to: A.addr.unifiedShielded, amountZat: 200000, memo: restoredMemo }], cfg.seeds.C, 3));
+  step("restored-payment", rPay);
+  window.__run.txs.restoredPayment = rPay.txids[0];
+  window.__run.restoredMemo = restoredMemo;
+  await mine(1);
+  await R.sync();
+  const bR3 = plain(await R.get_balances(rId));
+  step("restored-after", bR3);
+  check("restored-wallet-pays-from-stage1-sapling-notes", rPay.txids.length === 1 && rPay.outputs[0].pool === "ironwood" && bR3.saplingTotalZat === 0
+    && bR3.totalZat === 420000 - rShield.feeZat - 200000 - rPay.feeZat && bR3.ironwoodTotalZat === bR3.totalZat, { bR3, shieldFee: rShield.feeZat, payFee: rPay.feeZat });
+  R.free();
+
+  // ---------- 14. the wallet database file goes away with the wallet ----------
+  const files0 = open_wallet_databases();
+  const tmp = new WebWallet("test", lwdUrl, 1, 1, dbB);
+  const files1 = open_wallet_databases();
+  tmp.free();
+  const files2 = open_wallet_databases();
+  check("db-file-deleted-on-drop", files1.length === files0.length + 1 && files2.length === files0.length && JSON.stringify(files2) === JSON.stringify(files0), { files0: files0.length, files1: files1.length, files2: files2.length });
+
+  // ---------- 15. lock discipline: calls made during a sync wait, no deadlock ----------
+  await mine(2);
+  const syncP = A.w.sync();
+  const during = await Promise.all([A.w.get_balances(A.id), A.w.get_addresses(A.id), A.w.get_transaction_history(A.id, 5, 0), A.w.db_to_bytes()]);
+  await syncP;
+  check("calls-during-sync-complete", during.length === 4 && plain(await A.w.get_balances(A.id)).chainTipHeight === (await tipOf()));
+
+  // ---------- 16. broadcast errors, small deposits and UTXOs spent elsewhere, on Stage 2 ----------
+  const fault = (q) => post(`/__ctl/fault?${q}`);
+  const inMempool = async (txid) => (await (await fetch("/__ctl/mempool")).json()).txids.includes(txid);
+  const Q = await open("Q", cfg.seeds.PROJECT, await tipOf(), 2);   // PROJECT seed, account 2
+  Q.addr = plain(await Q.w.get_addresses(Q.id));
+  const Q2 = await open("Q2", cfg.seeds.PROJECT, await tipOf(), 2); // the same account in a second wallet
+  const small = plain(await A.w.send(A.id, [{ to: Q.addr.transparent, amountZat: 90000, withdrawal: true }], A.seed, 0));
+  step("A-small-deposit-to-Q", small);
+  await mine(1);
+  await Q.w.sync();
+  await Q2.w.sync();
+  const bQ0 = plain(await Q.w.get_balances(Q.id));
+  check("small-deposit-waiting", bQ0.transparentShieldableZat === 90000 && plain(await Q2.w.get_balances(Q2.id)).transparentShieldableZat === 90000, bQ0);
+  await expectError("old-threshold-would-refuse", "nothing_to_shield", () => Q.w.preview_shield(Q.id, 100000n));
+  const pSmall = plain(await Q.w.preview_shield(Q.id, null));
+  const sSmall = plain(await Q.w.shield(Q.id, Q.seed, 2, null));
+  step("Q-shield-small", sSmall);
+  window.__run.txs.smallShield = sSmall.txid;
+  check("small-deposit-shields-to-ironwood", sSmall.transparentInZat === 90000 && sSmall.shieldedZat === 90000 - sSmall.feeZat && sSmall.feeZat === pSmall.feeZat && sSmall.pool === "ironwood", sSmall);
+  await mine(1);
+  await fault("method=GetTransaction&mode=busy&count=1000");
+  await Q2.w.sync();
+  await fault("method=GetTransaction&clear=1");
+  const bQ21 = plain(await Q2.w.get_balances(Q2.id));
+  step("Q2-after-shield-elsewhere", bQ21);
+  check("utxo-spent-elsewhere-reconciled", bQ21.transparentShieldableZat === 0 && bQ21.transparentTotalZat === 0, bQ21);
+  await expectError("nothing-left-to-shield", "nothing_to_shield", () => Q2.w.preview_shield(Q2.id, null));
+  await A.w.sync();
+  await fault("method=GetLightdInfo&mode=busy&skip=3&count=1");
+  const e1a = plain(await A.w.send(A.id, [{ to: B.addr.sapling, amountZat: 10000 }], A.seed, 0));
+  const leftover = await fault("method=GetLightdInfo&clear=1").catch(() => ({}));
+  check("no-guard-call-during-broadcast", e1a.txids.length === 1 && (await inMempool(e1a.txids[0])), { txid: e1a.txids[0], leftover });
+  await mine(1);
+  await A.w.sync();
+  await fault("method=SendTransaction&mode=busy&count=1");
+  try {
+    const r = await A.w.send(A.id, [{ to: B.addr.sapling, amountZat: 10000 }], A.seed, 0);
+    check("busy-broadcast-is-uncertain", false, { unexpectedResult: plain(r) });
+  } catch (e) {
+    const i = errInfo(e);
+    check("busy-broadcast-is-uncertain", i.code === "broadcast_uncertain" && /^[0-9a-f]{64}$/.test(e.txid ?? "") && !(await inMempool(e.txid)), { ...i, txid: e.txid });
+  }
+  await A.w.sync();
+  await fault("method=SendTransaction&mode=lost&count=1");
+  try {
+    const r = await A.w.send(A.id, [{ to: B.addr.sapling, amountZat: 10000 }], A.seed, 0);
+    check("lost-answer-is-uncertain", false, { unexpectedResult: plain(r) });
+  } catch (e) {
+    const i = errInfo(e);
+    const sent = /^[0-9a-f]{64}$/.test(e.txid ?? "") && (await inMempool(e.txid));
+    check("lost-answer-is-uncertain", i.code === "broadcast_uncertain" && sent, { ...i, txid: e.txid, inMempool: sent });
+    window.__run.txs.lostAnswer = e.txid;
+  }
+  await mine(1);
+  // The SECOND transaction of a TEX pair fails after the first left. The error names the
+  // first transaction as sent (the game's message relies on this marker), and only the first reaches the mempool.
+  await A.w.sync();
+  await fault("method=SendTransaction&mode=busy&skip=1&count=1");
+  try {
+    const r = await A.w.send(A.id, [{ to: cfg.projectTex, amountZat: 30000, withdrawal: true }], A.seed, 0);
+    check("s2-tex-second-tx-failure-names-the-first-as-sent", false, { unexpectedResult: plain(r) });
+  } catch (e) {
+    const i = errInfo(e);
+    const m = /\(transaction 2 of 2; transaction 1 ([0-9a-f]{64}) was sent\)/.exec(String(e?.message ?? ""));
+    const firstInMempool = m ? await inMempool(m[1]) : false;
+    const secondInMempool = /^[0-9a-f]{64}$/.test(e.txid ?? "") ? await inMempool(e.txid) : true;
+    check("s2-tex-second-tx-failure-names-the-first-as-sent", i.code === "broadcast_uncertain" && m !== null && firstInMempool && !secondInMempool, { ...i, firstInMempool, secondInMempool });
+    if (m) window.__run.txs.texHalfStep1 = m[1];
+  }
+  await fault("method=SendTransaction&clear=1").catch(() => undefined);
+  await mine(1);
+  window.__run.final = { A: plain(await A.w.get_balances(A.id)), tip: await tipOf() };
+  step("done");
+} catch (e) {
+  window.__run.ok = false;
+  step("error", { ...errInfo(e), stack: String(e?.stack ?? "").slice(0, 800) });
+}
+window.__run.finished = true;
+</script>
+</body>
+</html>

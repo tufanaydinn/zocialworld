@@ -1,0 +1,63 @@
+diff --git a/crates/webzjs-common/Cargo.toml b/crates/webzjs-common/Cargo.toml
+index bf9a370..0ebe27a 100644
+--- a/crates/webzjs-common/Cargo.toml
++++ b/crates/webzjs-common/Cargo.toml
+@@ -18,6 +18,13 @@ js-sys.workspace = true
+ pczt = { workspace = true, default-features = false, features = ["orchard", "sapling", "transparent"] }
+ serde-wasm-bindgen.workspace = true
+ 
++[features]
++# TESTING ONLY, never shipped (Zocial World ADR-018 Sapling beta). The "test" network string
++# becomes a local REGTEST chain: regtest address encodings (uregtest1…, zregtestsapling1…, tm…)
++# and every network upgrade through NU6.3 active from height 1, matching
++# `zebrad` regtest with all activation heights = 1. It is a cargo feature rather than a
++# source patch, so the shipped build and the regtest build come from one source tree.
++regtest = []
+ 
+ [lints]
+ workspace = true
+\ No newline at end of file
+diff --git a/crates/webzjs-common/src/network.rs b/crates/webzjs-common/src/network.rs
+index 08fbea9..d84207f 100644
+--- a/crates/webzjs-common/src/network.rs
++++ b/crates/webzjs-common/src/network.rs
+@@ -23,6 +23,9 @@ impl FromStr for Network {
+         match s {
+             "main" => Ok(Network::MainNetwork),
+             "test" => Ok(Network::TestNetwork),
++            // regtest build only: "regtest" is an alias of "test" (which is the local regtest chain).
++            #[cfg(feature = "regtest")]
++            "regtest" => Ok(Network::TestNetwork),
+             _ => Err(Error::InvalidNetwork(s.to_string())),
+         }
+     }
+@@ -32,7 +35,11 @@ impl Parameters for Network {
+     fn network_type(&self) -> zcash_protocol::consensus::NetworkType {
+         match self {
+             Network::MainNetwork => zcash_protocol::consensus::NetworkType::Main,
++            #[cfg(not(feature = "regtest"))]
+             Network::TestNetwork => zcash_protocol::consensus::NetworkType::Test,
++            // regtest build: the "test" network is a local regtest chain (uregtest1… / zregtestsapling1…).
++            #[cfg(feature = "regtest")]
++            Network::TestNetwork => zcash_protocol::consensus::NetworkType::Regtest,
+         }
+     }
+ 
+@@ -41,9 +48,17 @@ impl Parameters for Network {
+             Network::MainNetwork => {
+                 zcash_protocol::consensus::Network::MainNetwork.activation_height(nu)
+             }
++            #[cfg(not(feature = "regtest"))]
+             Network::TestNetwork => {
+                 zcash_protocol::consensus::Network::TestNetwork.activation_height(nu)
+             }
++            // regtest build: every upgrade (Overwinter … NU6.3) active from height 1, matching the
++            // local zebrad regtest chain used to verify the Sapling beta.
++            #[cfg(feature = "regtest")]
++            Network::TestNetwork => {
++                let _ = nu;
++                Some(consensus::BlockHeight::from_u32(1))
++            }
+         }
+     }
+ }

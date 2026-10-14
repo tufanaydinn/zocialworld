@@ -8,7 +8,7 @@
 //
 // Built on @chainsafe/webzjs-wallet (a vendored WebZjs build, patched to accept a memo on propose_transfer). ADR-018 § 3
 // (Stage 2): with VITE_ZCASH_NETWORK=main the alias points at the Stage 2 "Ironwood" mainnet engine (NU6.3, upstream
-// zcash_client_sqlite in wasm; its build scripts and API reference are published separately), whose extra API (the five addresses, per-pool zatoshi balances, the general multi-output send with TEX withdrawals,
+// zcash_client_sqlite in wasm; build scripts and API reference in scripts/wallet-engine/), whose extra API (the five addresses, per-pool zatoshi balances, the general multi-output send with TEX withdrawals,
 // shielding into Ironwood, the upgrade guard) is exposed below as the optional `mainnetEngine` part of ZecWallet.
 // CLIENT-ONLY: import dynamically (await import) — never on the server / SSR.
 //

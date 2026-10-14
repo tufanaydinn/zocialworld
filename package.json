@@ -22,8 +22,9 @@
     "test:e2e": "playwright test",
     "test:unit": "npm run test:unit --workspace apps/web",
     "test:server": "npm run test --workspace apps/server",
-    "test:scripts": "node --test scripts/dev/livekit.test.mjs scripts/dev/with-env.test.mjs scripts/tools/registry-keys.test.mjs scripts/assets/assets.test.mjs",
+    "test:scripts": "node --test scripts/dev/livekit.test.mjs scripts/dev/with-env.test.mjs scripts/tools/registry-keys.test.mjs scripts/assets/assets.test.mjs scripts/wallet-engine/fetch-engine.test.mjs",
     "assets:fetch": "node scripts/assets/fetch.mjs",
+    "engine:fetch": "node scripts/wallet-engine/fetch-engine.mjs",
     "test": "npm run test:unit && npm run test:server && npm run test:scripts"
   },
   "devDependencies": {

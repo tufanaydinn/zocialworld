@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Stage 2: the game server's fee and name checks (regtest)</title></head>
+<body>
+<pre id="out">starting…</pre>
+<script type="module">
+// Stage 2 (TESTING ONLY): the regtest twin of the Stage-2 engine pays the game server's name fee and player
+// payments with their fee output; run-server-checks.mjs speaks the game protocol to the real game server
+// (NAME_REGISTRY=lightwalletd, the transfer fee) and drives this page through window.zw. Seeds are the regtest test
+// keys served by the harness (/__ctl/config); they are never printed.
+import initWasm, { initThreadPool, WebWallet } from "/pkg/webzjs_wallet.js";
+
+const out = document.getElementById("out");
+const plain = (v) => JSON.parse(JSON.stringify(v ?? null, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
+const wallets = {};
+let cfg = null;
+const lwdUrl = `${location.origin}/zcash/lwd`;
+const wrap = (fn) => async (...args) => {
+  const t = performance.now();
+  try {
+    const result = await fn(...args);
+    out.textContent += `\nok ${fn.name}`;
+    return { ms: Math.round(performance.now() - t), result: plain(result) };
+  } catch (e) {
+    out.textContent += `\nerror ${fn.name} ${e?.code ?? ""}`;
+    return { ms: Math.round(performance.now() - t), error: { code: e?.code ?? null, message: String(e?.message ?? e).slice(0, 400) } };
+  }
+};
+window.zw = {
+  init: wrap(async function init() {
+    cfg = await (await fetch("/__ctl/config")).json();
+    await initWasm();
+    await initThreadPool(Math.min(navigator.hardwareConcurrency || 4, 4));
+    return { crossOriginIsolated: self.crossOriginIsolated };
+  }),
+  open: wrap(async function open(name, birthday) {
+    const w = new WebWallet("test", lwdUrl, 1, 1, null);
+    const id = await w.create_account(name, cfg.seeds[name], 0, birthday);
+    wallets[name] = { w, id };
+    return { id };
+  }),
+  sync: wrap(async function sync(name) { await wallets[name].w.sync(); return true; }),
+  balances: wrap(async function balances(name) { return wallets[name].w.get_balances(wallets[name].id); }),
+  addresses: wrap(async function addresses(name) { return wallets[name].w.get_addresses(wallets[name].id); }),
+  status: wrap(async function status(name) { return wallets[name].w.sending_status(); }),
+  // outputs: [{ to, amountZat, memo? }] — ONE transaction (the engine's general send, as the game's adapter calls it).
+  send: wrap(async function send(name, outputs) { return wallets[name].w.send(wallets[name].id, outputs, cfg.seeds[name], 0); }),
+};
+window.__ready = true;
+</script>
+</body>
+</html>

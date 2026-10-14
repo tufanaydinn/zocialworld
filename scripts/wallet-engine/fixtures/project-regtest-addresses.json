@@ -1,0 +1,9 @@
+{
+ "note": "REGTEST ONLY — test keys, never fund on any network. PROJECT (regtest test seed, account 0): Orchard-only, Orchard + Sapling and Orchard + transparent unified addresses and the TEX address, derived with zw-tx-decrypt examples/test_addresses.rs.",
+ "regtest": {
+  "orchardOnlyUa": "uregtest1hmcjr5wyhtugazwwdv4udhgjpwywqrz8e3e4xdmemgleuurk7pf5p662f7n0mw02vjz5ww6crgy2nn8gjm6h9ep6d0tuf2h8nga55shw",
+  "orchardSaplingUa": "uregtest1u6khvvfg67ylkr297xgv3wj32fltcnnywqrnejwzgy55mzapvknavn547yeygegxjgjgsvrzclhg3tcyj3nqwcpl5cqxn23vvsm8gl4297wq6u4dt6xy53ay2l8ystv3xej5p8v4zfnqxj9c2g6ct584xutzhumvk5mv3vt9850h2thx",
+  "orchardTransparentUa": "uregtest1rmzcfmpt6fwseg59e67kc9tv884vz2mwjhc8pk95wgjny34jxtvmqcvcc9l0pm8nrht3qdt0d47r52axf4t6wedaltugqzsydupeue09577qr8l8e3qhqj8zt93gn2ftq8qssrkv6ya",
+  "tex": "texregtest1ap63tfyf82heflwygeqtxkq9fnvlw4sny95s32"
+ }
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Stage 2 NU7 branch guard (public Testnet)</title></head>
+<body>
+<pre id="out">starting…</pre>
+<script type="module">
+// Stage 2: the Stage-2 MAINNET engine package (NU6.3 only) against the public Testnet, where NU7 is active since
+// height 4,465,026. Expected: sending_status() reports consensus_branch_mismatch (chain branch 77190ad9) and every
+// send/shield refuses with that code, while sync, balances and restore keep working. NO FUNDS: a fresh random seed
+// generated in the page, never printed, stored or sent anywhere. Wallet traffic goes through the GAME SERVER's wallet
+// bridge (?lwd=…/zcash/lwd) with LIGHTWALLETD_URL=https://testnet.zec.rocks:443.
+import initWasm, { initThreadPool, WebWallet, generate_seed_phrase, expected_consensus_branch, engine_info } from "/pkg/webzjs_wallet.js";
+
+const out = document.getElementById("out");
+window.__run = { steps: [], ok: true };
+const step = (name, data) => { const e = { name, t: Math.round(performance.now()), ...(data ?? {}) }; window.__run.steps.push(e); out.textContent += `\n${JSON.stringify(e)}`; return e; };
+const check = (name, cond, data) => { if (!cond) window.__run.ok = false; return step(`check:${name}`, { pass: !!cond, ...(data ?? {}) }); };
+const plain = (v) => JSON.parse(JSON.stringify(v ?? null, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
+const errInfo = (e) => ({ code: e?.code ?? null, message: String(e?.message ?? e).slice(0, 400) });
+async function expectError(name, codes, fn) {
+  try { const r = await fn(); return check(name, false, { expectedCodes: codes, unexpectedResult: plain(r) }); }
+  catch (e) { const i = errInfo(e); return check(name, codes.includes(i.code), { expectedCodes: codes, ...i }); }
+}
+try {
+  const params = new URLSearchParams(location.search);
+  const lwdUrl = params.get("lwd");
+  const blocks = Number(params.get("blocks") ?? 5000);
+  await initWasm();
+  await initThreadPool(Math.min(navigator.hardwareConcurrency || 4, 4));
+  const info = plain(engine_info());
+  step("wasm-ready", { crossOriginIsolated: self.crossOriginIsolated, expectedBranch: expected_consensus_branch(), lwdUrl, info });
+  check("build-targets-nu63-mainnet-package", expected_consensus_branch() === "37a5165b" && info.regtest === false && info.supportedBranches.join() === "37a5165b", { supportedBranches: info.supportedBranches });
+  const wallet = new WebWallet("test", lwdUrl, 1, 1, null);
+  const tip = Number(await wallet.get_latest_block());
+  check("testnet-past-nu7", tip >= 4_465_026, { tip });
+  const birthday = tip - blocks;
+  let seed = generate_seed_phrase();
+  const accountId = await wallet.create_account("nu7-guard", seed, 0, birthday);
+  step("account", { tip, birthday, accountId });
+  const a = plain(await wallet.get_addresses(accountId));
+  step("addresses", { unifiedPrefix: a.unified.slice(0, 7), saplingPrefix: a.sapling.slice(0, 13), transparentPrefix: a.transparent.slice(0, 2) });
+  check("testnet-address-prefixes", a.unified.startsWith("utest1") && a.unifiedShielded.startsWith("utest1") && a.sapling.startsWith("ztestsapling1") && a.transparent.startsWith("tm"));
+  const st = plain(await wallet.sending_status());
+  step("sending-status", st);
+  check("guard-reports-branch-mismatch", st.allowed === false && st.code === "consensus_branch_mismatch" && st.expectedBranch === "37a5165b" && st.chainBranch === "77190ad9" && st.chainName === "test", { chainBranch: st.chainBranch, code: st.code });
+  const s0 = performance.now();
+  await wallet.sync();
+  const b = plain(await wallet.get_balances(accountId));
+  step("synced", { seconds: +((performance.now() - s0) / 1000).toFixed(1), blocks: tip - birthday, balances: b });
+  check("sync-keeps-working-on-nu7-blocks", b.fullyScannedHeight >= tip && b.chainTipHeight >= tip, { fullyScannedHeight: b.fullyScannedHeight, chainTipHeight: b.chainTipHeight });
+  check("balances-readable-every-pool", b.totalZat === 0 && b.ironwoodTotalZat === 0 && b.saplingTotalZat === 0 && b.orchardTotalZat === 0 && b.transparentTotalZat === 0);
+  await expectError("send-refused-by-guard", ["consensus_branch_mismatch"], () => wallet.send(accountId, [{ to: a.sapling, amountZat: 10000, memo: "zocial-world nu7 guard check" }], seed, 0));
+  await expectError("preview-send-refused-by-guard", ["consensus_branch_mismatch"], () => wallet.preview_send(accountId, [{ to: a.unifiedShielded, amountZat: 10000 }]));
+  await expectError("shield-refused-by-guard", ["consensus_branch_mismatch"], () => wallet.preview_shield(accountId, null));
+  await expectError("legacy-propose-refused-by-guard", ["consensus_branch_mismatch"], () => wallet.propose_transfer(accountId, a.unifiedShielded, 10000n, null));
+  seed = null;
+  // A second sync once the chain has moved on: the scan follows new NU7 blocks and the guard still holds.
+  const waitStart = performance.now();
+  let newTip = tip;
+  while (newTip <= b.fullyScannedHeight && performance.now() - waitStart < 6 * 60_000) {
+    await new Promise((r) => setTimeout(r, 15_000));
+    newTip = Number(await wallet.get_latest_block());
+  }
+  await wallet.sync();
+  const b2 = plain(await wallet.get_balances(accountId));
+  const st2 = plain(await wallet.sending_status());
+  check("second-sync-follows-new-nu7-blocks", b2.fullyScannedHeight > b.fullyScannedHeight && b2.fullyScannedHeight >= newTip && st2.code === "consensus_branch_mismatch", { before: b.fullyScannedHeight, after: b2.fullyScannedHeight, newTip, waitedSec: Math.round((performance.now() - waitStart) / 1000), code: st2.code });
+  const db = await wallet.db_to_bytes();
+  const restored = new WebWallet("test", lwdUrl, 1, 1, db);
+  const rb = plain(await restored.get_balances(accountId));
+  check("restore", rb.fullyScannedHeight === b2.fullyScannedHeight && String.fromCharCode(...db.slice(0, 15)) === "SQLite format 3", { bytes: db.length });
+  step("done");
+} catch (e) {
+  window.__run.ok = false;
+  step("error", { ...errInfo(e), stack: String(e?.stack ?? "").slice(0, 800) });
+}
+window.__run.finished = true;
+</script>
+</body>
+</html>

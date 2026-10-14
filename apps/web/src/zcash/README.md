@@ -26,7 +26,7 @@ refuses to build or start):
 
 The stand-in engine lets a checkout without the engine binary typecheck, build and run everything
 except the wallet: every call fails with `engine_not_installed`, and the wallet panel says the engine
-is not installed in this build. The engine build scripts are published separately.
+is not installed in this build. The engine's sources and build are in `scripts/wallet-engine/`.
 
 ## Files
 

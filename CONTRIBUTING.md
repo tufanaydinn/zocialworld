@@ -20,9 +20,10 @@ npm install
 npm run dev          # web client (http://localhost:5174), game server (port 8787) and a local LiveKit
 ```
 
-`npm run dev` uses the `test` network and the sample content. The wallet engine build is not in this
-repository yet (its build scripts will be published separately later), so the wallet runs on a stand-in
-engine that reports "not installed"; everything else works. `npm run assets:fetch` downloads the optional
+`npm run dev` uses the `test` network and the sample content. Without the wallet engine's WebAssembly
+module the wallet runs on a stand-in engine that reports "not installed"; everything else works. The
+engine's sources and build are in [scripts/wallet-engine/](scripts/wallet-engine/README.md);
+`npm run engine:fetch` downloads the published mainnet module and checks it against `SHA256SUMS`. `npm run assets:fetch` downloads the optional
 third-party model packs. See [apps/web/README.md](apps/web/README.md) and
 [apps/server/README.md](apps/server/README.md), which also explain local multi-user testing.
 

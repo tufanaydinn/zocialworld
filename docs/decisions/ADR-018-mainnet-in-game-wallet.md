@@ -143,7 +143,7 @@ The mainnet build is the Zcash Community Grants fork at the NU6.3 consensus rule
 - **Automatic for players.** The game is a web page, so a rebuilt wallet engine reaches players on their next page load. Nothing is installed, and the encrypted wallet stays on the device.
   - The server announces its build id.
   - A client running an older build shows "Update ready — reload" and reloads safely between actions (never during a send).
-- **A one-command rebuild.** The engine's build is reproducible: pinned sources, patch files and a build script (published separately from this repository, later). Moving to NU7 means bumping the pinned upstream revisions once librustzcash and the wallet fork support NU7, running the script, testing on the public testnet (NU7 has been active there since block 4,465,026, 2026-10-04) and deploying before the mainnet activation height.
+- **A one-command rebuild.** The engine's build is reproducible: pinned sources, patch files and a build script (`scripts/wallet-engine/`). Moving to NU7 means bumping the pinned upstream revisions once librustzcash and the wallet fork support NU7, running the script, testing on the public testnet (NU7 has been active there since block 4,465,026, 2026-10-04) and deploying before the mainnet activation height.
   - NU7 also shortens the block target to 25 seconds; the import date estimator accounts for that.
 - **Safety net.** If the chain upgrades before the new build is live, the branch check of § 2 pauses sending and keeps balances visible.
 
@@ -194,7 +194,7 @@ decision above says players get, what is charged or what anyone learns beyond wh
 sqlite-wasm-rs 0.4.3 — SQLite 3.50.4 compiled from the official amalgamation with a pinned emscripten (byte-identical
 to the crate's prebuilt library, which is no longer linked). Version-6 transactions on NU6.3 (`37a5165b`). The wasm
 (62,478,361 bytes, sha256 `772d2606…`) rebuilds byte for byte in two independent directories. The memory backend
-(`zcash_client_memory`) is gone. The engine's build scripts and patches will be published separately.
+(`zcash_client_memory`) is gone. The engine's build scripts and patches are in `scripts/wallet-engine/`.
 
 **§ 1 as amended — addresses.**
 - *Add funds* shows the **full unified address** (Orchard-family + Sapling + transparent receivers): any wallet pays it,

@@ -34,8 +34,9 @@ The wallet on the hosted site is an experimental, unaudited beta, with a cap of
 |---|---|
 | The web client: rendering, camera, movement, collision, interaction, HUD, minimap, chat, voice, Watch Hall, Learning Valley framework, community hub, project discovery, onboarding, moderation client, wallet client | The production world content: district, hall and valley layouts, lesson curriculum, event catalogue |
 | The game server: presence relay, chat, voice tokens, Watch Hall stage arbitration, content gateway, owned names, wallet bridge, payment and fee verification, moderation | Original Zocial World artwork, logos and branding |
-| A placeholder world: the prototype plaza, a small sample Watch Hall and three sample lessons | The production build of the wallet engine |
-| The multiplayer protocol, threat models, architecture notes and ADRs | Deployment configuration, keys and operations |
+| A placeholder world: the prototype plaza, a small sample Watch Hall and three sample lessons | |
+| The wallet engine: build scripts, patches, verification harness and the vendored package (its WebAssembly module is a Release asset) | Deployment configuration, keys and operations |
+| The multiplayer protocol, threat models, architecture notes and ADRs | |
 | Asset licence metadata and a fetch-and-verify script for the third-party model packs | |
 
 The client separates **systems** from **content**: systems never import content, and one content provider
@@ -43,9 +44,12 @@ supplies the locations, the hall layout and the lessons. A plain checkout uses t
 `apps/web/src/content/sample/`; the hosted deployment adds its own content module. See
 [apps/web/src/content/README.md](apps/web/src/content/README.md).
 
-The wallet engine is not in this repository yet: its build scripts will be published separately later.
-Without it, the client builds against a stand-in engine on the `test` network. Everything except the
-wallet works, and the wallet panel reports that the engine is not installed.
+The wallet engine (WebZjs with our patches, see [scripts/wallet-engine/README.md](scripts/wallet-engine/README.md))
+is built from source by `scripts/wallet-engine/build-engine.sh`. Its package is vendored in
+`vendor/webzjs-wallet-main/`, except the 62 MB WebAssembly module, which is published as a GitHub Release
+asset: `npm run engine:fetch` downloads it and refuses it unless it matches the committed `SHA256SUMS`.
+A `main` build needs it. A `test` build does not: without the module the client uses a stand-in engine,
+everything except the wallet works, and the wallet panel reports that the engine is not installed.
 
 ## Quick start
 
@@ -58,6 +62,7 @@ npm run typecheck    # TypeScript across every workspace
 npm test             # client unit tests, server tests and script tests
 npm run test:e2e     # Playwright end-to-end tests on the sample content
 VITE_ZCASH_NETWORK=test npm run build   # production build of the client and the server
+npm run engine:fetch # mainnet builds only: download and verify the wallet engine's WebAssembly module
 ```
 
 - `npm run dev` opens the client on <http://localhost:5174> with the game server on port 8787. The dev
@@ -93,8 +98,10 @@ scripts/
   dev/              local development helpers (LiveKit, env, load tests)
   assets/           fetch and verify the third-party model packs
   tools/            operator tools (registry keys)
+  wallet-engine/    the wallet engine's reproducible build, patches, fetch script and verification harness
 tests/e2e/          Playwright end-to-end tests
 vendor/
+  webzjs-wallet-main/ the mainnet wallet engine package (the .wasm module is fetched by npm run engine:fetch)
   zcash-tx-decrypt/ the game server's prebuilt shielded transaction decryption helper
 ```
 

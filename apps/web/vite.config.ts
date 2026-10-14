@@ -106,7 +106,7 @@ export function walletEngine(network: string | undefined, root: string = __dirna
   if (network === 'main') {
     const dir = path.resolve(root, '../../vendor/webzjs-wallet-main');
     if (!exists(path.join(dir, 'webzjs_wallet_bg.wasm'))) {
-      throw new Error(`FAIL_CLOSED: the wallet engine is missing at ${dir}. A main build needs the mainnet engine binary (its build scripts are published separately); a test build without a binary uses the stand-in engine.`);
+      throw new Error(`FAIL_CLOSED: the wallet engine is missing at ${dir}. A main build needs the mainnet engine binary: run \`npm run engine:fetch\` (or build it with scripts/wallet-engine/build-engine.sh); a test build without a binary uses the stand-in engine.`);
     }
     return engine(dir);
   }

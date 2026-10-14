@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Stage 2 mainnet smoke</title></head>
+<body>
+<pre id="out">starting…</pre>
+<script type="module">
+// Stage 2 mainnet smoke test of the Stage-2 engine (mainnet package of the reproducible build), NO FUNDS.
+// A fresh random seed is generated in the page and is never printed, stored or sent anywhere (a throwaway with zero
+// balance). Wallet traffic goes through the GAME SERVER's wallet bridge (?lwd=…/zcash/lwd) to zec.rocks.
+//  * create + sync from birthdays 2,000 and 30,000 blocks below the tip (timed, one fresh wallet each);
+//  * engine_info, addresses (decoded by the runner with zw-tx-decrypt 0.2), the upgrade guard on the live chain;
+//  * coded refusals with a zero balance; db_to_bytes round trip and an incremental sync.
+import initWasm, { initThreadPool, WebWallet, generate_seed_phrase, expected_consensus_branch, engine_info } from "/pkg/webzjs_wallet.js";
+
+const out = document.getElementById("out");
+window.__run = { steps: [], ok: true };
+const step = (name, data) => { const e = { name, t: Math.round(performance.now()), ...(data ?? {}) }; window.__run.steps.push(e); out.textContent += `\n${JSON.stringify(e)}`; return e; };
+const check = (name, cond, data) => { if (!cond) window.__run.ok = false; return step(`check:${name}`, { pass: !!cond, ...(data ?? {}) }); };
+const plain = (v) => JSON.parse(JSON.stringify(v ?? null, (_k, x) => (typeof x === "bigint" ? x.toString() : x)));
+const errInfo = (e) => ({ code: e?.code ?? null, message: String(e?.message ?? e).slice(0, 400) });
+async function expectError(name, code, fn) {
+  try { const r = await fn(); return check(name, false, { expectedCode: code, unexpectedResult: plain(r) }); }
+  catch (e) { const i = errInfo(e); return check(name, i.code === code, { expectedCode: code, ...i }); }
+}
+try {
+  const params = new URLSearchParams(location.search);
+  const lwdUrl = params.get("lwd");
+  const orchardOnly = params.get("orchardOnly");
+  const testnetUa = params.get("testnetUa");
+  const tex = params.get("tex");
+  const ranges = (params.get("blocks") ?? "2000,30000").split(",").map(Number);
+  await initWasm();
+  await initThreadPool(Math.min(navigator.hardwareConcurrency || 4, 4));
+  const info = plain(engine_info());
+  step("wasm-ready", { crossOriginIsolated: self.crossOriginIsolated, expectedBranch: expected_consensus_branch(), lwdUrl, info });
+  check("engine-info-mainnet", info.regtest === false && info.txVersion === "V6" && info.expectedBranch === "37a5165b" && /^sqlite 3\.50\.4$/.test(info.backend) && WebWallet.backend() === info.backend && info.pools.join() === "ironwood,sapling,orchard,transparent", info);
+  const probe = new WebWallet("main", lwdUrl, 1, 1, null);
+  const tip0 = Number(await probe.get_latest_block());
+  probe.free();
+  step("chain", { tip: tip0 });
+  window.__run.sync = {};
+  let last = null;
+  for (const blocks of ranges) {
+    const w = new WebWallet("main", lwdUrl, 1, 1, null);
+    const tip = Number(await w.get_latest_block());
+    const birthday = tip - blocks;
+    let seed = generate_seed_phrase();
+    const t0 = performance.now();
+    const id = await w.create_account("smoke", seed, 0, birthday);
+    const tc = performance.now();
+    await w.sync();
+    const seconds = +((performance.now() - tc) / 1000).toFixed(1);
+    const b = plain(await w.get_balances(id));
+    const bytes = await w.db_to_bytes();
+    window.__run.sync[blocks] = { birthday, tip, seconds, createMs: Math.round(tc - t0), fullyScannedHeight: b.fullyScannedHeight, chainTipHeight: b.chainTipHeight, dbBytes: bytes.length };
+    step(`synced-${blocks}`, window.__run.sync[blocks]);
+    check(`synced-to-tip-${blocks}`, b.fullyScannedHeight >= tip && b.chainTipHeight >= tip, window.__run.sync[blocks]);
+    check(`zero-in-every-pool-${blocks}`, b.totalZat === 0 && b.ironwoodTotalZat === 0 && b.saplingTotalZat === 0 && b.orchardTotalZat === 0 && b.transparentTotalZat === 0 && b.shieldedSpendableZat === 0, b);
+    if (last) { last.w.free(); }
+    last = { w, id, seed, b, bytes, blocks };
+    seed = null;
+  }
+  const { w, id, b, bytes } = last;
+  const a = plain(await w.get_addresses(id));
+  window.__run.addresses = { unified: a.unified, unifiedShielded: a.unifiedShielded, unifiedSaplingTransparent: a.unifiedSaplingTransparent, sapling: a.sapling, transparent: a.transparent };
+  check("mainnet-address-prefixes", a.unified.startsWith("u1") && a.unifiedShielded.startsWith("u1") && a.unifiedSaplingTransparent.startsWith("u1") && a.sapling.startsWith("zs1") && a.transparent.startsWith("t1")
+    && (await w.get_current_address(id)) === a.unified && (await w.get_unified_address(id)) === a.unified);
+  const st = plain(await w.sending_status());
+  step("sending-status", st);
+  check("sending-allowed-on-37a5165b", st.allowed === true && st.code === null && st.expectedBranch === "37a5165b" && st.chainBranch === "37a5165b" && st.nextBlockBranch === "37a5165b" && st.chainName === "main" && st.pendingUpgrade === null
+    && st.pools.join() === "ironwood,sapling,orchard,transparent", st);
+  // Coded refusals with a zero balance.
+  await expectError("zero-balance-send-ironwood", "insufficient_funds", () => w.send(id, [{ to: a.unifiedShielded, amountZat: 10000, memo: "zocial-world mainnet smoke" }], last.seed, 0));
+  last.seed = null;
+  await expectError("zero-balance-preview-zs1", "insufficient_funds", () => w.preview_send(id, [{ to: a.sapling, amountZat: 10000 }]));
+  await expectError("zero-balance-orchard-only-u1-is-payable", "insufficient_funds", () => w.preview_send(id, [{ to: orchardOnly, amountZat: 10000 }]));
+  await expectError("zero-balance-shield", "nothing_to_shield", () => w.preview_shield(id, null));
+  await expectError("zero-balance-withdraw-t1", "insufficient_funds", () => w.preview_send(id, [{ to: a.transparent, amountZat: 10000, withdrawal: true }]));
+  await expectError("zero-balance-withdraw-tex", "insufficient_funds", () => w.preview_send(id, [{ to: tex, amountZat: 10000, withdrawal: true }]));
+  await expectError("t1-without-withdrawal", "recipient_transparent_not_allowed", () => w.preview_send(id, [{ to: a.transparent, amountZat: 10000 }]));
+  await expectError("tex-without-withdrawal", "recipient_transparent_not_allowed", () => w.preview_send(id, [{ to: tex, amountZat: 10000 }]));
+  await expectError("testnet-address-on-mainnet", "recipient_wrong_network", () => w.preview_send(id, [{ to: testnetUa, amountZat: 10000 }]));
+  await expectError("garbage-address", "invalid_address", () => w.preview_send(id, [{ to: "u1notanaddress", amountZat: 10000 }]));
+  await expectError("memo-too-long", "memo_too_long", () => w.preview_send(id, [{ to: a.unifiedShielded, amountZat: 10000, memo: "x".repeat(513) }]));
+  // Persistence: SQLite save, restore, incremental sync.
+  const w2 = new WebWallet("main", lwdUrl, 1, 1, bytes);
+  check("restore-from-db_to_bytes", String.fromCharCode(...bytes.slice(0, 15)) === "SQLite format 3" && JSON.stringify(plain(await w2.get_balances(0))) === JSON.stringify(b) && JSON.stringify(plain(await w2.get_addresses(0))) === JSON.stringify(a), { bytes: bytes.length });
+  const t2 = performance.now();
+  await w2.sync();
+  const b2 = plain(await w2.get_balances(0));
+  step("incremental-sync", { seconds: +((performance.now() - t2) / 1000).toFixed(1), from: b.fullyScannedHeight, to: b2.fullyScannedHeight });
+  check("incremental-sync", b2.fullyScannedHeight >= b.fullyScannedHeight && b2.totalZat === 0);
+  const h = await w2.get_transaction_history(0, 10, 0);
+  check("empty-history", h.total_count === 0);
+  step("done");
+} catch (e) {
+  window.__run.ok = false;
+  step("error", { ...errInfo(e), stack: String(e?.stack ?? "").slice(0, 800) });
+}
+window.__run.finished = true;
+</script>
+</body>
+</html>

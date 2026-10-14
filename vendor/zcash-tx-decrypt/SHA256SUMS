@@ -5,5 +5,5 @@ c062dd977c6dce6b9fe90cb6c4df5f33d573a1523549504711b62b228f406bd3  ./package.json
 0a186dad1948bdc4ae252fa5661a746f8983a1a3348dac43b1eb854d3691ce26  ./test/fixtures/regtest-txs.json
 ba48e9c365a99c42ebdae80dbf23cca7fe20cf6296d81aeba2bb161600cee459  ./zw_tx_decrypt.d.ts
 cb50a70117d2cef906fd7852fff1a7c0249b285ed8f6d8a9c247a7224b905a28  ./zw_tx_decrypt.js
-582c578ab3a70777f22f5b8d92df431b3b94835fe38b71b7f569a3225fcb923e  ./zw_tx_decrypt_bg.wasm
+4ff4b6c095c7e6397ae3a3c48ea5d22615f623f5046e14a765806647b9590804  ./zw_tx_decrypt_bg.wasm
 33e77bec9166a7969edccb2d3f45a41eec845c46fe61365473f67015c9349c81  ./zw_tx_decrypt_bg.wasm.d.ts

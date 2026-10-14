@@ -362,7 +362,7 @@ It therefore does NOT contain:
 
 Added with the mainnet build (2026-10-08) and updated for Stage 2 (2026-10-09). It covers a
 build with `VITE_ZCASH_NETWORK=main`, the mainnet wallet engine (Stage 2: upstream
-`zcash_client_sqlite` in WebAssembly; its build scripts and provenance notes are published separately, later) and a game server with `ZCASH_NETWORK=main`. It is an
+`zcash_client_sqlite` in WebAssembly; its build scripts are in `scripts/wallet-engine/`, its provenance in `vendor/webzjs-wallet-main/PROVENANCE.md`) and a game server with `ZCASH_NETWORK=main`. It is an
 invited, real-money beta of **unaudited** software: a consent step, a per-transaction cap (0.01 ZEC by default) and a
 fresh wallet with a small amount are the stated conditions.
 

@@ -1,0 +1,24 @@
+WebZjs https://github.com/ZcashCommunityGrants/WebZjs @ bdbc6f2f9e8c60f722c73ca7c83b48b861428f70
+librustzcash 0a2c6d1ae6274e6af2291e312f7b7459516882f2; orchard 3bd2b736d1273226595773265313fc3f3428af16
+patches (applied in this order):
+  939a60982d9c7f6b8972dd725ad714eb473170340ab874c65b2125473966fed5  patches/webzjs/0001-shielded-memo-zip321-fix.diff
+  fa73baf24492d2021a850e1dbf94269c808fe937856c7dcca793f510dc9190fd  patches/webzjs/0002-regtest-test-network-feature.diff
+  161a64d93d5c86464f595191c9b4b28e3f8591a00a68c1e32490d35409527533  patches/webzjs/0003-sapling-beta-engine.diff
+  de5b878d49fc1a69e17c56f503497147904065ea8b5ecdd61aff7acfdf50b8db  patches/webzjs/0004-ironwood-sqlite-receive.diff
+  d365fd01dd76ce5916762dde8669a745d87a4a9ab2bd50770bbe3d294552377d  patches/webzjs/0005-ironwood-sqlite-engine.diff
+libsqlite3-sys shim:
+  60aed59b2e508010d16df711300eeaea799511bee47b3fcb01b72719eb669268  libsqlite3-sys-shim/Cargo.toml
+  04cef460f3c542ccfe47cf9cc79ca51dcc8efe6f4b5838f580ae2b904b637580  libsqlite3-sys-shim/src/lib.rs
+SQLite (build-sqlite.sh):
+  libsqlite3.a  sha256 8c0a39a8d467acbf2abb89315180e3f8c80f19121cba6843cd62da6911cc8a71  (1351992 bytes)
+  SQLite 3.50.4, official amalgamation sqlite-amalgamation-3500400.zip (sha256 1d3049dd0f830a025a53105fc79fd2ab9431aea99e137809d064d8ee8356b032) = sqlite-wasm-rs 0.4.3 sqlite3/
+  compiled by sqlite-wasm-rs 0.4.3's build script (feature bundled, release, opt-level z), crate sha256 0894a1b91dc660fbf1e6ea6f287562708e01ca1a18fa4e2c6dae0df5a05199c5
+  emscripten 4.0.12 (release 209b886304498eff50dd835850dc5715803401ed, tarball sha256 1c303712707a91b88f743b0ad6dd1544c289e614844396698a2510a66c5608f1, clang LLVM 7f93487862d98bf1c168babba87daf6224d8a46f)
+  emscripten libc.a rebuilt from source: sha256 1324fd783dd5ac979603bd68e22d4663e6ccf13281ca39441e070383d16a7315
+  the crate's prebuilt sqlite3/libsqlite3.a (sha256 8c0a39a8d467acbf2abb89315180e3f8c80f19121cba6843cd62da6911cc8a71) was deleted before the build; the from-source library is byte-identical to it
+toolchain: rustc 1.89.0-nightly (49a8ba068 2025-06-14) (channel manifest sha256 84c95b367d3101a2caf840f07715bff19942f3f1872e9161a81d9f842a23fe25); tools built with rustc 1.97.0 (2d8144b78 2026-07-07) (manifest sha256 3804d2666f7c12ce64205baa69b6be52f910b45b158091013264beb7aa1de7f5)
+tools: wasm-pack 0.15.0 (cargo install --locked); wasm-bindgen 0.2.100 (cargo install --locked); just 1.58.0 (cargo install --locked); wasm-opt version 117 (version_117) (tarball sha256 3dc677006555b355ea2da5e82602065a161d5e83eaefd3f759afa00b96e83212); node v22.22.0
+engine main: wasm 62478361 bytes, sha256 772d260643a874e261e5067324243b255194b90d2c91d0513e4b6ac0a25e3854
+engine regtest: wasm 62478481 bytes, sha256 768907a2c2317225aea50c6707dc612a5046920b679b72750968ed3112a4bf1b
+helper: wasm 1974581 bytes, sha256 4ff4b6c095c7e6397ae3a3c48ea5d22615f623f5046e14a765806647b9590804
+published engine hashes (Stage 2 engine): main 772d260643a874e261e5067324243b255194b90d2c91d0513e4b6ac0a25e3854, regtest 768907a2c2317225aea50c6707dc612a5046920b679b72750968ed3112a4bf1b

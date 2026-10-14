@@ -55,8 +55,8 @@ Copy `.env.example` to `.env` to change settings; it holds no secrets, only endp
 
 The in-game wallet runs a WebAssembly build of the WebZjs wallet engine. A `test` build without the engine
 binary uses a stand-in module: everything except the wallet works, and the wallet panel reports that the
-engine is not installed. A `main` build always requires the engine binary. The engine build scripts are
-published separately.
+engine is not installed. A `main` build always requires the engine binary: `npm run engine:fetch` downloads
+it, and `scripts/wallet-engine/` builds it from source.
 
 ## Content
 

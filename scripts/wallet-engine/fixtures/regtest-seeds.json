@@ -1,0 +1,10 @@
+{
+ "note": "REGTEST ONLY — test keys, never fund on any network. Test seeds for the local zebrad regtest chain of the engine harness. They are public: anything sent on any network to an address derived from them can be taken by anyone.",
+ "network": "regtest",
+ "seeds": {
+  "A": "void capable renew exact oppose velvet garbage claw method fashion picture cloth improve real return six attitude joy twin version wall answer ride squirrel",
+  "B": "art grow comfort marriage extra shuffle electric extend syrup alien marriage moon relax loud boring extend entry antenna alcohol tired bundle derive wish attack",
+  "C": "sentence captain fee core edge usage law page venue comfort witness account oxygen transfer slice cliff myself alcohol culture slush glimpse oppose demise chunk",
+  "PROJECT": "analyst doll improve pepper spike mirror nut nominee space hospital scan inmate inquiry canoe umbrella poem void magic dad poem music field regret narrow"
+ }
+}

@@ -1,0 +1,34 @@
+# Zocial World Stage 2: a stand-in for libsqlite3-sys 0.35 so that rusqlite 0.37 -- the
+# exact version zcash_client_sqlite pins -- runs on wasm32-unknown-unknown. On that target the FFI
+# comes from sqlite-wasm-rs 0.4.3 (SQLite 3.50.4 compiled for wasm, memory VFS by default, the same
+# API surface as libsqlite3-sys). On every other target it re-exports the real libsqlite3-sys.
+[package]
+name = "libsqlite3-sys"
+version = "0.35.0"
+edition = "2021"
+publish = false
+
+[features]
+default = ["min_sqlite_version_3_14_0"]
+bundled = ["bundled_bindings"]
+bundled-sqlcipher = ["bundled"]
+bundled-sqlcipher-vendored-openssl = ["bundled-sqlcipher"]
+bundled-windows = ["bundled_bindings"]
+bundled_bindings = []
+buildtime_bindgen = []
+column_metadata = []
+in_gecko = []
+loadable_extension = []
+min_sqlite_version_3_14_0 = []
+preupdate_hook = []
+session = []
+sqlcipher = []
+unlock_notify = []
+wasm32-wasi-vfs = []
+with-asan = []
+
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+sqlite-wasm-rs = { version = "=0.4.3", default-features = false, features = ["precompiled"] }
+
+[target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
+native = { package = "libsqlite3-sys", version = "=0.36.0", features = ["bundled"] }
